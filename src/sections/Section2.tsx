@@ -76,13 +76,13 @@ export function Section2() {
         }}
       />
 
-      <div style={{ position: 'absolute', top: '40px', left: '65px', width: '480px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
-        <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '60px', fontWeight: 300, color: '#ffffff', margin: 0 }}>
-          <BlurFadeWords text="Data Intelligence" baseDelay={0.5} isInView={isInView} />
+      <div style={{ position: 'absolute', top: '40px', left: '65px', width: '520px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+        <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '52px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '8px' }}>
+          <BlurFadeWords text="Space & Connections Are Instructions." baseDelay={0.5} isInView={isInView} />
         </h1>
-        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '36px', fontWeight: 300, margin: 0, marginBottom: '18px' }}>
+        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '28px', fontWeight: 300, margin: 0, marginBottom: '16px' }}>
           <BlurFadeWords
-            text="ai/MeshAPI"
+            text="Drop CSVs, text notes & designs onto the canvas to link context."
             baseDelay={0.8}
             isInView={isInView}
             wordStyle={{
@@ -92,10 +92,10 @@ export function Section2() {
             }}
           />
         </p>
-        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '19px', fontWeight: 300, color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          <BlurFadeWords text="Inspect plans before execution with zero" baseDelay={1.1} isInView={isInView} />
+        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '17px', fontWeight: 300, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
+          <BlurFadeWords text="Placing a sales spreadsheet next to customer feedback notes" baseDelay={1.1} isInView={isInView} />
           <br />
-          <BlurFadeWords text="black-box surprises or missing dependencies." baseDelay={1.45} isInView={isInView} />
+          <BlurFadeWords text="instructs the AI engine to correlate numbers with churn feedback." baseDelay={1.45} isInView={isInView} />
         </p>
       </div>
 

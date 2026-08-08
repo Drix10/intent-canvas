@@ -83,7 +83,7 @@ export function Section1Productivity() {
           position: 'absolute',
           top: '40px',
           left: '65px',
-          width: '480px',
+          width: '520px',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 10,
@@ -94,11 +94,11 @@ export function Section1Productivity() {
           initial={{ opacity: 0, x: 48 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.5, duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-          style={{ position: 'relative', width: '320px', height: '80px', marginBottom: '25px', marginLeft: '-30px' }}
+          style={{ position: 'relative', width: '320px', height: '80px', marginBottom: '15px', marginLeft: '-30px' }}
         >
           <img
             src="https://qclay.design/lovable/glass-menu/s1-notification-badge.svg"
-            alt="01/03"
+            alt="01/04"
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
           />
         </motion.div>
@@ -106,31 +106,31 @@ export function Section1Productivity() {
         <h1
           style={{
             fontFamily: 'var(--font-jakarta)',
-            fontSize: '60px',
+            fontSize: '52px',
             fontWeight: 300,
-            lineHeight: 1.05,
-            letterSpacing: '-1.5px',
+            lineHeight: 1.08,
+            letterSpacing: '-1.2px',
             color: '#ffffff',
             margin: 0,
-            marginBottom: '6px',
+            marginBottom: '8px',
           }}
         >
-          <BlurFadeWords text="Intent Engine" baseDelay={0.5} isInView={isInView} />
+          <BlurFadeWords text="Stop Clicking Buttons. Express Intent." baseDelay={0.5} isInView={isInView} />
         </h1>
 
         <p
           style={{
             fontFamily: 'var(--font-jakarta)',
-            fontSize: '36px',
+            fontSize: '28px',
             fontWeight: 300,
-            lineHeight: 1.18,
-            letterSpacing: '-0.6px',
+            lineHeight: 1.2,
+            letterSpacing: '-0.5px',
             margin: 0,
-            marginBottom: '18px',
+            marginBottom: '16px',
           }}
         >
           <BlurFadeWords
-            text="ai/SpatialPrimitive"
+            text="No forms. No syntax. Just tell the computer what you want."
             baseDelay={0.8}
             isInView={isInView}
             wordStyle={{
@@ -144,17 +144,17 @@ export function Section1Productivity() {
         <p
           style={{
             fontFamily: 'var(--font-jakarta)',
-            fontSize: '19px',
+            fontSize: '17px',
             fontWeight: 300,
-            lineHeight: 1.3,
-            color: 'rgba(255,255,255,0.6)',
+            lineHeight: 1.35,
+            color: 'rgba(255,255,255,0.65)',
             margin: 0,
-            maxWidth: '400px',
+            maxWidth: '460px',
           }}
         >
-          <BlurFadeWords text="Express outcomes naturally. The computer" baseDelay={1.1} isInView={isInView} />
+          <BlurFadeWords text="Traditional software forces you to perform manual step-by-step procedures." baseDelay={1.1} isInView={isInView} />
           <br />
-          <BlurFadeWords text="interprets context and executes computation." baseDelay={1.45} isInView={isInView} />
+          <BlurFadeWords text="Intent Canvas turns your desires directly into automated computations." baseDelay={1.45} isInView={isInView} />
         </p>
       </div>
 

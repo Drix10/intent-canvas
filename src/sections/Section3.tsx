@@ -76,13 +76,13 @@ export function Section3() {
         }}
       />
 
-      <div style={{ position: 'absolute', top: '40px', left: '65px', width: '480px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
-        <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '60px', fontWeight: 300, color: '#ffffff', margin: 0 }}>
-          <BlurFadeWords text="Spatial Collaboration" baseDelay={0.5} isInView={isInView} />
+      <div style={{ position: 'absolute', top: '40px', left: '65px', width: '520px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+        <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '52px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '8px' }}>
+          <BlurFadeWords text="Inspect Plans Before Execution." baseDelay={0.5} isInView={isInView} />
         </h1>
-        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '36px', fontWeight: 300, margin: 0, marginBottom: '18px' }}>
+        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '28px', fontWeight: 300, margin: 0, marginBottom: '16px' }}>
           <BlurFadeWords
-            text="ai/LivingInterfaces"
+            text="Zero black boxes. Gemini 2.5 Flash breaks intent into clear steps."
             baseDelay={0.8}
             isInView={isInView}
             wordStyle={{
@@ -92,10 +92,10 @@ export function Section3() {
             }}
           />
         </p>
-        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '19px', fontWeight: 300, color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-          <BlurFadeWords text="Space becomes context, relationships become instructions," baseDelay={1.1} isInView={isInView} />
+        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '17px', fontWeight: 300, color: 'rgba(255,255,255,0.65)', margin: 0 }}>
+          <BlurFadeWords text="Review every tool and step before confirming." baseDelay={1.1} isInView={isInView} />
           <br />
-          <BlurFadeWords text="and intent becomes executable computation." baseDelay={1.45} isInView={isInView} />
+          <BlurFadeWords text="If your prompt is ambiguous, interactive gates let you clarify instantly." baseDelay={1.45} isInView={isInView} />
         </p>
       </div>
 
