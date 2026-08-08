@@ -5,6 +5,7 @@ import { SpatialScroll } from './SpatialScroll'
 import { SpatialCanvas } from './components/canvas/SpatialCanvas'
 import { useCanvasStore } from './store/useCanvasStore'
 import { Navbar } from './components/layout/Navbar'
+import { IntentBar } from './components/canvas/IntentBar'
 import { PlanPreviewModal } from './components/canvas/PlanPreviewModal'
 import { ResultNodeCard } from './components/canvas/ResultNodeCard'
 import { DisambiguationModal } from './components/canvas/DisambiguationModal'
@@ -158,20 +159,23 @@ export default function App() {
   return (
     <SmoothScrollProvider>
       <main className="relative h-screen w-screen overflow-hidden bg-[#040406]">
-        {/* Top Control Navbar */}
-        <Navbar
+        {/* Minimal Uncluttered Floating Top Header */}
+        <Navbar />
+
+        {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
+        {viewMode === 'showcase' ? <SpatialScroll /> : <SpatialCanvas />}
+
+        {/* Dedicated Floating Intent Action Bar */}
+        <IntentBar
           onEvaluatePlan={handleEvaluatePlan}
           onExecuteComputation={() => handleExecuteComputation()}
           onFilterEnterprise={handleFilterEnterprise}
           onAddNewNode={handleAddNewNode}
         />
 
-        {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
-        {viewMode === 'showcase' ? <SpatialScroll /> : <SpatialCanvas />}
-
         {/* In-Canvas Result Overlay Container */}
         {executionResult && (
-          <div className="absolute bottom-6 right-6 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="absolute top-24 right-6 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <ResultNodeCard
               result={executionResult}
               onSaveAsPrimitive={handleSaveAsPrimitive}
