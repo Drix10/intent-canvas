@@ -65,6 +65,7 @@ export const intentApi = axios.create({
 
 if (APP_CONFIG.apiAccessToken) {
   intentApi.defaults.headers.common.Authorization = `Bearer ${APP_CONFIG.apiAccessToken}`
+  intentApi.defaults.headers.common['X-Intent-Canvas-Key'] = APP_CONFIG.apiAccessToken
 }
 
 export const intentPath = (path: string) => apiUrl(path)

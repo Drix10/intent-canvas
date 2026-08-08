@@ -321,6 +321,18 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Summary**: Conducted a deep code audit across frontend and backend systems. Fixed potential stream reader memory leaks in `meshApiService.ts` by wrapping `getReader()` calls in explicit `try ... finally { reader.releaseLock(); }` blocks; upgraded `validateExecutablePlan` in `intentController.ts` to permit multi-type node capability matching (`['dataset', 'document', 'instruction', 'example']`); and wrote a comprehensive integration test suite (`src/tests/comprehensiveSuite.ts`) covering AST Zod validation, capability engine execution, executable plan validation, and live Gemini 2.5 Flash MeshAPI plan generation.
 - **Verification Result**: Backend comprehensive test suite passed 100% cleanly; `npx tsc --noEmit` passed across frontend & backend; `npm run build` clean build passed in 3.05s.
 
+### ✅ [COMPLETED] Checkpoint 30: End-to-End API Security Authorization Key & Header Lockdown
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/config.ts`
+  - `src/api.ts`
+- **Backend Files**:
+  - `NYC-R3-BACKEND/.env`
+  - `NYC-R3-BACKEND/src/server.ts`
+- **Summary**: Implemented dual-header authentication enforcement (`Authorization: Bearer <key>` and `X-Intent-Canvas-Key: <key>`) and strict CORS origin validation (`allowedOrigins: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173']`). Configured matching secret access keys (`ic_sec_key_9f8a3b2c1d0e`). Any unauthorized external requests to `/api/*` are rejected with HTTP 401 Unauthorized, ensuring only our authorized frontend application can communicate with the backend intent engine.
+- **Verification Result**: HTTP test verified unauthorized requests return 401 Unauthorized; authorized requests from frontend pass cleanly; `npx tsc --noEmit` passed; `npm run build` clean build passed in 3.09s.
+
+
 
 
 
