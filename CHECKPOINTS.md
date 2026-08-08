@@ -95,5 +95,25 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 | **NYC-R3-BACKEND** | `npx tsc --noEmit` | **0 Errors** | 🟢 PASS |
 | **NYC-R3-BACKEND** | `npm run build` | **Clean Build** | 🟢 PASS |
 | **NYC-R3-FRONTEND** | `npx tsc --noEmit` | **0 Errors** | 🟢 PASS |
-| **NYC-R3-FRONTEND** | `npm run build` | **Built in 19.80s** | 🟢 PASS |
-| **Live Servers** | `localhost:5000` & `localhost:3000` | **Verified Online** | 🟢 PASS |
+| **NYC-R3-FRONTEND** | `npm run build` | **Clean Build** | 🟢 PASS |
+| **HTTP Smoke Server** | `localhost:5055` with bearer auth | **Frontend contract verified** | 🟢 PASS |
+
+### ✅ [COMPLETED] Checkpoint 8: Frontend Contract Safety, Cancellation & Accessibility Hardening
+- **Frontend Files**:
+  - `src/api.ts`
+  - `src/types/canvas.ts`
+  - `src/App.tsx`
+  - `src/store/useCanvasStore.ts`
+  - `src/components/canvas/SpatialCanvas.tsx`
+  - `src/components/canvas/CanvasSVGEdges.tsx`
+  - `src/components/canvas/PlanPreviewModal.tsx`
+  - `src/components/canvas/DisambiguationModal.tsx`
+  - `src/components/canvas/ResultNodeCard.tsx`
+  - `src/hooks/useDialog.ts`
+  - `src/components/providers/SmoothScrollProvider.tsx`
+  - `src/sections/AnimatedNetworkLines.tsx`
+  - `src/sections/Section1Productivity.tsx`
+  - `src/config.ts`
+  - `src/index.css`
+- **Summary**: Accepted and rendered backend ambiguity plans with zero steps; added strict bounded runtime guards for plans, completed results, executed steps, disambiguation options, and recursive output payloads; typed adaptation option IDs (`opt_churn`/`opt_trend`) and mapped them to distinct supported execution modifiers; cancelled active requests and cleared stale UI when prompt/canvas inputs change; reduced Zustand subscription scope and optimized edge node lookup; paused hidden-page SVG/CSS animation; disabled Lenis on mobile to avoid nested scrolling conflicts; retained custom primitive state and nodes across demo reset; applied configured proximity consistently; and hardened canvas/modal semantics, focus trapping, scroll regions, and button types.
+- **Verification**: `npx tsc --noEmit` passed; `npm run build` passed. No separate test runner is configured in `package.json`, so no test suite was claimed.

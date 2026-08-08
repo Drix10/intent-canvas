@@ -2,8 +2,10 @@ import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { MobileShowcasePanel } from '../components/showcase/MobileShowcasePanel'
 import { BlurFadeWords } from '../BlurFadeWords'
 import { Sparkles, Cpu, CheckCircle2 } from 'lucide-react'
+import { APP_CONFIG } from '../config'
 
 function AnimatedWords({ text, baseDelay = 0, isInView }: {
   text: string
@@ -86,6 +88,10 @@ export function Section1Productivity() {
     obs.observe(el)
     return () => obs.disconnect()
   }, [isMobile])
+
+  if (isMobile) {
+    return <MobileShowcasePanel eyebrow="01 / Intent as Input" title="Stop clicking buttons. Express intent." description="Describe the outcome you want in plain language. Intent Canvas turns your goal into an inspectable computation instead of a chain of forms and commands." accentClass="text-[#24ff95]" />
+  }
 
   const card = (
     <div
@@ -266,7 +272,7 @@ export function Section1Productivity() {
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
                 <div className="text-[10px] text-neutral-400 font-mono">Distance Metric</div>
-                <div className="text-sm font-bold text-[#00ff87]">240px Proximity</div>
+                 <div className="text-sm font-bold text-[#00ff87]">{APP_CONFIG.proximityDistancePixels}px Proximity</div>
               </div>
             </div>
 

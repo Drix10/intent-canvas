@@ -4,8 +4,9 @@ import { motion } from 'framer-motion';
 interface MagneticButtonProps {
   children: React.ReactNode;
   className?: string;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export const MagneticButton: React.FC<MagneticButtonProps> = ({
@@ -13,6 +14,7 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
   className = '',
   onClick,
   disabled = false,
+  type = 'button',
 }) => {
   const ref = useRef<HTMLButtonElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -38,6 +40,7 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
       animate={{ x: position.x, y: position.y }}
       transition={{ type: 'spring', stiffness: 350, damping: 15, mass: 0.5 }}
       onClick={onClick}
+      type={type}
       disabled={disabled}
       className={`relative inline-flex cursor-pointer items-center justify-center overflow-hidden rounded-full font-semibold transition-all duration-300 ${className}`}
     >

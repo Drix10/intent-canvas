@@ -29,16 +29,16 @@ export const IntentBar: React.FC<IntentBarProps> = ({
     <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2">
       {/* Quick Intent Suggestions Popover */}
       {showSuggestions && (
-        <div className="smoked-glass hairline-border flex items-center gap-2 rounded-2xl px-4 py-2 shadow-2xl backdrop-blur-2xl">
+        <div className="smoked-glass hairline-border flex max-w-[calc(100vw-1rem)] flex-wrap items-center justify-center gap-2 rounded-2xl px-4 py-2 shadow-2xl backdrop-blur-2xl">
           <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Guide:</span>
           {[
             'Show me why revenue dropped in August',
             'Analyze customer churn sentiment notes',
             'Compare Q3 sales with design system',
           ].map((suggestion, idx) => (
-            <button
-              key={idx}
-              type="button"
+             <button
+               type="button"
+               key={idx}
               onClick={() => {
                 setActiveIntentPrompt(suggestion);
                 setShowSuggestions(false);
@@ -51,11 +51,13 @@ export const IntentBar: React.FC<IntentBarProps> = ({
         </div>
       )}
 
-      <div className="smoked-glass hairline-border flex items-center gap-3 rounded-full px-5 py-3 shadow-2xl backdrop-blur-2xl">
+      <div className="smoked-glass hairline-border flex w-[calc(100vw-1rem)] max-w-5xl flex-wrap items-center justify-center gap-3 rounded-2xl px-3 py-3 shadow-2xl backdrop-blur-2xl sm:rounded-full sm:px-5">
         {/* Intent Input Prompt Bar */}
-        <div className="relative flex items-center">
+        <div className="relative flex w-full items-center sm:w-auto">
+          <label htmlFor="intent-prompt" className="sr-only">Describe the outcome you want</label>
           <Sparkles className="absolute left-3.5 h-3.5 w-3.5 text-[#00ff87]" />
           <input
+            id="intent-prompt"
             type="text"
             value={activeIntentPrompt}
             onChange={(e) => setActiveIntentPrompt(e.target.value)}
@@ -66,8 +68,9 @@ export const IntentBar: React.FC<IntentBarProps> = ({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          <button
+        <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
+           <button
+            type="button"
             onClick={onEvaluatePlan}
             disabled={isEvaluatingPlan}
             className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
@@ -92,7 +95,9 @@ export const IntentBar: React.FC<IntentBarProps> = ({
             )}
           </MagneticButton>
 
-          <button
+           <button
+            type="button"
+            aria-label="Adapt computation for enterprise customers"
             onClick={onFilterEnterprise}
             title="Step 2 Adaptability Demo: Filter Enterprise"
             className="flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/20"
@@ -100,7 +105,9 @@ export const IntentBar: React.FC<IntentBarProps> = ({
             <Filter className="h-3 w-3" /> Adapt
           </button>
 
-          <button
+           <button
+            type="button"
+            aria-label="Add document card"
             onClick={onAddNewNode}
             title="Add Document Card"
             className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
@@ -108,7 +115,9 @@ export const IntentBar: React.FC<IntentBarProps> = ({
             <Plus className="h-3.5 w-3.5" />
           </button>
 
-          <button
+           <button
+            type="button"
+            aria-label="Reset demo canvas"
             onClick={resetDemoCanvas}
             title="Reset Demo State"
             className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-400 hover:bg-white/10 hover:text-white"
@@ -116,6 +125,9 @@ export const IntentBar: React.FC<IntentBarProps> = ({
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
         </div>
+        <span className="sr-only" aria-live="polite">
+          {isEvaluatingPlan ? 'Preparing an inspectable plan.' : isExecutingPlan ? 'Computing your requested result.' : ''}
+        </span>
       </div>
     </div>
   );

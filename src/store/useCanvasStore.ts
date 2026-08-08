@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { CanvasNode, CanvasEdge, ExecutionPlan, ExecutionResult } from '../types/canvas';
+import { CanvasNode, CanvasEdge, ExecutionPlan, ExecutionResult, CustomPrimitiveRecord } from '../types/canvas';
+import { createId } from '../utils/id';
 
 interface CanvasState {
   nodes: CanvasNode[];
@@ -12,15 +13,16 @@ interface CanvasState {
   isExecutingPlan: boolean;
   activePlan: ExecutionPlan | null;
   executionResult: ExecutionResult | null;
-  customPrimitives: any[];
+  customPrimitives: CustomPrimitiveRecord[];
   viewMode: 'showcase' | 'interactive';
+  resetVersion: number;
 
   // Actions
   setPan: (pan: { x: number; y: number }) => void;
   setZoom: (zoom: number) => void;
   setViewMode: (mode: 'showcase' | 'interactive') => void;
   addNode: (node: CanvasNode) => void;
-  updateNodePosition: (id: string, x: number, y: number) => void;
+  updateNodePosition: (id: string, x: number, y: number) => 'updated' | 'collision' | 'invalid' | 'missing';
   addEdge: (sourceId: string, targetId: string) => void;
   removeEdge: (edgeId: string) => void;
   selectNode: (id: string, multi?: boolean) => void;
@@ -30,7 +32,7 @@ interface CanvasState {
   setIsExecutingPlan: (executing: boolean) => void;
   setActivePlan: (plan: ExecutionPlan | null) => void;
   setExecutionResult: (result: ExecutionResult | null) => void;
-  addCustomPrimitive: (primitive: any) => void;
+  addCustomPrimitive: (primitive: CustomPrimitiveRecord) => void;
   resetDemoCanvas: () => void;
 }
 
@@ -84,6 +86,40 @@ const initialDemoEdges: CanvasEdge[] = [
   },
 ];
 
+const NODE_GAP = 16;
+
+const primitiveNodes = (primitives: CustomPrimitiveRecord[]): CanvasNode[] => primitives.map((primitive, index) => ({
+  id: primitive.primitiveId,
+  title: primitive.title,
+  type: 'custom_primitive',
+  position: { x: 100 + index * 316, y: 360, width: 300, height: 160 },
+  dataPayload: { mimeType: 'application/x-intent-primitive', contentSummary: primitive.description ?? 'Saved custom computational primitive.' },
+}));
+
+function overlaps(
+  first: { x: number; y: number; width: number; height: number },
+  second: { x: number; y: number; width: number; height: number },
+) {
+  return first.x < second.x + second.width + NODE_GAP &&
+    first.x + first.width + NODE_GAP > second.x &&
+    first.y < second.y + second.height + NODE_GAP &&
+    first.y + first.height + NODE_GAP > second.y;
+}
+
+function freePosition(nodes: CanvasNode[], node: CanvasNode): CanvasNode['position'] {
+  const start = node.position;
+  for (let index = 0; index < 1000; index += 1) {
+    const candidate = {
+      ...start,
+      x: start.x + (index % 10) * (start.width + NODE_GAP),
+      y: start.y + Math.floor(index / 10) * (start.height + NODE_GAP),
+    };
+    if (!nodes.some((other) => overlaps(candidate, other.position))) return candidate;
+  }
+  const lowestNode = nodes.reduce((max, other) => Math.max(max, other.position.y + other.position.height), start.y);
+  return { ...start, x: start.x, y: lowestNode + NODE_GAP };
+}
+
 export const useCanvasStore = create<CanvasState>((set) => ({
   nodes: initialDemoNodes,
   edges: initialDemoEdges,
@@ -97,15 +133,39 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   executionResult: null,
   customPrimitives: [],
   viewMode: 'showcase',
+  resetVersion: 0,
 
-  setPan: (pan) => set({ pan }),
-  setZoom: (zoom) => set({ zoom }),
+  setPan: (pan) => set({
+    pan: { x: Number.isFinite(pan.x) ? pan.x : 0, y: Number.isFinite(pan.y) ? pan.y : 0 },
+  }),
+  setZoom: (zoom) => set({ zoom: Number.isFinite(zoom) ? Math.min(Math.max(zoom, 0.5), 2) : 1 }),
   setViewMode: (viewMode) => set({ viewMode }),
-  addNode: (node) => set((state) => ({ nodes: [...state.nodes, node] })),
-  updateNodePosition: (id, x, y) => set((state) => ({
-    nodes: state.nodes.map((n) => (n.id === id ? { ...n, position: { ...n.position, x, y } } : n)),
-  })),
+  addNode: (node) => set((state) => {
+    const { x, y, width, height } = node.position;
+    if (!node.id || state.nodes.some((existing) => existing.id === node.id) || ![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return state;
+    return { nodes: [...state.nodes, { ...node, position: freePosition(state.nodes, node) }] };
+  }),
+  updateNodePosition: (id, x, y) => {
+    let result: 'updated' | 'collision' | 'invalid' | 'missing' = 'missing';
+    set((state) => {
+      const moving = state.nodes.find((node) => node.id === id);
+      if (!moving) return state;
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        result = 'invalid';
+        return state;
+      }
+      const nextPosition = { ...moving.position, x, y };
+      if (state.nodes.some((node) => node.id !== id && overlaps(nextPosition, node.position))) {
+        result = 'collision';
+        return state;
+      }
+      result = 'updated';
+      return { nodes: state.nodes.map((node) => node.id === id ? { ...node, position: nextPosition } : node) };
+    });
+    return result;
+  },
   addEdge: (sourceNodeId, targetNodeId) => set((state) => {
+    if (sourceNodeId === targetNodeId || !state.nodes.some((node) => node.id === sourceNodeId) || !state.nodes.some((node) => node.id === targetNodeId)) return state;
     const exists = state.edges.some(
       (e) => (e.sourceNodeId === sourceNodeId && e.targetNodeId === targetNodeId) ||
              (e.sourceNodeId === targetNodeId && e.targetNodeId === sourceNodeId)
@@ -115,7 +175,7 @@ export const useCanvasStore = create<CanvasState>((set) => ({
       edges: [
         ...state.edges,
         {
-          id: `edge_${Date.now()}`,
+          id: createId('edge'),
           sourceNodeId,
           targetNodeId,
           relationType: 'explicit_connector',
@@ -127,9 +187,12 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   removeEdge: (edgeId) => set((state) => ({
     edges: state.edges.filter((e) => e.id !== edgeId),
   })),
-  selectNode: (id, multi) => set((state) => ({
+  selectNode: (id, multi) => set((state) => {
+    if (!state.nodes.some((node) => node.id === id)) return state;
+    return {
     selectedNodeIds: multi ? (state.selectedNodeIds.includes(id) ? state.selectedNodeIds.filter((i) => i !== id) : [...state.selectedNodeIds, id]) : [id],
-  })),
+    };
+  }),
   clearSelection: () => set({ selectedNodeIds: [] }),
   setActiveIntentPrompt: (activeIntentPrompt) => set({ activeIntentPrompt }),
   setIsEvaluatingPlan: (isEvaluatingPlan) => set({ isEvaluatingPlan }),
@@ -137,11 +200,17 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   setActivePlan: (activePlan) => set({ activePlan }),
   setExecutionResult: (executionResult) => set({ executionResult }),
   addCustomPrimitive: (primitive) => set((state) => ({ customPrimitives: [...state.customPrimitives, primitive] })),
-  resetDemoCanvas: () => set({
-    nodes: initialDemoNodes,
+  resetDemoCanvas: () => set((state) => ({
+    nodes: [...initialDemoNodes, ...primitiveNodes(state.customPrimitives)],
     edges: initialDemoEdges,
+    pan: { x: 0, y: 0 },
+    zoom: 1,
+    selectedNodeIds: [],
     activePlan: null,
     executionResult: null,
     activeIntentPrompt: '',
-  }),
+    isEvaluatingPlan: false,
+    isExecutingPlan: false,
+    resetVersion: state.resetVersion + 1,
+  })),
 }));

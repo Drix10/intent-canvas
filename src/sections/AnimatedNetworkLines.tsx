@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { useId } from 'react'
+import { useEffect, useId, useState } from 'react'
 
 const sortedPaths = [
   "M126.227 198.56H309.396L356.076 143.247H659.502",
@@ -36,7 +36,15 @@ const sortedPaths = [
 
 export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView: boolean; color?: string }) {
   const uid = useId()
+  const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden)
   const glowId = `${uid}-glow`
+
+  useEffect(() => {
+    const handleVisibility = () => setPageVisible(!document.hidden)
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [])
+  const shouldAnimate = isInView && pageVisible
 
   return (
     <svg width="484" height="358" viewBox="0 0 593 453" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -64,8 +72,8 @@ export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView
           <g key={i}>
             <motion.path d={d} stroke="#272729" strokeWidth="1.55864" strokeLinecap="round" fill="none"
               initial={{ pathLength: 0, opacity: 0 }}
-              animate={isInView ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
-              transition={isInView ? {
+               animate={shouldAnimate ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
+               transition={shouldAnimate ? {
                 pathLength: { delay: 0.05 + i * 0.05, duration: 1.2, ease: [0.25, 1, 0.5, 1] },
                 opacity: { delay: 0.05 + i * 0.05, duration: 0.15 },
               } : { duration: 0 }}
@@ -79,11 +87,11 @@ export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView
                     <stop offset="100%" stopColor="white" stopOpacity="0" />
                   </radialGradient>
                   <mask id={maskId}>
-                    <circle r="40" fill={`url(#${gradId})`}>
-                      <animateMotion dur="3.5s" repeatCount="indefinite" begin={beginTime} keyPoints="0;1;1" keyTimes="0;0.667;1" calcMode="linear">
-                        <mpath href={`#${pathId}`} />
-                      </animateMotion>
-                      <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.067;0.6;0.667;1" dur="3.5s" repeatCount="indefinite" begin={beginTime} />
+                     <circle r="40" fill={`url(#${gradId})`}>
+                       {shouldAnimate && <animateMotion dur="3.5s" repeatCount="indefinite" begin={beginTime} keyPoints="0;1;1" keyTimes="0;0.667;1" calcMode="linear">
+                         <mpath href={`#${pathId}`} />
+                       </animateMotion>}
+                       {shouldAnimate && <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.067;0.6;0.667;1" dur="3.5s" repeatCount="indefinite" begin={beginTime} />}
                     </circle>
                   </mask>
                 </defs>
@@ -96,8 +104,8 @@ export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView
 
       <motion.g filter={`url(#${glowId})`}
         initial={{ opacity: 0 }}
-        animate={isInView ? { opacity: 0.8 } : { opacity: 0 }}
-        transition={isInView ? { delay: 0.8, duration: 0.5 } : { duration: 0 }}
+         animate={shouldAnimate ? { opacity: 0.8 } : { opacity: 0 }}
+         transition={shouldAnimate ? { delay: 0.8, duration: 0.5 } : { duration: 0 }}
       >
         <path d="M136.155 197.851C136.155 185.71 145.998 175.867 158.139 175.867C170.279 175.867 180.122 185.71 180.122 197.851V200.687C180.122 212.828 170.279 222.671 158.139 222.671C145.998 222.671 136.155 212.828 136.155 200.687V197.851Z" fill={color} />
       </motion.g>

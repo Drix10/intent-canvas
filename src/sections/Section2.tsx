@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { MobileShowcasePanel } from '../components/showcase/MobileShowcasePanel'
 import { BlurFadeWords } from '../BlurFadeWords'
 import { Network, Layers, Sparkles, CheckCircle2, FileText, Database } from 'lucide-react'
 
@@ -86,6 +87,10 @@ export function Section2() {
     obs.observe(el)
     return () => obs.disconnect()
   }, [isMobile])
+
+  if (isMobile) {
+    return <MobileShowcasePanel eyebrow="02 / Spatial Context" title="Space and connections are instructions." description="Place datasets, notes, and design references together. Their relationships become context that guides the computation." accentClass="text-[#906aff]" />
+  }
 
   const card = (
     <div

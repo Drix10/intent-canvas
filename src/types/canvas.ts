@@ -11,7 +11,7 @@ export interface CanvasNode {
     mimeType: string;
     contentSummary: string;
     rawReference?: string;
-    parsedMetrics?: Record<string, any>;
+    parsedMetrics?: Record<string, unknown>;
   };
 }
 
@@ -50,6 +50,21 @@ export interface ExecutionResult {
   goalSummary?: string;
   confidenceScore?: number;
   executedSteps?: PlanStep[];
-  outputPayload?: Record<string, any>;
+  outputPayload?: Record<string, unknown>;
   disambiguation?: ExecutionPlan['disambiguation'];
+}
+
+export type AdaptationOptionId = 'opt_churn' | 'opt_trend';
+
+export interface AdaptationRequest {
+  adaptationOptionId: AdaptationOptionId;
+  filterModifier: 'enterprise' | 'trend';
+}
+
+export interface CustomPrimitiveRecord {
+  primitiveId: string;
+  title: string;
+  description?: string;
+  inputNodeTypes?: NodeType[];
+  createdAt?: number;
 }

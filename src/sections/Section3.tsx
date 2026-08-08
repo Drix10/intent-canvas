@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { MobileShowcasePanel } from '../components/showcase/MobileShowcasePanel'
 import { BlurFadeWords } from '../BlurFadeWords'
 import { Workflow, ShieldCheck, Sparkles, CheckCircle2, GitFork, Eye } from 'lucide-react'
 
@@ -86,6 +87,10 @@ export function Section3() {
     obs.observe(el)
     return () => obs.disconnect()
   }, [isMobile])
+
+  if (isMobile) {
+    return <MobileShowcasePanel eyebrow="03 / Inspectable Plans" title="Review the plan before execution." description="Every intent becomes clear steps with named capabilities. If the request is ambiguous, the system asks a focused question before it runs." accentClass="text-[#4c6dff]" />
+  }
 
   const card = (
     <div

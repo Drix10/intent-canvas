@@ -47,7 +47,7 @@ Spatial Graph AST Compiler
 
 The backend engine follows a strict fail-fast 3-tier layering architecture compliant with senior engineering standards:
 
-- **Route Layer**: `src/server.ts` exposes Zod-validated endpoints `/api/intent/parse`, `/api/intent/plan`, `/api/intent/execute`, and `/api/intent/create-primitive`.
+- **Route Layer**: `src/server.ts` exposes Zod-validated endpoints `/api/intent/parse`, `/api/intent/plan`, `/api/intent/execute`, and `/api/intent/create-primitive`. API routes support an optional bearer token through `INTENT_API_ACCESS_TOKEN`.
 - **Validation Layer**: `src/validators/spatialAstValidator.ts` uses Zod schemas (`SpatialGraphASTSchema`, `SpatialNodeSchema`) to validate every network boundary.
 - **Service Layer**:
   - `MeshApiService`: Integrates with MeshAPI (`https://developers.meshapi.ai`) for LLM reasoning and intent decomposition, featuring deterministic fallback execution.
@@ -81,12 +81,16 @@ npm install
 # 2. Configure environment variables (.env)
 PORT=5000
 NODE_ENV=development
+CORS_ORIGINS=http://localhost:3000
+INTENT_API_ACCESS_TOKEN=
 MESH_API_KEY=your_mesh_api_key_here
 MESH_API_BASE_URL=https://api.meshapi.ai/v1
 
 # 3. Start backend development server
 npm run dev
 ```
+
+Set the same access token in `VITE_API_ACCESS_TOKEN` when the backend token is enabled. The frontend accepts zero-step plans when they contain a disambiguation gate and sends typed adaptation choices to execution.
 
 ### Frontend Installation (`NYC-R3-FRONTEND`)
 ```bash

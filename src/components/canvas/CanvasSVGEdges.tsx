@@ -7,13 +7,16 @@ interface CanvasSVGEdgesProps {
 }
 
 export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) => {
-  const getNodeCenter = (id: string) => {
-    const n = nodes.find((node) => node.id === id);
-    if (!n) return { x: 0, y: 0 };
-    return {
-      x: n.position.x + n.position.width / 2,
-      y: n.position.y + n.position.height / 2,
-    };
+  const nodesById = new Map(nodes.map((node) => [node.id, node]));
+  const getNodeAnchor = (id: string, toward: { x: number; y: number }) => {
+    const node = nodesById.get(id);
+    if (!node) return null;
+    const center = { x: node.position.x + node.position.width / 2, y: node.position.y + node.position.height / 2 };
+    const dx = toward.x - center.x;
+    const dy = toward.y - center.y;
+    if (dx === 0 && dy === 0) return center;
+    const scale = 1 / Math.max(Math.abs(dx) / (node.position.width / 2), Math.abs(dy) / (node.position.height / 2));
+    return { x: center.x + dx * scale, y: center.y + dy * scale };
   };
 
   return (
@@ -26,8 +29,14 @@ export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) 
       </defs>
 
       {edges.map((edge) => {
-        const start = getNodeCenter(edge.sourceNodeId);
-        const end = getNodeCenter(edge.targetNodeId);
+         const source = nodesById.get(edge.sourceNodeId);
+         const target = nodesById.get(edge.targetNodeId);
+        if (!source || !target) return null;
+        const sourceCenter = { x: source.position.x + source.position.width / 2, y: source.position.y + source.position.height / 2 };
+        const targetCenter = { x: target.position.x + target.position.width / 2, y: target.position.y + target.position.height / 2 };
+        const start = getNodeAnchor(edge.sourceNodeId, targetCenter);
+        const end = getNodeAnchor(edge.targetNodeId, sourceCenter);
+        if (!start || !end) return null;
 
         const dx = end.x - start.x;
         const cx1 = start.x + dx * 0.5;

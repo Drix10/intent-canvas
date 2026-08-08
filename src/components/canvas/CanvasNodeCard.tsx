@@ -6,14 +6,12 @@ import { FileText, Database, Layout, Sparkles, Box } from 'lucide-react';
 interface CanvasNodeCardProps {
   node: CanvasNode;
   isSelected: boolean;
-  onSelect: (e: React.MouseEvent) => void;
   onStartConnection: (nodeId: string) => void;
 }
 
-export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = ({
+export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
   node,
   isSelected,
-  onSelect,
   onStartConnection,
 }) => {
   const getIcon = () => {
@@ -48,16 +46,15 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = ({
 
   return (
     <div
-      onClick={onSelect}
       className={`relative cursor-grab active:cursor-grabbing select-none transition-all ${
         isSelected ? 'ring-2 ring-[#00ff87] ring-offset-2 ring-offset-[#040406] shadow-[0_0_25px_rgba(0,255,135,0.25)]' : ''
       }`}
       style={{
         width: node.position.width,
-        minHeight: node.position.height,
+        height: node.position.height,
       }}
     >
-      <SpotlightCard className="h-full w-full p-4">
+      <SpotlightCard className="h-full w-full overflow-hidden p-4">
         {/* Node Header */}
         <div className="mb-2.5 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
@@ -75,7 +72,11 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = ({
         </p>
 
         {/* Connection Handle Button */}
-        <button
+         <button
+          type="button"
+          aria-label={`Connect ${node.title} to another node`}
+          onPointerDown={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             onStartConnection(node.id);
@@ -87,4 +88,4 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = ({
       </SpotlightCard>
     </div>
   );
-};
+});

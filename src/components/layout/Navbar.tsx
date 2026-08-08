@@ -19,6 +19,8 @@ export const Navbar: React.FC = () => {
         {/* Minimal Mode Segmented Control */}
         <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-0.5">
           <button
+            type="button"
+            aria-pressed={viewMode === 'showcase'}
             onClick={() => setViewMode('showcase')}
             className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[11px] font-semibold transition-all ${
               viewMode === 'showcase'
@@ -29,6 +31,8 @@ export const Navbar: React.FC = () => {
             <LayoutGrid className="h-3 w-3" /> Showcase
           </button>
           <button
+            type="button"
+            aria-pressed={viewMode === 'interactive'}
             onClick={() => setViewMode('interactive')}
             className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[11px] font-semibold transition-all ${
               viewMode === 'interactive'
@@ -42,6 +46,7 @@ export const Navbar: React.FC = () => {
 
         {/* Quick Launch CTA Button */}
         <button
+          type="button"
           onClick={() => setViewMode(viewMode === 'showcase' ? 'interactive' : 'showcase')}
           className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
         >

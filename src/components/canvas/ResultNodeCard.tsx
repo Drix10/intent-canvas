@@ -3,22 +3,35 @@ import { SpotlightCard } from '../ui/SpotlightCard';
 import { ExecutionResult } from '../../types/canvas';
 import { Sparkles, AlertTriangle, CheckCircle2, TrendingUp, Box, X } from 'lucide-react';
 import { useCanvasStore } from '../../store/useCanvasStore';
+import { sanitizeSvg } from '../../utils/sanitizeSvg';
 
 interface ResultNodeCardProps {
   result: ExecutionResult;
   onSaveAsPrimitive?: () => void;
+  isSavingPrimitive?: boolean;
 }
 
-export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAsPrimitive }) => {
+export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAsPrimitive, isSavingPrimitive = false }) => {
   const setExecutionResult = useCanvasStore((state) => state.setExecutionResult);
-  const dataPattern = result.outputPayload?.dataPattern;
-  const docSynthesis = result.outputPayload?.documentSynthesis;
+  const dataPattern = result.outputPayload?.dataPattern as {
+    anomalyDetected?: boolean;
+    anomalyDetails?: { month?: string; deviationPercent?: string; probableCause?: string };
+    chartSvg?: string;
+    insights?: string[];
+  } | undefined;
+  const docSynthesis = result.outputPayload?.documentSynthesis as {
+    synthesisTitle?: string;
+    keyTakeaways?: string[];
+  } | undefined;
+  const safeChartSvg = sanitizeSvg(dataPattern?.chartSvg);
 
   return (
     <div className="w-[420px] max-w-[calc(100vw-2rem)] select-none">
       <SpotlightCard spotlightColor="rgba(0, 255, 135, 0.18)" className="relative border-[#00ff87]/40 bg-[#090a0f]/95 shadow-2xl backdrop-blur-2xl">
         {/* Close / Dismiss Button */}
         <button
+          type="button"
+          aria-label="Close computed output"
           onClick={() => setExecutionResult(null)}
           className="absolute top-3.5 right-3.5 rounded-full border border-white/10 bg-white/5 p-1 text-neutral-400 hover:bg-white/10 hover:text-white"
         >
@@ -37,7 +50,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
             </div>
           </div>
           <span className="rounded-full border border-[#00ff87]/30 bg-[#00ff87]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#00ff87]">
-            94% Match
+            {Math.round(Math.max(0, Math.min(1, result.confidenceScore ?? 0)) * 100)}% Match
           </span>
         </div>
 
@@ -59,7 +72,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
         )}
 
         {/* Inline SVG Chart */}
-        {dataPattern?.chartSvg && (
+        {safeChartSvg && (
           <div className="mb-3 rounded-xl border border-white/[0.08] bg-[#040406] p-2 overflow-x-auto">
             <div className="mb-1 flex items-center justify-between px-1">
               <span className="flex items-center gap-1 text-[10px] font-semibold text-neutral-400">
@@ -69,13 +82,13 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
             </div>
             <div
               className="flex justify-center min-w-[280px]"
-              dangerouslySetInnerHTML={{ __html: dataPattern.chartSvg }}
+              dangerouslySetInnerHTML={{ __html: safeChartSvg }}
             />
           </div>
         )}
 
         {/* Insights Bullets */}
-        {dataPattern?.insights && (
+        {Array.isArray(dataPattern?.insights) && (
           <div className="mb-3 space-y-1.5">
             {dataPattern.insights.map((insight: string, idx: number) => (
               <div key={idx} className="flex items-start gap-1.5 text-[11px] text-neutral-300">
@@ -91,7 +104,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
           <div className="mb-3 rounded-xl border border-sky-500/20 bg-sky-500/5 p-2.5">
             <h4 className="mb-1 text-xs font-bold text-sky-400">{docSynthesis.synthesisTitle}</h4>
             <ul className="space-y-1 pl-3 text-[10px] text-neutral-300 list-disc">
-              {docSynthesis.keyTakeaways.map((takeaway: string, idx: number) => (
+              {(docSynthesis.keyTakeaways ?? []).map((takeaway: string, idx: number) => (
                 <li key={idx} className="leading-snug">{takeaway}</li>
               ))}
             </ul>
@@ -101,10 +114,12 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
         {/* Dynamic Custom Primitive Saver Button */}
         {onSaveAsPrimitive && (
           <button
+            type="button"
             onClick={onSaveAsPrimitive}
+            disabled={isSavingPrimitive}
             className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 py-2 text-xs font-bold text-amber-400 transition-colors hover:bg-amber-500/20"
           >
-            <Box className="h-3.5 w-3.5" /> Save as Custom Higher-Order Primitive
+            <Box className="h-3.5 w-3.5" /> {isSavingPrimitive ? 'Saving Primitive...' : 'Save as Custom Higher-Order Primitive'}
           </button>
         )}
       </SpotlightCard>

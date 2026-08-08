@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react'
-import { motion, useMotionValue, animate } from 'framer-motion'
+import { motion, useMotionValue, animate, useReducedMotion } from 'framer-motion'
 import { Section1Productivity } from './sections/Section1Productivity'
 import { Section2 } from './sections/Section2'
 import { Section3 } from './sections/Section3'
@@ -28,6 +28,7 @@ export function SpatialScroll({
 }: SpatialScrollProps) {
   const isMobile = useIsMobile()
   const isPhone = useIsMobile(600)
+  const prefersReducedMotion = useReducedMotion()
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const sectionRef = useRef(0)
@@ -35,6 +36,7 @@ export function SpatialScroll({
   const hasLooped = useRef(false)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const animationControls = useRef<Array<{ stop: () => void }>>([])
 
   const posFor = useCallback((idx: number) => {
     const pos = SECTION_POSITIONS[idx]
@@ -51,22 +53,28 @@ export function SpatialScroll({
     isAnimating.current = true
     if (sectionRef.current === 3 && idx === 0) hasLooped.current = true
     const { tx, ty } = posFor(idx)
-    animate(x, tx, { duration: 0.85, ease: [0.76, 0, 0.24, 1] })
-    animate(y, ty, { duration: 0.85, ease: [0.76, 0, 0.24, 1] })
+    animationControls.current.forEach((control) => control.stop())
+    animationControls.current = [
+      animate(x, tx, { duration: prefersReducedMotion ? 0 : 0.85, ease: [0.76, 0, 0.24, 1] }),
+      animate(y, ty, { duration: prefersReducedMotion ? 0 : 0.85, ease: [0.76, 0, 0.24, 1] }),
+    ]
     sectionRef.current = idx
     if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
-    animTimeoutRef.current = setTimeout(() => { isAnimating.current = false }, 950)
-  }, [x, y, posFor])
+    animTimeoutRef.current = setTimeout(() => { isAnimating.current = false }, prefersReducedMotion ? 0 : 950)
+  }, [x, y, posFor, prefersReducedMotion])
 
   useEffect(() => {
     return () => {
       if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
+      animationControls.current.forEach((control) => control.stop())
     }
   }, [])
 
   useEffect(() => {
     if (isMobile) return
     const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement
+      if (target.closest('input, textarea, button, [contenteditable="true"], [data-scrollable="true"]')) return
       e.preventDefault()
       if (isAnimating.current) return
       if (Math.abs(e.deltaY) < 35) return
@@ -128,6 +136,7 @@ export function SpatialScroll({
     const isTablet = !isPhone
     const snapSlot: React.CSSProperties = {
       height: '100vh',
+      boxSizing: 'border-box',
       scrollSnapAlign: 'start',
       scrollSnapStop: 'always',
       overflow: 'hidden',

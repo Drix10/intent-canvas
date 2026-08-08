@@ -2,6 +2,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
 import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { MobileShowcasePanel } from '../components/showcase/MobileShowcasePanel'
 import { BlurFadeWords } from '../BlurFadeWords'
 import { useCanvasStore } from '../store/useCanvasStore'
 import { MagneticButton } from '../components/ui/MagneticButton'
@@ -86,6 +87,35 @@ export function Section4({
     obs.observe(el)
     return () => obs.disconnect()
   }, [isMobile])
+
+  if (isMobile) {
+    return (
+      <MobileShowcasePanel eyebrow="04 / Try It Live" title="Shape an outcome, then make it real." description="Start with a plain-language goal. Inspect the generated plan when you want confidence, or execute directly to see the result in the workspace." accentClass="text-[#00ff87]">
+        <label htmlFor="mobile-showcase-intent" className="sr-only">Describe the outcome you want</label>
+        <input
+          id="mobile-showcase-intent"
+          type="text"
+          value={activeIntentPrompt}
+          onChange={(event) => setActiveIntentPrompt(event.target.value)}
+          placeholder="e.g. Explain the August revenue drop"
+          className="mt-6 w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-[#00ff87]/60"
+        />
+        <div className="mt-3 grid grid-cols-1 gap-2">
+          <button type="button" onClick={onEvaluatePlan} disabled={isEvaluatingPlan} className="rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">
+            {isEvaluatingPlan ? 'Preparing plan...' : 'Inspect plan first'}
+          </button>
+          <MagneticButton type="button" onClick={onExecuteComputation} disabled={isExecutingPlan} className="w-full bg-[#00ff87] px-4 py-3 text-sm font-bold text-black disabled:opacity-50">
+            {isExecutingPlan ? 'Computing...' : 'Execute computation'}
+          </MagneticButton>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button type="button" onClick={onFilterEnterprise} className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300">Adapt for enterprise</button>
+          <button type="button" onClick={onAddNewNode} className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-xs text-neutral-200">Add document</button>
+        </div>
+        <button type="button" onClick={() => setViewMode('interactive')} className="mt-4 w-full text-xs text-neutral-400 underline underline-offset-4 hover:text-white">Open the full workspace</button>
+      </MobileShowcasePanel>
+    )
+  }
 
   const card = (
     <div
@@ -173,6 +203,7 @@ export function Section4({
               <Sparkles className="h-4 w-4 text-[#00ff87]" /> Natural Intent Input Console
             </span>
             <button
+              type="button"
               onClick={() => setViewMode('interactive')}
               className="flex items-center gap-1 text-[11px] font-semibold text-neutral-400 hover:text-[#00ff87]"
             >
@@ -182,7 +213,9 @@ export function Section4({
 
           {/* Prompt Input Box */}
           <div className="relative mb-2.5">
+            <label htmlFor="showcase-intent-prompt" className="sr-only">Describe the outcome you want</label>
             <input
+              id="showcase-intent-prompt"
               type="text"
               value={activeIntentPrompt}
               onChange={(e) => setActiveIntentPrompt(e.target.value)}
@@ -211,9 +244,10 @@ export function Section4({
           </div>
 
           {/* Console Action Bar */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <button
+                type="button"
                 onClick={onFilterEnterprise}
                 title="Filter Enterprise Adaptability Demo"
                 className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20"
@@ -222,6 +256,7 @@ export function Section4({
               </button>
 
               <button
+                type="button"
                 onClick={onAddNewNode}
                 title="Add Document Card"
                 className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white"
@@ -230,6 +265,8 @@ export function Section4({
               </button>
 
               <button
+                type="button"
+                aria-label="Reset demo canvas"
                 onClick={resetDemoCanvas}
                 title="Reset Demo State"
                 className="rounded-xl border border-white/10 bg-white/5 p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
@@ -238,8 +275,9 @@ export function Section4({
               </button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
+                type="button"
                 onClick={onEvaluatePlan}
                 disabled={isEvaluatingPlan}
                 className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
