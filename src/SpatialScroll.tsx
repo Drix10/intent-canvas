@@ -44,8 +44,8 @@ export function SpatialScroll({
   const posFor = useCallback((idx: number) => {
     const pos = SECTION_POSITIONS[idx]
     return {
-      tx: pos.x * window.innerWidth,
-      ty: pos.y * window.innerHeight,
+      tx: pos.x * (window.innerWidth * 0.74),
+      ty: pos.y * (window.innerHeight * 0.82),
     }
   }, [])
 
@@ -55,18 +55,16 @@ export function SpatialScroll({
     if (isAnimating.current) return
     isAnimating.current = true
     if (sectionRef.current === 3 && idx === 0) hasLooped.current = true
+    setActiveSection(idx)
     const { tx, ty } = posFor(idx)
     animationControls.current.forEach((control) => control.stop())
     animationControls.current = [
-      animate(x, tx, { duration: prefersReducedMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }),
-      animate(y, ty, { duration: prefersReducedMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }),
+      animate(x, tx, { duration: prefersReducedMotion ? 0 : 0.75, ease: [0.16, 1, 0.3, 1] }),
+      animate(y, ty, { duration: prefersReducedMotion ? 0 : 0.75, ease: [0.16, 1, 0.3, 1] }),
     ]
     sectionRef.current = idx
     if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
-    animTimeoutRef.current = setTimeout(() => {
-      setActiveSection(idx)
-      isAnimating.current = false
-    }, prefersReducedMotion ? 0 : 550)
+    animTimeoutRef.current = setTimeout(() => { isAnimating.current = false }, prefersReducedMotion ? 0 : 800)
   }, [x, y, posFor, prefersReducedMotion])
 
   useEffect(() => {
@@ -83,7 +81,7 @@ export function SpatialScroll({
       if (target.closest('input, textarea, button, [contenteditable="true"], [data-scrollable="true"]')) return
       e.preventDefault()
       if (isAnimating.current) return
-       if (Math.abs(e.deltaY) < 12) return
+      if (Math.abs(e.deltaY) < 5) return
       const dir = e.deltaY > 0 ? 1 : -1
       if (!hasLooped.current && sectionRef.current === 0 && dir === -1) return
       goTo((sectionRef.current + dir + 4) % 4)
@@ -177,9 +175,9 @@ export function SpatialScroll({
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#040406' }}>
       <motion.div style={{ x, y, position: 'relative', width: '200vw', height: '200vh', willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
         <div style={{ position: 'absolute', top: '0', left: '0', width: '100vw', height: '100vh' }}><Section1Productivity isInView={activeSection === 0} /></div>
-        <div style={{ position: 'absolute', top: '0', left: '100vw', width: '100vw', height: '100vh' }}><Section2 isInView={activeSection === 1} /></div>
-        <div style={{ position: 'absolute', top: '100vh', left: '100vw', width: '100vw', height: '100vh' }}><Section3 isInView={activeSection === 2} /></div>
-        <div style={{ position: 'absolute', top: '100vh', left: '0', width: '100vw', height: '100vh' }}><Section4 {...section4Props} isInView={activeSection === 3} /></div>
+        <div style={{ position: 'absolute', top: '0', left: '74vw', width: '100vw', height: '100vh' }}><Section2 isInView={activeSection === 1} /></div>
+        <div style={{ position: 'absolute', top: '82vh', left: '74vw', width: '100vw', height: '100vh' }}><Section3 isInView={activeSection === 2} /></div>
+        <div style={{ position: 'absolute', top: '82vh', left: '0', width: '100vw', height: '100vh' }}><Section4 {...section4Props} isInView={activeSection === 3} /></div>
       </motion.div>
     </div>
   )

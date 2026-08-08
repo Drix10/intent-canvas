@@ -288,6 +288,15 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Summary**: Resolved section transition lag and background color flashing during spatial navigation. Replaced fractional `74vw` / `82vh` section positions with clean `100vw` / `100vh` grid offsets, eliminating section overlap bleeding; and deferred `setActiveSection(idx)` state updates to trigger only after the 550ms slide transition settles (`[0.22, 1, 0.36, 1]` cubic bezier), preventing simultaneous GPU rasterization of entrance card animations during 2D matrix translation.
 - **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed in 3.05s.
 
+### ✅ [COMPLETED] Checkpoint 26: Faithful Restoration of prompt.md 74vw / 82vh Spatial Canvas Specification
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/SpatialScroll.tsx`
+  - `src/components/providers/SmoothScrollProvider.tsx`
+- **Summary**: Restored the original 2D spatial canvas layout spec from `prompt.md`. Re-instated the 74vw horizontal and 82vh vertical section offsets (`left: 74vw`, `top: 82vh`) so adjacent section glass cards remain partially visible in the peripheral viewport background, providing the intended spatial canvas depth; restored immediate `setActiveSection(idx)` entrance triggers with `[0.16, 1, 0.3, 1]` easing; and restored Lenis smooth wheel scrolling in `SmoothScrollProvider.tsx`.
+- **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed in 3.24s.
+
+
 
 
 

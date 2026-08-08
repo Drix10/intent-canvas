@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import Lenis from 'lenis'
 
-export const SmoothScrollProvider: React.FC<{ children: React.ReactNode; enabled?: boolean }> = ({ children, enabled = false }) => {
+export const SmoothScrollProvider: React.FC<{ children: React.ReactNode; enabled?: boolean }> = ({ children, enabled = true }) => {
   useEffect(() => {
     if (!enabled) return
     const isMobile = window.matchMedia('(max-width: 1024px)').matches
