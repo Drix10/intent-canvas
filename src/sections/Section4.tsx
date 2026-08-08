@@ -158,6 +158,23 @@ export function Section4({
 
       {/* Main Section Header */}
       <div style={{ position: 'absolute', top: '35px', left: '55px', right: '55px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          style={{ position: 'relative', marginBottom: '12px' }}
+        >
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 backdrop-blur-xl shadow-[0_0_20px_rgba(255,183,3,0.2)]">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-400"></span>
+            </span>
+            <span className="font-mono text-xs font-bold tracking-widest text-amber-300">04 / 04</span>
+            <span className="text-neutral-500">•</span>
+            <span className="text-[11px] font-semibold text-neutral-300">Dynamic Living Output</span>
+          </div>
+        </motion.div>
+
         <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '46px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '6px' }}>
           <BlurFadeWords text="Experience Intent-Driven Computation." baseDelay={0.4} isInView={isInView} />
         </h1>

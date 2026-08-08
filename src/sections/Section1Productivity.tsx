@@ -145,21 +145,17 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          style={{ position: 'relative', width: '320px', height: '80px', marginBottom: '25px', marginLeft: '-30px' }}
+          style={{ position: 'relative', marginBottom: '20px' }}
         >
-          <img
-            src="https://qclay.design/lovable/glass-menu/s1-notification-badge.svg"
-            alt=""
-            onError={(event) => { event.currentTarget.style.display = 'none' }}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
-          />
-          <span className="sr-only">01/04</span>
-          <div style={{
-            position: 'absolute', width: '155px', height: '155px',
-            top: '50%', left: '44px', transform: 'translate(-50%, -50%)',
-            background: 'radial-gradient(circle, rgba(36,255,149,0.10) 0%, rgba(36,255,149,0) 70%)',
-            pointerEvents: 'none', borderRadius: '50%',
-          }} />
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-[#00ff87]/30 bg-[#00ff87]/10 px-4 py-1.5 backdrop-blur-xl shadow-[0_0_20px_rgba(0,255,135,0.2)]">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#00ff87] opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#00ff87]"></span>
+            </span>
+            <span className="font-mono text-xs font-bold tracking-widest text-[#b8ffd9]">01 / 04</span>
+            <span className="text-neutral-500">•</span>
+            <span className="text-[11px] font-semibold text-neutral-300">Intent as Input</span>
+          </div>
         </motion.div>
 
         <h1

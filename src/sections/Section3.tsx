@@ -128,6 +128,23 @@ export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}
 
       {/* ── Text block ── */}
       <div style={{ position: 'absolute', top: '40px', left: '65px', width: '480px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          style={{ position: 'relative', marginBottom: '20px' }}
+        >
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-[#4C6DFF]/30 bg-[#4C6DFF]/10 px-4 py-1.5 backdrop-blur-xl shadow-[0_0_20px_rgba(76,109,255,0.2)]">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#4C6DFF] opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#4C6DFF]"></span>
+            </span>
+            <span className="font-mono text-xs font-bold tracking-widest text-[#A8C4FF]">03 / 04</span>
+            <span className="text-neutral-500">•</span>
+            <span className="text-[11px] font-semibold text-neutral-300">Inspectable DAG Plan</span>
+          </div>
+        </motion.div>
+
         <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '52px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '8px' }}>
           <BlurFadeWords text="Inspect Plans Before Execution." baseDelay={0.5} isInView={isInView} />
         </h1>

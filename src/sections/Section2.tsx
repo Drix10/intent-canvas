@@ -128,6 +128,23 @@ export function Section2({ isInView: propIsInView }: { isInView?: boolean } = {}
 
       {/* ── Text block ── */}
       <div style={{ position: 'absolute', top: '40px', left: '65px', width: '480px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          style={{ position: 'relative', marginBottom: '20px' }}
+        >
+          <div className="inline-flex items-center gap-2.5 rounded-full border border-[#906AFF]/30 bg-[#906AFF]/10 px-4 py-1.5 backdrop-blur-xl shadow-[0_0_20px_rgba(144,106,255,0.2)]">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#906AFF] opacity-75"></span>
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#906AFF]"></span>
+            </span>
+            <span className="font-mono text-xs font-bold tracking-widest text-[#D4C4FF]">02 / 04</span>
+            <span className="text-neutral-500">•</span>
+            <span className="text-[11px] font-semibold text-neutral-300">Spatial Graph AST</span>
+          </div>
+        </motion.div>
+
         <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '52px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '8px' }}>
           <BlurFadeWords text="Space & Connections Are Instructions." baseDelay={0.5} isInView={isInView} />
         </h1>
