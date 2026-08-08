@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCanvasStore } from '../../store/useCanvasStore';
-import { Sparkles, LayoutGrid, Move, ArrowRight } from 'lucide-react';
+import { Sparkles, LayoutGrid, Move } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const { viewMode, setViewMode } = useCanvasStore();
@@ -16,22 +16,27 @@ export const Navbar: React.FC = () => {
           <span className="text-xs font-bold tracking-tight text-white">Intent Canvas</span>
         </div>
 
-        {/* Minimal Mode Segmented Control */}
+        {/* Primary navigation */}
         <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-0.5">
           <button
             type="button"
-            aria-pressed={viewMode === 'showcase'}
-            onClick={() => setViewMode('showcase')}
+            aria-label="Open how it works showcase"
+            aria-pressed={false}
+            onClick={() => {
+              setViewMode('showcase');
+              window.dispatchEvent(new CustomEvent('showcase-navigate', { detail: 1 }));
+            }}
             className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[11px] font-semibold transition-all ${
               viewMode === 'showcase'
                 ? 'bg-[#00ff87]/20 text-[#00ff87] border border-[#00ff87]/30 shadow-sm'
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
-            <LayoutGrid className="h-3 w-3" /> Showcase
+            <LayoutGrid className="h-3 w-3" /> How It Works
           </button>
           <button
             type="button"
+            aria-label="Open spatial workspace"
             aria-pressed={viewMode === 'interactive'}
             onClick={() => setViewMode('interactive')}
             className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[11px] font-semibold transition-all ${
@@ -40,19 +45,9 @@ export const Navbar: React.FC = () => {
                 : 'text-neutral-400 hover:text-white'
             }`}
           >
-            <Move className="h-3 w-3" /> Spatial Workspace
+            <Move className="h-3 w-3" /> Workspace
           </button>
         </div>
-
-        {/* Quick Launch CTA Button */}
-        <button
-          type="button"
-          onClick={() => setViewMode(viewMode === 'showcase' ? 'interactive' : 'showcase')}
-          className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
-        >
-          <span>{viewMode === 'showcase' ? 'Launch Canvas' : 'View Slides'}</span>
-          <ArrowRight className="h-3 w-3" />
-        </button>
       </div>
     </header>
   );

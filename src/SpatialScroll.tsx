@@ -55,12 +55,12 @@ export function SpatialScroll({
     const { tx, ty } = posFor(idx)
     animationControls.current.forEach((control) => control.stop())
     animationControls.current = [
-      animate(x, tx, { duration: prefersReducedMotion ? 0 : 0.85, ease: [0.76, 0, 0.24, 1] }),
-      animate(y, ty, { duration: prefersReducedMotion ? 0 : 0.85, ease: [0.76, 0, 0.24, 1] }),
+      animate(x, tx, { duration: prefersReducedMotion ? 0 : 0.75, ease: [0.16, 1, 0.3, 1] }),
+      animate(y, ty, { duration: prefersReducedMotion ? 0 : 0.75, ease: [0.16, 1, 0.3, 1] }),
     ]
     sectionRef.current = idx
     if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
-    animTimeoutRef.current = setTimeout(() => { isAnimating.current = false }, prefersReducedMotion ? 0 : 950)
+    animTimeoutRef.current = setTimeout(() => { isAnimating.current = false }, prefersReducedMotion ? 0 : 800)
   }, [x, y, posFor, prefersReducedMotion])
 
   useEffect(() => {
@@ -77,13 +77,27 @@ export function SpatialScroll({
       if (target.closest('input, textarea, button, [contenteditable="true"], [data-scrollable="true"]')) return
       e.preventDefault()
       if (isAnimating.current) return
-      if (Math.abs(e.deltaY) < 35) return
+       if (Math.abs(e.deltaY) < 5) return
       const dir = e.deltaY > 0 ? 1 : -1
       if (!hasLooped.current && sectionRef.current === 0 && dir === -1) return
       goTo((sectionRef.current + dir + 4) % 4)
     }
     window.addEventListener('wheel', handleWheel, { passive: false })
     return () => window.removeEventListener('wheel', handleWheel)
+  }, [goTo, isMobile])
+
+  useEffect(() => {
+    const handleShowcaseNavigation = (event: Event) => {
+      const index = (event as CustomEvent<number>).detail
+      if (!Number.isInteger(index) || index < 0 || index > 3) return
+      if (isMobile) {
+        scrollContainerRef.current?.children[index]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      } else {
+        goTo(index)
+      }
+    }
+    window.addEventListener('showcase-navigate', handleShowcaseNavigation)
+    return () => window.removeEventListener('showcase-navigate', handleShowcaseNavigation)
   }, [goTo, isMobile])
 
   useEffect(() => {
@@ -143,7 +157,7 @@ export function SpatialScroll({
       paddingBottom: isTablet ? '36px' : 0,
     }
     return (
-      <div ref={scrollContainerRef} style={{ width: '100vw', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: '#040406', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+       <div ref={scrollContainerRef} style={{ width: '100vw', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: '#0a0d15', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <div style={snapSlot}><Section1Productivity /></div>
         <div style={snapSlot}><Section2 /></div>
         <div style={snapSlot}><Section3 /></div>
@@ -154,7 +168,7 @@ export function SpatialScroll({
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#040406' }}>
-      <motion.div style={{ x, y, position: 'relative', width: '200vw', height: '200vh', willChange: 'transform' }}>
+      <motion.div style={{ x, y, position: 'relative', width: '200vw', height: '200vh', willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
         <div style={{ position: 'absolute', top: '0', left: '0', width: '100vw', height: '100vh' }}><Section1Productivity /></div>
         <div style={{ position: 'absolute', top: '0', left: '74vw', width: '100vw', height: '100vh' }}><Section2 /></div>
         <div style={{ position: 'absolute', top: '82vh', left: '74vw', width: '100vw', height: '100vh' }}><Section3 /></div>

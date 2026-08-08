@@ -71,12 +71,9 @@ export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView
         return (
           <g key={i}>
             <motion.path d={d} stroke="#272729" strokeWidth="1.55864" strokeLinecap="round" fill="none"
-              initial={{ pathLength: 0, opacity: 0 }}
-               animate={shouldAnimate ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
-               transition={shouldAnimate ? {
-                pathLength: { delay: 0.05 + i * 0.05, duration: 1.2, ease: [0.25, 1, 0.5, 1] },
-                opacity: { delay: 0.05 + i * 0.05, duration: 0.15 },
-              } : { duration: 0 }}
+              initial={{ pathLength: 1, opacity: 0.6 }}
+              animate={shouldAnimate ? { opacity: 1 } : { opacity: 0.3 }}
+              transition={{ duration: 0.4 }}
             />
             {(i === 0 || i === 1) && (
               <>

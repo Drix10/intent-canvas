@@ -25,7 +25,7 @@ export function BlurFadeWords({
           }}
           transition={{
             delay: isInView ? baseDelay + i * 0.07 : 0,
-            duration: 0.5,
+            duration: 0.3,
             ease: 'easeOut',
           }}
           style={{

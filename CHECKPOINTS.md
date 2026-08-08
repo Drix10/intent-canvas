@@ -167,3 +167,56 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Summary**: Rejected unknown capability output families, preserved the notification badge text for failed images, restored card image visibility while keeping gradient fallbacks, and prevented output-node creation from exceeding the shared 30-node limit.
 - **Verification Result**: Frontend typecheck, build, and `git diff --check` passed.
 - **Next Checkpoint**: Browser-level responsive, accessibility, and real-file interaction verification.
+
+### ✅ [COMPLETED] Checkpoint 12: Landing Showcase Readability Pass
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/index.css`
+  - `src/sections/Section1Productivity.tsx`
+  - `src/sections/Section2.tsx`
+  - `src/sections/Section3.tsx`
+  - `src/sections/Section4.tsx`
+- **Summary**: Made all four desktop showcase sections initialize with visible copy so text does not remain hidden while the intersection observer settles. Reduced heavy card labels and headings from bold to semibold/medium through a scoped showcase rule, preserving the existing obsidian, glass, glow, and motion treatment.
+- **Verification Result**: Frontend `npx tsc --noEmit`, `npm run build`, and `git diff --check` passed.
+- **Next Checkpoint**: Browser-level visual verification on standard desktop and mobile widths.
+
+### ✅ [COMPLETED] Checkpoint 13: Workspace Onboarding and Three-Item Navigation
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/components/canvas/SpatialCanvas.tsx`
+  - `src/components/layout/Navbar.tsx`
+  - `src/SpatialScroll.tsx`
+- **Summary**: Replaced the minimal workspace hint with a first-use onboarding panel that explains arrange, connect, and compute, includes a guided prompt action, and keeps the starter context visible. Reworked the navbar into explicit Overview, How It Works, and Workspace actions with desktop and mobile showcase navigation support.
+- **Verification Result**: Frontend `npx tsc --noEmit`, `npm run build`, and `git diff --check` passed.
+- **Next Checkpoint**: Browser-level visual verification on standard desktop and mobile widths.
+
+### ✅ [COMPLETED] Checkpoint 15: Showcase Cards Visual Redesign (Sections 2 & 3)
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/sections/Section2.tsx` [REDESIGNED]
+  - `src/sections/Section3.tsx` [REDESIGNED]
+- **Summary**: Redesigned Section 2 and Section 3 right-side cards to replace legacy template 3D avatar orbits, spinning stock images, and SVG chart overlays with crisp smoked-glass cards (`Spatial Context Mesh`, `Multi-Modal Stream`, `Deterministic DAG Inspector`, `Disambiguation Gate`) using Lucide icons (`Network`, `Sparkles`, `Workflow`, `ShieldCheck`), structured metrics, and animated conic magic borders matching Section 1 aesthetic.
+- **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed.
+
+### ✅ [COMPLETED] Checkpoint 16: Guided Intent Console Input UX & Interactive Prompt Suggestions
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/store/useCanvasStore.ts`
+  - `src/sections/Section4.tsx`
+  - `src/components/canvas/IntentBar.tsx`
+  - `src/App.tsx`
+- **Summary**: Replaced hardcoded prefilled input state in Zustand store with clean empty state (`activeIntentPrompt: ''`). Added interactive **Guided Prompt Suggestion Chips** in Section 4 and a **Guide Popover** on the Canvas Intent Bar allowing users to type custom computing intents or select 1-click guided prompt chips. Updated `App.tsx` AST compiler with fallback handling for empty prompts.
+- **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed.
+
+### ✅ [COMPLETED] Checkpoint 17: 60fps Spatial Scroll Performance Optimization
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/sections/Section1Productivity.tsx`
+  - `src/sections/Section2.tsx`
+  - `src/sections/Section3.tsx`
+  - `src/sections/Section4.tsx`
+  - `src/sections/AnimatedNetworkLines.tsx`
+  - `src/SpatialScroll.tsx`
+- **Summary**: Resolved GPU compositing and scroll lag across all 4 sections. Adjusted `IntersectionObserver` threshold from `0.92` to `0.35` to eliminate jarring mid-scroll unmounting/remounting of Framer Motion text and cards. Unmounted `MagicBorder` when `!isInView` and removed expensive `drop-shadow` from rotating conic WebkitMask layer, eliminating GPU rasterizer bottleneck. Replaced SVG path length re-animation in `AnimatedNetworkLines.tsx` with smooth opacity transitions. Hardware accelerated the 2×2 motion container in `SpatialScroll.tsx` with `transform: translateZ(0)` and `backfaceVisibility: hidden`, tuning easing to `ease: [0.16, 1, 0.3, 1]`.
+- **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed in 26.90s.
+

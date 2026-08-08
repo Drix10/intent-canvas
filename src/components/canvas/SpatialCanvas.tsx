@@ -10,6 +10,7 @@ export const SpatialCanvas: React.FC = () => {
   const pan = useCanvasStore((state) => state.pan);
   const zoom = useCanvasStore((state) => state.zoom);
   const selectedNodeIds = useCanvasStore((state) => state.selectedNodeIds);
+  const setActiveIntentPrompt = useCanvasStore((state) => state.setActiveIntentPrompt);
   const resetVersion = useCanvasStore((state) => state.resetVersion);
   const setPan = useCanvasStore((state) => state.setPan);
   const setZoom = useCanvasStore((state) => state.setZoom);
@@ -211,21 +212,30 @@ export const SpatialCanvas: React.FC = () => {
           Choose another node to connect, or click Connect Relation again to cancel.
         </div>
       )}
-      {showGuide && !connectingSourceId && (
-        <div className="absolute top-5 left-5 z-40 max-w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-[#090a0f]/95 p-4 text-xs text-neutral-300 shadow-2xl backdrop-blur-xl">
-          <div className="mb-2 flex items-start justify-between gap-4">
-            <div>
-              <p className="font-bold text-white">Shape your intent</p>
-              <p className="mt-1 leading-relaxed">Describe an outcome below, then inspect the plan before running it.</p>
-            </div>
-            <button type="button" aria-label="Close canvas guide" onClick={() => setShowGuide(false)} className="text-lg leading-none text-neutral-400 hover:text-white">&times;</button>
-          </div>
-          <ul className="space-y-1 text-[11px] text-neutral-400">
-            <li>Drag the canvas background to pan.</li>
-            <li>Drag a node or use arrow keys to reposition it.</li>
-            <li>Use Connect Relation to link two nodes.</li>
-          </ul>
-        </div>
+       {showGuide && !connectingSourceId && (
+         <div className="absolute top-24 left-5 z-40 w-[min(25rem,calc(100vw-2rem))] rounded-3xl border border-[#00ff87]/20 bg-[#090a0f]/95 p-5 text-xs text-neutral-300 shadow-2xl backdrop-blur-xl">
+           <div className="mb-3 flex items-start justify-between gap-4">
+             <div>
+               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#00ff87]">Start with intent</p>
+               <p className="mt-2 text-base font-medium text-white">Shape your first computation</p>
+               <p className="mt-1 leading-relaxed text-neutral-400">Your starter nodes are ready. Arrange context, connect related sources, then describe the outcome you want.</p>
+             </div>
+             <button type="button" aria-label="Close canvas guide" onClick={() => setShowGuide(false)} className="text-lg leading-none text-neutral-400 hover:text-white">&times;</button>
+           </div>
+           <div className="mb-4 grid grid-cols-3 gap-2 text-[10px]">
+             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2"><span className="block font-semibold text-white">01</span><span className="mt-1 block text-neutral-500">Arrange</span></div>
+             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2"><span className="block font-semibold text-white">02</span><span className="mt-1 block text-neutral-500">Connect</span></div>
+             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2"><span className="block font-semibold text-white">03</span><span className="mt-1 block text-neutral-500">Compute</span></div>
+           </div>
+           <button type="button" onClick={() => { setActiveIntentPrompt(APP_CONFIG.defaultIntentPrompt); document.getElementById('intent-prompt')?.focus(); }} className="w-full rounded-xl border border-[#00ff87]/30 bg-[#00ff87]/10 px-3 py-2.5 text-left text-[11px] font-medium text-[#b8ffd9] transition-colors hover:bg-[#00ff87]/20">
+             Try the guided intent: <span className="text-[#00ff87]">why revenue dropped in August</span>
+           </button>
+           <ul className="mt-3 space-y-1 text-[11px] text-neutral-500">
+             <li>Drag the canvas background to pan.</li>
+             <li>Drag a node or use arrow keys to reposition it.</li>
+             <li>Use Connect Relation to link two nodes.</li>
+           </ul>
+         </div>
       )}
       {dragBlocked && (
         <div role="status" className="absolute bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full border border-amber-400/40 bg-[#090a0f]/95 px-4 py-2 text-xs font-semibold text-amber-300 shadow-2xl">

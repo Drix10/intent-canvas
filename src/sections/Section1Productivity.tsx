@@ -33,13 +33,14 @@ function AnimatedWords({ text, baseDelay = 0, isInView }: {
 const MAGIC_BORDER_GREEN = 'conic-gradient(from 0deg, transparent 0%, transparent 35%, rgba(36,255,149,0.12) 42%, #24FF95 50%, rgba(36,255,149,0.12) 58%, transparent 65%, transparent 100%)'
 
 function MagicBorder({ color, radius = '24px', reverse = false, duration = 5, initialAngle = 0, isInView = true }: { color: string; radius?: string; reverse?: boolean; duration?: number; initialAngle?: number; isInView?: boolean }) {
+  if (!isInView) return null
   const fromAngle = reverse ? -initialAngle : initialAngle
   const toAngle = fromAngle + (reverse ? -360 : 360)
   return (
     <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, borderRadius: radius, pointerEvents: 'none', overflow: 'hidden', zIndex: 60, padding: '2px', WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude' }}>
       <motion.div
-        style={{ position: 'absolute', left: '50%', top: '50%', width: '250%', height: '250%', background: color, x: '-50%', y: '-50%', transformOrigin: 'center center', filter: 'drop-shadow(0 0 4px rgba(36, 255, 149, 0.4))', willChange: 'transform' }}
-        animate={isInView ? { rotate: [fromAngle, toAngle] } : false}
+        style={{ position: 'absolute', left: '50%', top: '50%', width: '250%', height: '250%', background: color, x: '-50%', y: '-50%', transformOrigin: 'center center', willChange: 'transform' }}
+        animate={{ rotate: [fromAngle, toAngle] }}
         transition={{ repeat: Infinity, duration, ease: 'linear' }}
       />
     </div>
@@ -51,7 +52,7 @@ const NATIVE_H = 684
 
 export function Section1Productivity() {
   const sectionRef = useRef<HTMLElement>(null)
-  const [isInView, setIsInView] = useState(false)
+  const [isInView, setIsInView] = useState(true)
   const isMobile = useIsMobile()
   const [scale, setScale] = useState(1)
 
@@ -70,7 +71,7 @@ export function Section1Productivity() {
     const el = sectionRef.current
     if (!el) return
     let wasVisible = false
-    const enterRatio = isMobile ? 0.2 : 0.92
+    const enterRatio = isMobile ? 0.2 : 0.35
     const exitRatio = isMobile ? 0.05 : 0.1
     const obs = new IntersectionObserver(
       ([entry]) => {
@@ -95,6 +96,7 @@ export function Section1Productivity() {
 
   const card = (
     <div
+      className="landing-showcase-card"
       style={{
         position: 'relative',
         width: NATIVE_W,
