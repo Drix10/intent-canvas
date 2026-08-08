@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCanvasStore } from '../../store/useCanvasStore';
 import { MagneticButton } from '../ui/MagneticButton';
-import { Sparkles, Play, Plus, RefreshCw, Filter, Layers, Server } from 'lucide-react';
+import { Sparkles, Play, Plus, RefreshCw, Filter, LayoutGrid, Move } from 'lucide-react';
 
 interface NavbarProps {
   onEvaluatePlan: () => void;
@@ -22,6 +22,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     isEvaluatingPlan,
     isExecutingPlan,
     resetDemoCanvas,
+    viewMode,
+    setViewMode,
   } = useCanvasStore();
 
   return (
@@ -33,9 +35,30 @@ export const Navbar: React.FC<NavbarProps> = ({
             <Sparkles className="h-4 w-4" />
           </div>
           <span className="text-xs font-bold tracking-tight text-white">Intent Canvas</span>
-          <span className="hidden sm:inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-semibold text-[#00ff87]">
-            <Server className="h-2.5 w-2.5" /> MeshAPI Engine
-          </span>
+        </div>
+
+        {/* View Mode Segmented Control */}
+        <div className="flex items-center rounded-full border border-white/10 bg-white/[0.04] p-0.5">
+          <button
+            onClick={() => setViewMode('showcase')}
+            className={`flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition-all ${
+              viewMode === 'showcase'
+                ? 'bg-[#00ff87]/20 text-[#00ff87] border border-[#00ff87]/30 shadow-sm'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+          >
+            <LayoutGrid className="h-3 w-3" /> Showcase
+          </button>
+          <button
+            onClick={() => setViewMode('interactive')}
+            className={`flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-semibold transition-all ${
+              viewMode === 'interactive'
+                ? 'bg-[#00ff87]/20 text-[#00ff87] border border-[#00ff87]/30 shadow-sm'
+                : 'text-neutral-400 hover:text-white'
+            }`}
+          >
+            <Move className="h-3 w-3" /> Spatial Canvas
+          </button>
         </div>
 
         {/* Intent Input Prompt Bar */}
@@ -45,7 +68,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             value={activeIntentPrompt}
             onChange={(e) => setActiveIntentPrompt(e.target.value)}
             placeholder="Express your natural computing intent..."
-            className="w-[340px] md:w-[460px] rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-[#00ff87]/50 focus:bg-white/[0.08]"
+            className="w-[280px] md:w-[380px] rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-[#00ff87]/50 focus:bg-white/[0.08]"
           />
         </div>
 

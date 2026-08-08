@@ -13,10 +13,12 @@ interface CanvasState {
   activePlan: ExecutionPlan | null;
   executionResult: ExecutionResult | null;
   customPrimitives: any[];
+  viewMode: 'showcase' | 'interactive';
 
   // Actions
   setPan: (pan: { x: number; y: number }) => void;
   setZoom: (zoom: number) => void;
+  setViewMode: (mode: 'showcase' | 'interactive') => void;
   addNode: (node: CanvasNode) => void;
   updateNodePosition: (id: string, x: number, y: number) => void;
   addEdge: (sourceId: string, targetId: string) => void;
@@ -94,9 +96,11 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   activePlan: null,
   executionResult: null,
   customPrimitives: [],
+  viewMode: 'showcase',
 
   setPan: (pan) => set({ pan }),
   setZoom: (zoom) => set({ zoom }),
+  setViewMode: (viewMode) => set({ viewMode }),
   addNode: (node) => set((state) => ({ nodes: [...state.nodes, node] })),
   updateNodePosition: (id, x, y) => set((state) => ({
     nodes: state.nodes.map((n) => (n.id === id ? { ...n, position: { ...n.position, x, y } } : n)),

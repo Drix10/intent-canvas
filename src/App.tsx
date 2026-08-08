@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import { SmoothScrollProvider } from './components/providers/SmoothScrollProvider'
 import { SpatialScroll } from './SpatialScroll'
+import { SpatialCanvas } from './components/canvas/SpatialCanvas'
 import { useCanvasStore } from './store/useCanvasStore'
 import { Navbar } from './components/layout/Navbar'
 import { PlanPreviewModal } from './components/canvas/PlanPreviewModal'
@@ -18,6 +19,7 @@ export default function App() {
     executionResult,
     isEvaluatingPlan,
     isExecutingPlan,
+    viewMode,
     setIsEvaluatingPlan,
     setIsExecutingPlan,
     setActivePlan,
@@ -164,8 +166,8 @@ export default function App() {
           onAddNewNode={handleAddNewNode}
         />
 
-        {/* Spatial 4-Section Showcase Canvas */}
-        <SpatialScroll />
+        {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
+        {viewMode === 'showcase' ? <SpatialScroll /> : <SpatialCanvas />}
 
         {/* In-Canvas Result Overlay Container */}
         {executionResult && (
