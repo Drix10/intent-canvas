@@ -149,33 +149,41 @@ export default function App() {
           },
         }
         addNode(primitiveNode)
-        alert(`✅ Created Custom Computational Primitive: "${primitive.title}"!`)
+        alert(`Object Created: Custom Computational Primitive "${primitive.title}"!`)
       }
     } catch (err) {
       console.error('[Create Primitive Error]:', err)
     }
   }
 
+  const intentHandlers = {
+    onEvaluatePlan: handleEvaluatePlan,
+    onExecuteComputation: () => handleExecuteComputation(),
+    onFilterEnterprise: handleFilterEnterprise,
+    onAddNewNode: handleAddNewNode,
+  };
+
   return (
     <SmoothScrollProvider>
       <main className="relative h-screen w-screen overflow-hidden bg-[#040406]">
-        {/* Minimal Uncluttered Floating Top Header */}
-        <Navbar />
+        {/* Render Navbar & IntentBar ONLY in interactive canvas view mode */}
+        {viewMode === 'interactive' && (
+          <>
+            <Navbar />
+            <IntentBar {...intentHandlers} />
+          </>
+        )}
 
         {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
-        {viewMode === 'showcase' ? <SpatialScroll /> : <SpatialCanvas />}
-
-        {/* Dedicated Floating Intent Action Bar */}
-        <IntentBar
-          onEvaluatePlan={handleEvaluatePlan}
-          onExecuteComputation={() => handleExecuteComputation()}
-          onFilterEnterprise={handleFilterEnterprise}
-          onAddNewNode={handleAddNewNode}
-        />
+        {viewMode === 'showcase' ? (
+          <SpatialScroll {...intentHandlers} />
+        ) : (
+          <SpatialCanvas />
+        )}
 
         {/* In-Canvas Result Overlay Container */}
         {executionResult && (
-          <div className="absolute top-24 right-6 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          <div className="absolute top-20 right-6 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <ResultNodeCard
               result={executionResult}
               onSaveAsPrimitive={handleSaveAsPrimitive}

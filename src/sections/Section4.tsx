@@ -5,17 +5,37 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import { BlurFadeWords } from '../BlurFadeWords'
 import { useCanvasStore } from '../store/useCanvasStore'
 import { MagneticButton } from '../components/ui/MagneticButton'
-import { ArrowRight, Sparkles } from 'lucide-react'
+import { Sparkles, Play, Plus, RefreshCw, Filter, FileText, Database, Layers, ArrowRight } from 'lucide-react'
 
 const NATIVE_W = 1040
 const NATIVE_H = 684
 
-export function Section4() {
+interface Section4Props {
+  onEvaluatePlan: () => void;
+  onExecuteComputation: () => void;
+  onFilterEnterprise: () => void;
+  onAddNewNode: () => void;
+}
+
+export function Section4({
+  onEvaluatePlan,
+  onExecuteComputation,
+  onFilterEnterprise,
+  onAddNewNode,
+}: Section4Props) {
   const sectionRef = useRef<HTMLElement>(null)
   const [isInView, setIsInView] = useState(false)
   const isMobile = useIsMobile()
   const [scale, setScale] = useState(1)
-  const setViewMode = useCanvasStore((state) => state.setViewMode)
+
+  const {
+    activeIntentPrompt,
+    setActiveIntentPrompt,
+    isEvaluatingPlan,
+    isExecutingPlan,
+    resetDemoCanvas,
+    setViewMode,
+  } = useCanvasStore()
 
   useEffect(() => {
     const update = () => {
@@ -80,44 +100,136 @@ export function Section4() {
         }}
       />
 
-      {/* Main Text Header */}
-      <div style={{ position: 'absolute', top: '40px', left: '65px', width: '520px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
-        <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '52px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '8px' }}>
-          <BlurFadeWords text="Living Outputs & Dynamic Reuse." baseDelay={0.5} isInView={isInView} />
+      {/* Main Section Header */}
+      <div style={{ position: 'absolute', top: '35px', left: '60px', right: '60px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+        <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '48px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '6px' }}>
+          <BlurFadeWords text="Experience Intent-Driven Computation." baseDelay={0.4} isInView={isInView} />
         </h1>
-        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '28px', fontWeight: 300, margin: 0, marginBottom: '16px' }}>
-          <BlurFadeWords
-            text="Results render right on canvas. Save workflows as dynamic nodes."
-            baseDelay={0.8}
-            isInView={isInView}
-            wordStyle={{
-              background: 'linear-gradient(180deg, #FFFFFF 0%, #A0A0A0 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          />
-        </p>
-        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '17px', fontWeight: 300, color: 'rgba(255,255,255,0.65)', margin: 0, marginBottom: '24px' }}>
-          <BlurFadeWords text="Adapt computed charts in real time without starting over." baseDelay={1.1} isInView={isInView} />
-          <br />
-          <BlurFadeWords text="Click 'Save as Custom Primitive' to create reusable computational nodes." baseDelay={1.45} isInView={isInView} />
+
+        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '18px', fontWeight: 300, color: 'rgba(255,255,255,0.7)', margin: 0, marginBottom: '20px' }}>
+          <BlurFadeWords text="Type your natural intent below, inspect the execution plan, or execute the dynamic computation live." baseDelay={0.7} isInView={isInView} />
         </p>
 
-        {/* High-Impact Call-To-Action (CTA) */}
+        {/* User Guidance Step Pills */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-          transition={{ delay: 1.8, duration: 0.6, ease: 'easeOut' }}
-          className="mt-2"
+          initial={{ opacity: 0, y: 15 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+          transition={{ delay: 0.9, duration: 0.5 }}
+          className="mb-6 grid grid-cols-3 gap-3"
         >
-          <MagneticButton
-            onClick={() => setViewMode('interactive')}
-            className="group bg-[#00ff87] px-8 py-3.5 text-sm font-bold text-black hover:bg-[#00ff87]/90 shadow-[0_0_30px_rgba(0,255,135,0.4)]"
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 fill-black" /> Launch Interactive Spatial Canvas <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-[#00ff87]">
+              <Database className="h-3.5 w-3.5" /> 1. Context Nodes Linked
+            </div>
+            <p className="mt-1 text-[11px] text-neutral-400">
+              `Sales_Q3_Metrics.csv` + `Customer_Feedback.txt` connected on spatial canvas.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-sky-400">
+              <Sparkles className="h-3.5 w-3.5" /> 2. Express Outcome
+            </div>
+            <p className="mt-1 text-[11px] text-neutral-400">
+              State desired result in plain English. No syntax or commands needed.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+              <Play className="h-3.5 w-3.5" /> 3. Live Execution & Adaptation
+            </div>
+            <p className="mt-1 text-[11px] text-neutral-400">
+              Inspect step-by-step Gemini plans & render SVG metrics directly on canvas.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Embedded Interactive Intent Console */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.96 }}
+          transition={{ delay: 1.1, duration: 0.6 }}
+          className="rounded-2xl border border-white/15 bg-[#090a0f]/90 p-4 shadow-2xl backdrop-blur-2xl"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+              <Sparkles className="h-4 w-4 text-[#00ff87]" /> Natural Intent Input Console
             </span>
-          </MagneticButton>
+            <button
+              onClick={() => setViewMode('interactive')}
+              className="flex items-center gap-1 text-[11px] font-semibold text-neutral-400 hover:text-[#00ff87]"
+            >
+              Open Full Drag & Drop Spatial Workspace <ArrowRight className="h-3 w-3" />
+            </button>
+          </div>
+
+          {/* Prompt Input Box */}
+          <div className="relative mb-4">
+            <input
+              type="text"
+              value={activeIntentPrompt}
+              onChange={(e) => setActiveIntentPrompt(e.target.value)}
+              placeholder="Express your natural computing intent..."
+              className="w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-3 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-[#00ff87]/60 focus:bg-white/[0.08]"
+            />
+          </div>
+
+          {/* Console Action Bar */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onFilterEnterprise}
+                title="Filter Enterprise Adaptability Demo"
+                className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20"
+              >
+                <Filter className="h-3 w-3" /> Adapt (Filter Enterprise)
+              </button>
+
+              <button
+                onClick={onAddNewNode}
+                title="Add Document Card"
+                className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white"
+              >
+                <Plus className="h-3.5 w-3.5" /> Add Document Card
+              </button>
+
+              <button
+                onClick={resetDemoCanvas}
+                title="Reset Demo State"
+                className="rounded-xl border border-white/10 bg-white/5 p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onEvaluatePlan}
+                disabled={isEvaluatingPlan}
+                className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
+              >
+                {isEvaluatingPlan ? 'Evaluating...' : 'Inspect Plan'}
+              </button>
+
+              <MagneticButton
+                onClick={onExecuteComputation}
+                disabled={isExecutingPlan}
+                className="bg-[#00ff87] px-6 py-2 text-xs font-bold text-black hover:bg-[#00ff87]/90 shadow-[0_0_20px_rgba(0,255,135,0.3)]"
+              >
+                {isExecutingPlan ? (
+                  <span className="flex items-center gap-1.5">
+                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                    Computing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5">
+                    <Play className="h-3.5 w-3.5 fill-black" /> Confirm & Execute Computation
+                  </span>
+                )}
+              </MagneticButton>
+            </div>
+          </div>
         </motion.div>
       </div>
 

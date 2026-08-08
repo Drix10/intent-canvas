@@ -13,7 +13,19 @@ const SECTION_POSITIONS = [
   { x: 0, y: -1 },
 ]
 
-export function SpatialScroll() {
+interface SpatialScrollProps {
+  onEvaluatePlan: () => void;
+  onExecuteComputation: () => void;
+  onFilterEnterprise: () => void;
+  onAddNewNode: () => void;
+}
+
+export function SpatialScroll({
+  onEvaluatePlan,
+  onExecuteComputation,
+  onFilterEnterprise,
+  onAddNewNode,
+}: SpatialScrollProps) {
   const isMobile = useIsMobile()
   const isPhone = useIsMobile(600)
   const x = useMotionValue(0)
@@ -105,6 +117,13 @@ export function SpatialScroll() {
     return () => { window.removeEventListener('touchstart', onTouchStart); window.removeEventListener('touchend', onTouchEnd) }
   }, [isMobile, goTo])
 
+  const section4Props = {
+    onEvaluatePlan,
+    onExecuteComputation,
+    onFilterEnterprise,
+    onAddNewNode,
+  };
+
   if (isMobile) {
     const isTablet = !isPhone
     const snapSlot: React.CSSProperties = {
@@ -119,7 +138,7 @@ export function SpatialScroll() {
         <div style={snapSlot}><Section1Productivity /></div>
         <div style={snapSlot}><Section2 /></div>
         <div style={snapSlot}><Section3 /></div>
-        <div style={snapSlot}><Section4 /></div>
+        <div style={snapSlot}><Section4 {...section4Props} /></div>
       </div>
     )
   }
@@ -130,7 +149,7 @@ export function SpatialScroll() {
         <div style={{ position: 'absolute', top: '0', left: '0', width: '100vw', height: '100vh' }}><Section1Productivity /></div>
         <div style={{ position: 'absolute', top: '0', left: '74vw', width: '100vw', height: '100vh' }}><Section2 /></div>
         <div style={{ position: 'absolute', top: '82vh', left: '74vw', width: '100vw', height: '100vh' }}><Section3 /></div>
-        <div style={{ position: 'absolute', top: '82vh', left: '0', width: '100vw', height: '100vh' }}><Section4 /></div>
+        <div style={{ position: 'absolute', top: '82vh', left: '0', width: '100vw', height: '100vh' }}><Section4 {...section4Props} /></div>
       </motion.div>
     </div>
   )
