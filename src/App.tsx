@@ -265,6 +265,7 @@ export default function App() {
       },
     }
     addNode(newNode)
+    setStatusMessage('Added document card "Q3_Strategy_Brief.pdf" to canvas.')
   }
 
   const handleAddFile = async (file: File) => {
@@ -283,6 +284,7 @@ export default function App() {
         position: findVisibleNodePosition(280, 160),
         dataPayload: { mimeType: file.type || 'application/octet-stream', contentSummary, rawReference: file.name },
       })
+      setStatusMessage(`Uploaded and added file "${file.name}" to canvas.`)
     } catch {
       setErrorMessage('The selected file could not be read.')
     }
@@ -349,6 +351,12 @@ export default function App() {
           <div role="alert" className="fixed top-5 left-1/2 z-[60] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-xl border border-red-400/30 bg-red-950/90 px-4 py-3 text-xs text-red-100 shadow-2xl backdrop-blur-xl">
             <span>{errorMessage}</span>
             <button type="button" aria-label="Dismiss error" onClick={() => setErrorMessage(null)} className="text-red-200 hover:text-white">&times;</button>
+          </div>
+        )}
+        {statusMessage && (
+          <div role="status" className="fixed top-5 left-1/2 z-[60] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-xl border border-emerald-400/30 bg-emerald-950/90 px-4 py-3 text-xs text-emerald-100 shadow-2xl backdrop-blur-xl">
+            <span>{statusMessage}</span>
+            <button type="button" aria-label="Dismiss message" onClick={() => setStatusMessage(null)} className="text-emerald-200 hover:text-white">&times;</button>
           </div>
         )}
         {/* Render Navbar & IntentBar ONLY in interactive canvas view mode */}

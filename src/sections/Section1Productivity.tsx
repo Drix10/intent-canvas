@@ -50,11 +50,13 @@ function MagicBorder({ color, radius = '24px', reverse = false, duration = 5, in
 const NATIVE_W = 1040
 const NATIVE_H = 684
 
-export function Section1Productivity() {
+export function Section1Productivity({ isInView: propIsInView }: { isInView?: boolean } = {}) {
   const sectionRef = useRef<HTMLElement>(null)
-  const [isInView, setIsInView] = useState(true)
+  const [internalIsInView, setInternalIsInView] = useState(true)
   const isMobile = useIsMobile()
   const [scale, setScale] = useState(1)
+
+  const isInView = propIsInView ?? internalIsInView
 
   useEffect(() => {
     const update = () => {
@@ -78,10 +80,10 @@ export function Section1Productivity() {
         const ratio = entry.intersectionRatio
         if (entry.isIntersecting && ratio >= enterRatio && !wasVisible) {
           wasVisible = true
-          setIsInView(true)
+          setInternalIsInView(true)
         } else if (!entry.isIntersecting || ratio < exitRatio) {
           wasVisible = false
-          setIsInView(false)
+          setInternalIsInView(false)
         }
       },
       { threshold: [exitRatio, enterRatio] }
@@ -224,6 +226,7 @@ export function Section1Productivity() {
           width: '570px',
           height: '358px',
           zIndex: 10,
+          pointerEvents: 'none',
         }}
       >
         <AnimatedNetworkLines isInView={isInView} color="#24FF95" />

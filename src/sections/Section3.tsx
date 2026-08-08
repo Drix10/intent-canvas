@@ -49,11 +49,13 @@ function MagicBorder({ color, radius = '24px', reverse = false, duration = 4, in
 const NATIVE_W = 1040
 const NATIVE_H = 684
 
-export function Section3() {
+export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}) {
   const sectionRef = useRef<HTMLElement>(null)
-  const [isInView, setIsInView] = useState(true)
+  const [internalIsInView, setInternalIsInView] = useState(true)
   const isMobile = useIsMobile()
   const [scale, setScale] = useState(1)
+
+  const isInView = propIsInView ?? internalIsInView
 
   useEffect(() => {
     const update = () => {
@@ -77,10 +79,10 @@ export function Section3() {
         const ratio = entry.intersectionRatio
         if (entry.isIntersecting && ratio >= enterRatio && !wasVisible) {
           wasVisible = true
-          setIsInView(true)
+          setInternalIsInView(true)
         } else if (!entry.isIntersecting || ratio < exitRatio) {
           wasVisible = false
-          setIsInView(false)
+          setInternalIsInView(false)
         }
       },
       { threshold: [exitRatio, enterRatio] }
@@ -149,7 +151,7 @@ export function Section3() {
       </div>
 
       {/* ── Diagram block ── */}
-      <div style={{ position: 'absolute', left: '35px', bottom: '-25px', width: '570px', height: '358px', zIndex: 10 }}>
+      <div style={{ position: 'absolute', left: '35px', bottom: '-25px', width: '570px', height: '358px', zIndex: 10, pointerEvents: 'none' }}>
         <AnimatedNetworkLines isInView={isInView} color="#4C6DFF" />
       </div>
 

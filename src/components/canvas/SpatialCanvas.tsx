@@ -3,6 +3,7 @@ import { useCanvasStore } from '../../store/useCanvasStore';
 import { CanvasNodeCard } from './CanvasNodeCard';
 import { CanvasSVGEdges } from './CanvasSVGEdges';
 import { APP_CONFIG } from '../../config';
+import { Sparkles, Plus, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, FileUp } from 'lucide-react';
 
 export const SpatialCanvas: React.FC = () => {
   const nodes = useCanvasStore((state) => state.nodes);
@@ -12,6 +13,7 @@ export const SpatialCanvas: React.FC = () => {
   const selectedNodeIds = useCanvasStore((state) => state.selectedNodeIds);
   const setActiveIntentPrompt = useCanvasStore((state) => state.setActiveIntentPrompt);
   const resetVersion = useCanvasStore((state) => state.resetVersion);
+  const resetDemoCanvas = useCanvasStore((state) => state.resetDemoCanvas);
   const setPan = useCanvasStore((state) => state.setPan);
   const setZoom = useCanvasStore((state) => state.setZoom);
   const updateNodePosition = useCanvasStore((state) => state.updateNodePosition);
@@ -26,6 +28,7 @@ export const SpatialCanvas: React.FC = () => {
   const [connectingSourceId, setConnectingSourceId] = useState<string | null>(null);
   const [dragBlocked, setDragBlocked] = useState(false);
   const [showGuide, setShowGuide] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const activePointerId = useRef<number | null>(null);
   const captureElement = useRef<HTMLElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -71,6 +74,15 @@ export const SpatialCanvas: React.FC = () => {
     finishPointer(activePointerId.current ?? -1);
     setConnectingSourceId(null);
   }, [finishPointer, resetVersion]);
+
+  // Auto-center canvas nodes on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const initialPanX = Math.max(20, Math.round((window.innerWidth - 1100) / 2));
+    const initialPanY = Math.max(90, Math.round((window.innerHeight - 450) / 2));
+    setPan({ x: initialPanX, y: initialPanY });
+    setZoom(1);
+  }, [setPan, setZoom]);
 
   const handleBackgroundPointerDown = (event: React.PointerEvent) => {
     if (activePointerId.current !== null) return;
@@ -169,6 +181,11 @@ export const SpatialCanvas: React.FC = () => {
     }
   }, [addEdge, connectingSourceId]);
 
+  const resetView = () => {
+    setPan({ x: 0, y: 0 });
+    setZoom(1);
+  };
+
   return (
     <div
       ref={containerRef}
@@ -180,7 +197,7 @@ export const SpatialCanvas: React.FC = () => {
       onPointerUp={handlePointerUp}
       onWheel={handleWheel}
       style={{ touchAction: 'none' }}
-      className="relative h-full w-full overflow-hidden bg-[#040406] bg-obsidian-grid cursor-grab active:cursor-grabbing"
+      className="relative h-full w-full overflow-hidden bg-[#040406] bg-obsidian-grid cursor-grab active:cursor-grabbing select-none"
     >
       <div
         onPointerDown={handleBackgroundPointerDown}
@@ -188,15 +205,29 @@ export const SpatialCanvas: React.FC = () => {
         className="absolute inset-0 h-full w-full"
       >
         <CanvasSVGEdges nodes={nodes} edges={edges} />
+        {/* Floating Spatial Cluster Tag */}
+        {nodes.length >= 2 && (
+          <div
+            style={{
+              position: 'absolute',
+              top: `${Math.min(...nodes.map(n => n.position.y)) - 32}px`,
+              left: `${Math.min(...nodes.map(n => n.position.x))}px`,
+              zIndex: 10,
+            }}
+            className="flex items-center gap-1.5 rounded-full border border-[#00ff87]/30 bg-[#00ff87]/10 px-3 py-0.5 text-[10px] font-bold text-[#00ff87] backdrop-blur-md"
+          >
+            <Layers className="h-3 w-3" /> Spatial Cluster Radius (&lt;240px Auto-Linked Context)
+          </div>
+        )}
         {nodes.map((node) => (
           <div
             key={node.id}
             onPointerDown={(event) => handleNodePointerDown(event, node)}
             onKeyDown={(event) => handleNodeKeyDown(event, node)}
-             role="group"
-             aria-roledescription="canvas node"
-             aria-grabbed={activeDraggingNodeId === node.id}
-             aria-selected={selectedNodeIds.includes(node.id)}
+            role="group"
+            aria-roledescription="canvas node"
+            aria-grabbed={activeDraggingNodeId === node.id}
+            aria-selected={selectedNodeIds.includes(node.id)}
             tabIndex={0}
             aria-label={`${node.title}, ${node.type.replace('_', ' ')}. Use arrow keys to move.`}
             style={{ position: 'absolute', transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0px)`, willChange: 'transform', zIndex: connectingSourceId === node.id ? 30 : 20 }}
@@ -207,46 +238,172 @@ export const SpatialCanvas: React.FC = () => {
         ))}
       </div>
 
-      {connectingSourceId && (
-        <div role="status" className="absolute top-6 left-1/2 z-40 -translate-x-1/2 rounded-full border border-[#00ff87]/40 bg-[#090a0f]/90 px-4 py-1.5 text-xs font-semibold text-[#00ff87] shadow-2xl backdrop-blur-xl">
-          Choose another node to connect, or click Connect Relation again to cancel.
+      {/* Top Center Active Context Indicator Banner */}
+      {nodes.length > 0 && !connectingSourceId && (
+        <div role="status" className="absolute top-20 left-1/2 z-40 -translate-x-1/2 flex items-center gap-2.5 rounded-full border border-[#00ff87]/30 bg-[#090a0f]/90 px-4 py-1.5 text-xs text-white shadow-2xl backdrop-blur-xl">
+          <span className="flex items-center gap-1.5 font-bold text-[#00ff87]">
+            <Sparkles className="h-3.5 w-3.5 animate-pulse" /> Active Context:
+          </span>
+          <span className="text-neutral-300 font-medium">
+            <strong className="text-white">{nodes.length} Nodes Loaded</strong>
+          </span>
+          <span className="text-neutral-500">•</span>
+          <button
+            type="button"
+            onClick={() => {
+              const initialPanX = Math.max(20, Math.round((window.innerWidth - 1100) / 2));
+              const initialPanY = Math.max(90, Math.round((window.innerHeight - 450) / 2));
+              setPan({ x: initialPanX, y: initialPanY });
+              setZoom(1);
+            }}
+            className="font-bold text-[#00ff87] hover:underline"
+          >
+            Center View 🎯
+          </button>
         </div>
       )}
-       {showGuide && !connectingSourceId && (
-         <div className="absolute top-24 left-5 z-40 w-[min(25rem,calc(100vw-2rem))] rounded-3xl border border-[#00ff87]/20 bg-[#090a0f]/95 p-5 text-xs text-neutral-300 shadow-2xl backdrop-blur-xl">
-           <div className="mb-3 flex items-start justify-between gap-4">
-             <div>
-               <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#00ff87]">Start with intent</p>
-               <p className="mt-2 text-base font-medium text-white">Shape your first computation</p>
-               <p className="mt-1 leading-relaxed text-neutral-400">Your starter nodes are ready. Arrange context, connect related sources, then describe the outcome you want.</p>
-             </div>
-             <button type="button" aria-label="Close canvas guide" onClick={() => setShowGuide(false)} className="text-lg leading-none text-neutral-400 hover:text-white">&times;</button>
-           </div>
-           <div className="mb-4 grid grid-cols-3 gap-2 text-[10px]">
-             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2"><span className="block font-semibold text-white">01</span><span className="mt-1 block text-neutral-500">Arrange</span></div>
-             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2"><span className="block font-semibold text-white">02</span><span className="mt-1 block text-neutral-500">Connect</span></div>
-             <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2"><span className="block font-semibold text-white">03</span><span className="mt-1 block text-neutral-500">Compute</span></div>
-           </div>
-           <button type="button" onClick={() => { setActiveIntentPrompt(APP_CONFIG.defaultIntentPrompt); document.getElementById('intent-prompt')?.focus(); }} className="w-full rounded-xl border border-[#00ff87]/30 bg-[#00ff87]/10 px-3 py-2.5 text-left text-[11px] font-medium text-[#b8ffd9] transition-colors hover:bg-[#00ff87]/20">
-             Try the guided intent: <span className="text-[#00ff87]">why revenue dropped in August</span>
-           </button>
-           <ul className="mt-3 space-y-1 text-[11px] text-neutral-500">
-             <li>Drag the canvas background to pan.</li>
-             <li>Drag a node or use arrow keys to reposition it.</li>
-             <li>Use Connect Relation to link two nodes.</li>
-           </ul>
-         </div>
+
+      {/* Dynamic Status Pill when Connecting Nodes */}
+      {connectingSourceId && (
+        <div role="status" className="absolute top-20 left-1/2 z-40 -translate-x-1/2 rounded-full border border-[#00ff87]/40 bg-[#090a0f]/90 px-4 py-1.5 text-xs font-semibold text-[#00ff87] shadow-2xl backdrop-blur-xl animate-pulse">
+          Click another node to connect a Bezier relation edge, or click again to cancel.
+        </div>
       )}
+
+      {/* Top-Right Collapsible Guidance HUD */}
+      {showGuide ? (
+        <div className="absolute top-20 right-6 z-40 w-[min(24rem,calc(100vw-2rem))] rounded-3xl border border-[#00ff87]/25 bg-[#090a0f]/95 p-5 text-xs text-neutral-300 shadow-2xl backdrop-blur-2xl">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#00ff87] flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" /> Spatial Computing Primitive
+              </p>
+              <h4 className="mt-1 text-sm font-bold text-white">How Spatial Canvas Works</h4>
+            </div>
+            <button type="button" aria-label="Close guide" onClick={() => setShowGuide(false)} className="rounded-lg p-1 text-neutral-400 hover:bg-white/10 hover:text-white">
+              &times;
+            </button>
+          </div>
+
+          <div className="mb-3.5 grid grid-cols-3 gap-1.5 text-[10px]">
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2">
+              <span className="block font-bold text-[#00ff87]">01. Arrange</span>
+              <span className="mt-0.5 block text-neutral-400">Drag cards within 240px to auto-cluster.</span>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2">
+              <span className="block font-bold text-sky-400">02. Connect</span>
+              <span className="mt-0.5 block text-neutral-400">Link explicit Bezier curve relations.</span>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2">
+              <span className="block font-bold text-amber-400">03. Compute</span>
+              <span className="mt-0.5 block text-neutral-400">State your goal in the Intent Bar.</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setActiveIntentPrompt(APP_CONFIG.defaultIntentPrompt);
+              const el = document.getElementById('intent-prompt');
+              if (el) el.focus();
+            }}
+            className="w-full rounded-xl border border-[#00ff87]/30 bg-[#00ff87]/10 px-3 py-2 text-left text-[11px] font-semibold text-[#b8ffd9] transition-colors hover:bg-[#00ff87]/20"
+          >
+            Try Guided Intent: <span className="text-[#00ff87]">"Why revenue dropped in August"</span>
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowGuide(true)}
+          className="absolute top-20 right-6 z-40 flex items-center gap-1.5 rounded-full border border-white/15 bg-[#090a0f]/90 px-3.5 py-1.5 text-xs font-semibold text-neutral-300 shadow-xl backdrop-blur-xl hover:border-[#00ff87]/50 hover:text-white"
+        >
+          <HelpCircle className="h-3.5 w-3.5 text-[#00ff87]" /> How Spatial Canvas Works
+        </button>
+      )}
+
+      {/* Bottom-Left Spatial Status HUD */}
+      <div className="absolute bottom-6 left-6 z-40 flex flex-wrap items-center gap-2 rounded-2xl border border-white/15 bg-[#090a0f]/90 px-4 py-2.5 text-xs font-medium text-neutral-300 shadow-2xl backdrop-blur-2xl">
+        <span className="flex items-center gap-1.5 font-bold text-white pr-2 border-r border-white/10">
+          <Layers className="h-3.5 w-3.5 text-[#00ff87]" /> Spatial AST
+        </span>
+        <span className="text-neutral-400">Nodes: <strong className="text-white font-mono">{nodes.length}</strong></span>
+        <span className="text-neutral-500">•</span>
+        <span className="text-neutral-400">Edges: <strong className="text-white font-mono">{edges.length}</strong></span>
+        <span className="text-neutral-500">•</span>
+        <span className="text-neutral-400">Cluster Radius: <strong className="text-emerald-400 font-mono">240px</strong></span>
+
+        <button
+          type="button"
+          onClick={resetDemoCanvas}
+          title="Restore Initial Starter Context"
+          className="ml-2 flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-neutral-300 hover:bg-white/10 hover:text-white"
+        >
+          <RotateCcw className="h-3 w-3 text-sky-400" /> Restore Starter Context
+        </button>
+      </div>
+
+      {/* Bottom-Right Zoom HUD Controls */}
+      <div className="absolute bottom-6 right-6 z-40 flex items-center gap-1 rounded-2xl border border-white/15 bg-[#090a0f]/90 p-1.5 text-xs text-neutral-300 shadow-2xl backdrop-blur-2xl">
+        <button
+          type="button"
+          onClick={() => setZoom(Math.max(APP_CONFIG.minZoom, zoom - 0.1))}
+          title="Zoom Out"
+          className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </button>
+        <span className="px-2 font-mono text-xs font-bold text-white">{Math.round(zoom * 100)}%</span>
+        <button
+          type="button"
+          onClick={() => setZoom(Math.min(APP_CONFIG.maxZoom, zoom + 0.1))}
+          title="Zoom In"
+          className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </button>
+        <div className="h-4 w-px bg-white/10 mx-1" />
+        <button
+          type="button"
+          onClick={resetView}
+          title="Reset View Position & Zoom"
+          className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Drag Collision Warning */}
       {dragBlocked && (
-        <div role="status" className="absolute bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full border border-amber-400/40 bg-[#090a0f]/95 px-4 py-2 text-xs font-semibold text-amber-300 shadow-2xl">
+        <div role="status" className="absolute bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-full border border-amber-400/40 bg-[#090a0f]/95 px-4 py-2 text-xs font-semibold text-amber-300 shadow-2xl">
           Move blocked: nodes keep a clear working gap.
         </div>
       )}
+
+      {/* High-Tech Smoked Glass Empty State Hub when all nodes are cleared */}
       {nodes.length === 0 && (
-        <div role="status" className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-neutral-400">
-          Add a file, image, or document to begin shaping an intent.
+        <div role="status" className="absolute inset-0 z-30 flex items-center justify-center p-6 text-center">
+          <div className="w-[min(28rem,calc(100vw-2rem))] rounded-3xl border border-white/15 bg-[#090a0f]/90 p-8 shadow-2xl backdrop-blur-2xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#00ff87]/30 bg-[#00ff87]/10 text-[#00ff87]">
+              <Network className="h-7 w-7" />
+            </div>
+            <h3 className="text-lg font-bold text-white">Spatial Intent Workspace Ready</h3>
+            <p className="mt-2 text-xs leading-relaxed text-neutral-400">
+              Your spatial graph AST is currently empty. Drop files anywhere onto screen, or click below to restore the starter context scenario.
+            </p>
+            <div className="mt-6 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={resetDemoCanvas}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#00ff87] px-4 py-2.5 text-xs font-bold text-black hover:bg-[#00ff87]/90 shadow-[0_0_20px_rgba(0,255,135,0.3)] transition-all"
+              >
+                <RotateCcw className="h-4 w-4" /> Restore Starter Demo Context
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 };
+

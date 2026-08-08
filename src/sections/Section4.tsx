@@ -33,6 +33,8 @@ interface Section4Props {
   onExecuteComputation: () => void;
   onFilterEnterprise: () => void;
   onAddNewNode: () => void;
+  onAddFile?: (file: File) => void;
+  isInView?: boolean;
 }
 
 export function Section4({
@@ -40,11 +42,16 @@ export function Section4({
   onExecuteComputation,
   onFilterEnterprise,
   onAddNewNode,
+  onAddFile,
+  isInView: propIsInView,
 }: Section4Props) {
   const sectionRef = useRef<HTMLElement>(null)
-  const [isInView, setIsInView] = useState(true)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [internalIsInView, setInternalIsInView] = useState(true)
   const isMobile = useIsMobile()
   const [scale, setScale] = useState(1)
+
+  const isInView = propIsInView ?? internalIsInView
 
   const {
     activeIntentPrompt,
@@ -77,10 +84,10 @@ export function Section4({
         const ratio = entry.intersectionRatio
         if (entry.isIntersecting && ratio >= enterRatio && !wasVisible) {
           wasVisible = true
-          setIsInView(true)
+          setInternalIsInView(true)
         } else if (!entry.isIntersecting || ratio < exitRatio) {
           wasVisible = false
-          setIsInView(false)
+          setInternalIsInView(false)
         }
       },
       { threshold: [exitRatio, enterRatio] }
@@ -144,7 +151,7 @@ export function Section4({
           width: '100%', height: '100%',
           objectFit: 'cover',
           pointerEvents: 'none',
-          zIndex: 999,
+          zIndex: 1,
           filter: 'drop-shadow(0 0 50px rgba(255, 255, 255, 0.75))',
         }}
       />
@@ -199,7 +206,7 @@ export function Section4({
           initial={{ opacity: 0, scale: 0.96 }}
           animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.96 }}
           transition={{ delay: 1.1, duration: 0.6 }}
-          className="rounded-2xl border border-white/15 bg-[#090a0f]/90 p-4 shadow-2xl backdrop-blur-2xl"
+          className="relative z-30 pointer-events-auto rounded-2xl border border-white/15 bg-[#090a0f]/90 p-4 shadow-2xl backdrop-blur-2xl"
         >
           <div className="mb-3 flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-xs font-bold text-white">
@@ -258,13 +265,31 @@ export function Section4({
                 <Filter className="h-3 w-3" /> Adapt (Filter Enterprise)
               </button>
 
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".pdf,.csv,.txt,.png,.jpg,.jpeg,.json"
+                onChange={(e) => {
+                  const file = e.target.files?.[0]
+                  if (file && onAddFile) onAddFile(file)
+                  e.target.value = ''
+                }}
+                className="hidden"
+              />
+
               <button
                 type="button"
-                onClick={onAddNewNode}
-                title="Add Document Card"
+                onClick={() => {
+                  if (onAddFile && fileInputRef.current) {
+                    fileInputRef.current.click()
+                  } else {
+                    onAddNewNode()
+                  }
+                }}
+                title="Upload Document or CSV File from Computer"
                 className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white"
               >
-                <Plus className="h-3.5 w-3.5" /> Add Document Card
+                <Plus className="h-3.5 w-3.5" /> Upload / Add File
               </button>
 
               <button
@@ -310,7 +335,7 @@ export function Section4({
       </div>
 
       {/* Network Lines */}
-      <div style={{ position: 'absolute', left: '35px', bottom: '-25px', width: '570px', height: '358px', zIndex: 10 }}>
+      <div style={{ position: 'absolute', left: '35px', bottom: '-25px', width: '570px', height: '358px', zIndex: 10, pointerEvents: 'none' }}>
         <AnimatedNetworkLines isInView={isInView} color="#ffffff" />
       </div>
 
