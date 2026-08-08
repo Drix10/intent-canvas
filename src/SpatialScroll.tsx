@@ -1,0 +1,137 @@
+import { useCallback, useEffect, useRef } from 'react'
+import { motion, useMotionValue, animate } from 'framer-motion'
+import { Section1Productivity } from './sections/Section1Productivity'
+import { Section2 } from './sections/Section2'
+import { Section3 } from './sections/Section3'
+import { Section4 } from './sections/Section4'
+import { useIsMobile } from './hooks/useIsMobile'
+
+const SECTION_POSITIONS = [
+  { x: 0, y: 0 },
+  { x: -1, y: 0 },
+  { x: -1, y: -1 },
+  { x: 0, y: -1 },
+]
+
+export function SpatialScroll() {
+  const isMobile = useIsMobile()
+  const isPhone = useIsMobile(600)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const sectionRef = useRef(0)
+  const isAnimating = useRef(false)
+  const hasLooped = useRef(false)
+  const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const posFor = useCallback((idx: number) => {
+    const pos = SECTION_POSITIONS[idx]
+    return {
+      tx: pos.x * (window.innerWidth * 0.74),
+      ty: pos.y * (window.innerHeight * 0.82),
+    }
+  }, [])
+
+  const animTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const goTo = useCallback((idx: number) => {
+    if (isAnimating.current) return
+    isAnimating.current = true
+    if (sectionRef.current === 3 && idx === 0) hasLooped.current = true
+    const { tx, ty } = posFor(idx)
+    animate(x, tx, { duration: 0.85, ease: [0.76, 0, 0.24, 1] })
+    animate(y, ty, { duration: 0.85, ease: [0.76, 0, 0.24, 1] })
+    sectionRef.current = idx
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
+    animTimeoutRef.current = setTimeout(() => { isAnimating.current = false }, 950)
+  }, [x, y, posFor])
+
+  useEffect(() => {
+    return () => {
+      if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (isMobile) return
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      if (isAnimating.current) return
+      if (Math.abs(e.deltaY) < 5) return
+      const dir = e.deltaY > 0 ? 1 : -1
+      if (!hasLooped.current && sectionRef.current === 0 && dir === -1) return
+      goTo((sectionRef.current + dir + 4) % 4)
+    }
+    window.addEventListener('wheel', handleWheel, { passive: false })
+    return () => window.removeEventListener('wheel', handleWheel)
+  }, [goTo, isMobile])
+
+  useEffect(() => {
+    if (isMobile) return
+    let timer: ReturnType<typeof setTimeout>
+    const handleResize = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => {
+        const { tx, ty } = posFor(sectionRef.current)
+        x.set(tx)
+        y.set(ty)
+      }, 100)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => { window.removeEventListener('resize', handleResize); clearTimeout(timer) }
+  }, [x, y, posFor, isMobile])
+
+  useEffect(() => {
+    if (isMobile) return
+    const onTouchStart = (e: TouchEvent) => {
+      const t = e.touches[0]
+      touchStart.current = { x: t.clientX, y: t.clientY }
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!touchStart.current) return
+      const t = e.changedTouches[0]
+      const dx = touchStart.current.x - t.clientX
+      const dy = touchStart.current.y - t.clientY
+      touchStart.current = null
+      const absDx = Math.abs(dx)
+      const absDy = Math.abs(dy)
+      if (absDx < 50 && absDy < 50) return
+      const dir = absDx >= absDy ? (dx > 0 ? 1 : -1) : (dy > 0 ? 1 : -1)
+      if (!hasLooped.current && sectionRef.current === 0 && dir === -1) return
+      goTo((sectionRef.current + dir + 4) % 4)
+    }
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => { window.removeEventListener('touchstart', onTouchStart); window.removeEventListener('touchend', onTouchEnd) }
+  }, [isMobile, goTo])
+
+  if (isMobile) {
+    const isTablet = !isPhone
+    const snapSlot: React.CSSProperties = {
+      height: '100vh',
+      scrollSnapAlign: 'start',
+      scrollSnapStop: 'always',
+      overflow: 'hidden',
+      paddingBottom: isTablet ? '36px' : 0,
+    }
+    return (
+      <div ref={scrollContainerRef} style={{ width: '100vw', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: '#040406', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <div style={snapSlot}><Section1Productivity /></div>
+        <div style={snapSlot}><Section2 /></div>
+        <div style={snapSlot}><Section3 /></div>
+        <div style={snapSlot}><Section4 /></div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#040406' }}>
+      <motion.div style={{ x, y, position: 'relative', width: '200vw', height: '200vh', willChange: 'transform' }}>
+        <div style={{ position: 'absolute', top: '0', left: '0', width: '100vw', height: '100vh' }}><Section1Productivity /></div>
+        <div style={{ position: 'absolute', top: '0', left: '74vw', width: '100vw', height: '100vh' }}><Section2 /></div>
+        <div style={{ position: 'absolute', top: '82vh', left: '74vw', width: '100vw', height: '100vh' }}><Section3 /></div>
+        <div style={{ position: 'absolute', top: '82vh', left: '0', width: '100vw', height: '100vh' }}><Section4 /></div>
+      </motion.div>
+    </div>
+  )
+}
