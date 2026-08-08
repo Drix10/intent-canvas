@@ -5,7 +5,23 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import { BlurFadeWords } from '../BlurFadeWords'
 import { useCanvasStore } from '../store/useCanvasStore'
 import { MagneticButton } from '../components/ui/MagneticButton'
-import { Sparkles, Play, Plus, RefreshCw, Filter, FileText, Database, Layers, ArrowRight } from 'lucide-react'
+import { Sparkles, Play, Plus, RefreshCw, Filter, Database, ArrowRight } from 'lucide-react'
+
+const MAGIC_BORDER_WHITE = 'conic-gradient(from 0deg, transparent 0%, transparent 35%, rgba(255,255,255,0.12) 42%, #ffffff 50%, rgba(255,255,255,0.12) 58%, transparent 65%, transparent 100%)'
+
+function MagicBorder({ color, radius = '24px', reverse = false, duration = 4, initialAngle = 0, isInView = true }: { color: string; radius?: string; reverse?: boolean; duration?: number; initialAngle?: number; isInView?: boolean }) {
+  const fromAngle = reverse ? -initialAngle : initialAngle
+  const toAngle = fromAngle + (reverse ? -360 : 360)
+  return (
+    <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, borderRadius: radius, pointerEvents: 'none', overflow: 'hidden', zIndex: 60, padding: '2px', WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude' }}>
+      <motion.div
+        style={{ position: 'absolute', left: '50%', top: '50%', width: '250%', height: '250%', background: color, x: '-50%', y: '-50%', transformOrigin: 'center center', filter: 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.3))', willChange: 'transform' }}
+        animate={isInView ? { rotate: [fromAngle, toAngle] } : false}
+        transition={{ repeat: Infinity, duration, ease: 'linear' }}
+      />
+    </div>
+  )
+}
 
 const NATIVE_W = 1040
 const NATIVE_H = 684
@@ -101,12 +117,12 @@ export function Section4({
       />
 
       {/* Main Section Header */}
-      <div style={{ position: 'absolute', top: '35px', left: '60px', right: '60px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
-        <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '48px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '6px' }}>
+      <div style={{ position: 'absolute', top: '35px', left: '55px', right: '55px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
+        <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '46px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '6px' }}>
           <BlurFadeWords text="Experience Intent-Driven Computation." baseDelay={0.4} isInView={isInView} />
         </h1>
 
-        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '18px', fontWeight: 300, color: 'rgba(255,255,255,0.7)', margin: 0, marginBottom: '20px' }}>
+        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '17px', fontWeight: 300, color: 'rgba(255,255,255,0.7)', margin: 0, marginBottom: '18px' }}>
           <BlurFadeWords text="Type your natural intent below, inspect the execution plan, or execute the dynamic computation live." baseDelay={0.7} isInView={isInView} />
         </p>
 
@@ -115,7 +131,7 @@ export function Section4({
           initial={{ opacity: 0, y: 15 }}
           animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
           transition={{ delay: 0.9, duration: 0.5 }}
-          className="mb-6 grid grid-cols-3 gap-3"
+          className="mb-5 grid grid-cols-3 gap-3"
         >
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#00ff87]">
@@ -165,13 +181,13 @@ export function Section4({
           </div>
 
           {/* Prompt Input Box */}
-          <div className="relative mb-4">
+          <div className="relative mb-3.5">
             <input
               type="text"
               value={activeIntentPrompt}
               onChange={(e) => setActiveIntentPrompt(e.target.value)}
               placeholder="Express your natural computing intent..."
-              className="w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-3 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-[#00ff87]/60 focus:bg-white/[0.08]"
+              className="w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-[#00ff87]/60 focus:bg-white/[0.08]"
             />
           </div>
 
@@ -237,6 +253,8 @@ export function Section4({
       <div style={{ position: 'absolute', left: '35px', bottom: '-25px', width: '570px', height: '358px', zIndex: 10 }}>
         <AnimatedNetworkLines isInView={isInView} color="#ffffff" />
       </div>
+
+      <MagicBorder color={MAGIC_BORDER_WHITE} radius="24px" duration={10} initialAngle={90} isInView={isInView} />
     </div>
   )
 
