@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { BlurFadeWords } from '../BlurFadeWords'
+import { Sparkles, Cpu, Layers, Workflow, CheckCircle2 } from 'lucide-react'
 
 function AnimatedWords({ text, baseDelay = 0, isInView }: {
   text: string
@@ -101,7 +102,6 @@ export function Section1Productivity() {
           '0 0 0 1px rgba(129,209,189,0.01), 0 40px 120px rgba(0,0,0,0.75), 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
       }}
     >
-      {/* LightsOfCard overlay */}
       <img
         src="https://qclay.design/lovable/glass-menu/card-light-overlay.png"
         alt=""
@@ -204,7 +204,7 @@ export function Section1Productivity() {
         </p>
       </div>
 
-      {/* ── Diagram block ── */}
+      {/* ── Network Lines ── */}
       <div
         style={{
           position: 'absolute',
@@ -216,75 +216,9 @@ export function Section1Productivity() {
         }}
       >
         <AnimatedNetworkLines isInView={isInView} color="#24FF95" />
-
-        <motion.img
-          src="https://qclay.design/lovable/glass-menu/asterisk-button.svg"
-          alt=""
-          initial={{ rotate: 0, opacity: 0 }}
-          animate={isInView ? { rotate: [0, 14, 0], opacity: 1 } : { rotate: 0, opacity: 0 }}
-          transition={{
-            rotate: { delay: 0.1, duration: 1.1, ease: [0.45, 0, 0.55, 1] },
-            opacity: { delay: 0.1, duration: 0.7, ease: 'easeOut' },
-          }}
-          style={{
-            position: 'absolute',
-            width: '85px', height: '85px',
-            left: '48px', top: '134px',
-            objectFit: 'contain',
-            objectPosition: 'center calc(60% + 2px)',
-            backdropFilter: 'blur(12px)',
-            backgroundColor: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(160,160,160,0.1)',
-            borderRadius: '20px',
-            padding: '1px',
-            boxSizing: 'border-box',
-          }}
-        />
-
-        <motion.img
-          src="https://qclay.design/lovable/glass-menu/discord-button.svg"
-          alt=""
-          initial={{ scale: 0, rotate: -180, y: -20 }}
-          animate={isInView ? { scale: 1, rotate: 0, y: 0 } : { scale: 0, rotate: -180, y: -20 }}
-          transition={isInView ? { delay: 2.0, duration: 0.8, ease: [0.22, 1, 0.36, 1] } : { duration: 0 }}
-          style={{
-            position: 'absolute',
-            width: '85px', height: '85px',
-            left: '375px', top: '64px',
-            objectFit: 'contain',
-            objectPosition: 'center calc(50% + 2px)',
-            backdropFilter: 'blur(12px)',
-            backgroundColor: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(160,160,160,0.1)',
-            borderRadius: '20px',
-            padding: '1px',
-            boxSizing: 'border-box',
-          }}
-        />
-
-        <motion.img
-          src="https://qclay.design/lovable/glass-menu/slack-button.svg"
-          alt=""
-          initial={{ scale: 0, rotate: -180, y: -20 }}
-          animate={isInView ? { scale: 1, rotate: 0, y: 0 } : { scale: 0, rotate: -180, y: -20 }}
-          transition={isInView ? { delay: 2.35, duration: 0.8, ease: [0.22, 1, 0.36, 1] } : { duration: 0 }}
-          style={{
-            position: 'absolute',
-            width: '85px', height: '85px',
-            left: '380px', top: '193px',
-            objectFit: 'contain',
-            objectPosition: 'center calc(50% + 2px)',
-            backdropFilter: 'blur(12px)',
-            backgroundColor: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(160,160,160,0.1)',
-            borderRadius: '20px',
-            padding: '1px',
-            boxSizing: 'border-box',
-          }}
-        />
       </div>
 
-      {/* ── Right Half Rich Glass Cards ── */}
+      {/* ── Right Half Tailored Project Cards ── */}
       <div
         style={{
           position: 'absolute',
@@ -295,208 +229,86 @@ export function Section1Productivity() {
           display: 'flex',
           flexDirection: 'column',
           gap: '12px',
-          padding: '6px 0 6px 73px',
+          padding: '24px 28px 24px 73px',
           boxSizing: 'border-box',
           perspective: '1200px',
+          zIndex: 15,
         }}
       >
-        {/* Top Card: Team Creation & Avatar Orbits */}
+        {/* Top Card: Spatial Graph AST Compiler */}
         <div style={{ flex: 0.93, position: 'relative', overflow: 'hidden' }}>
           <motion.div
-            initial={{ opacity: 0, x: -200, rotateY: -90, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: -200, rotateY: -90, scale: 0.8 }}
-            transition={isInView ? { type: 'spring', stiffness: 32, damping: 22, mass: 1.2 } : { duration: 0 }}
-            style={{
-              width: '100.5%',
-              height: '100.5%',
-              marginTop: '-0.25%',
-              marginLeft: '-0.25%',
-              borderRadius: '24px',
-              backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s1-top-card-bg.png)',
-              backgroundSize: '100% 100%',
-              overflow: 'hidden',
-              position: 'relative',
-              transformOrigin: 'center center',
-              boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.01)',
-            }}
+            initial={{ opacity: 0, x: -100, rotateY: -45, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: -100, rotateY: -45, scale: 0.9 }}
+            transition={isInView ? { type: 'spring', stiffness: 40, damping: 22, mass: 1.1 } : { duration: 0 }}
+            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#00ff87]/30 bg-[#090a0f]/90 shadow-2xl backdrop-blur-2xl"
           >
-            <div style={{ position: 'absolute', top: 0, bottom: 0, left: '-70px', right: 0, pointerEvents: 'none' }}>
-              <img
-                src="https://qclay.design/lovable/glass-menu/s1-top-card-header.png"
-                alt=""
-                style={{
-                  position: 'absolute',
-                  top: '1.5px',
-                  left: '50%',
-                  transform: 'translateX(calc(-50% + 30px))',
-                  width: '90%', height: 'auto',
-                  pointerEvents: 'none',
-                  filter: 'grayscale(1) sepia(1) hue-rotate(116deg) saturate(1.8) brightness(1.1)',
-                }}
-              />
-              <div style={{ position: 'absolute', top: -50, left: '50%', transform: 'translateX(calc(-50% + 35px))', width: '80%', height: '100%', pointerEvents: 'none' }}>
-                <motion.img
-                  src="https://qclay.design/lovable/glass-menu/s1-top-card-light.png"
-                  alt=""
-                  initial={{ opacity: 0, y: -100 }}
-                  animate={isInView ? { opacity: 0.5, y: 0 } : { opacity: 0, y: -100 }}
-                  transition={isInView ? {
-                    opacity: { duration: 0.8, ease: 'easeOut', delay: 0.2 },
-                    y: { duration: 1.4, ease: [0.45, 0, 0.55, 1], delay: 0.2 },
-                  } : { duration: 0 }}
-                  style={{
-                    width: '100%', height: '100%',
-                    objectFit: 'contain',
-                    objectPosition: 'top center',
-                    pointerEvents: 'none',
-                    transformOrigin: '50% 0%',
-                    filter: 'drop-shadow(0 0 60px rgba(36, 255, 149, 0.7)) drop-shadow(0 0 30px rgba(36, 255, 149, 0.5))',
-                  }}
-                />
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#00ff87] uppercase tracking-wider">
+                  <Cpu className="h-3.5 w-3.5" /> Spatial Graph AST Compiler
+                </span>
+                <span className="rounded-full border border-[#00ff87]/30 bg-[#00ff87]/10 px-2 py-0.5 text-[9px] font-bold text-[#00ff87]">
+                  Primitive v1.0
+                </span>
               </div>
-
-              <div style={{ position: 'absolute', top: '-5px', left: 'calc(59% - 10px)', transform: 'translate(-50%, -50%)', marginTop: '4px', pointerEvents: 'auto' }}>
-                <div style={{ width: '54px', height: '54px', borderRadius: '50%', overflow: 'hidden' }}>
-                  <img src="https://qclay.design/lovable/glass-menu/avatar-man-top.png" alt="" style={{ width: '100%', height: 'calc(100% + 15px)', objectFit: 'cover', marginTop: '15px' }} />
-                </div>
-              </div>
-
-              {/* Outer orbit */}
-              <motion.div
-                style={{ position: 'absolute', inset: 0, transformOrigin: 'calc(59% - 10px) 13.5px', willChange: 'transform' }}
-                initial={{ rotate: 180 }}
-                animate={isInView ? { rotate: 0 } : { rotate: 180 }}
-                transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 } : { duration: 0 }}
-              >
-                <div style={{ position: 'absolute', top: 'calc(37% - 20px)', left: 'calc(22% + 10px)', transform: 'translate(-50%,-50%)', pointerEvents: 'auto' }}>
-                  <motion.div initial={{ rotate: -180, opacity: 0 }} animate={isInView ? { rotate: 0, opacity: 1 } : { rotate: -180, opacity: 0 }} transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 } : { duration: 0 }} style={{ width: '34px', height: '34px', borderRadius: '50%', backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img src="https://qclay.design/lovable/glass-menu/github-icon.svg" alt="" style={{ width: '16px', height: '16px' }} />
-                  </motion.div>
-                </div>
-                <div style={{ position: 'absolute', top: 'calc(55% - 0px)', left: 'calc(32% + 13px)', transform: 'translate(-50%,-50%)', pointerEvents: 'auto' }}>
-                  <motion.div initial={{ rotate: -180, opacity: 0 }} animate={isInView ? { rotate: 0, opacity: 1 } : { rotate: -180, opacity: 0 }} transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 } : { duration: 0 }} style={{ width: '44px', height: '44px', borderRadius: '50%', overflow: 'hidden' }}>
-                    <img src="https://qclay.design/lovable/glass-menu/avatar-woman-1.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </motion.div>
-                </div>
-                <div style={{ position: 'absolute', top: 'calc(66% - -2px)', left: '54%', transform: 'translate(-50%,-50%)', pointerEvents: 'auto' }}>
-                  <motion.div initial={{ rotate: -180, opacity: 0 }} animate={isInView ? { rotate: 0, opacity: 1 } : { rotate: -180, opacity: 0 }} transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 } : { duration: 0 }} style={{ width: '44px', height: '44px', borderRadius: '50%', overflow: 'hidden' }}>
-                    <img src="https://qclay.design/lovable/glass-menu/avatar-woman-2.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </motion.div>
-                </div>
-                <div style={{ position: 'absolute', top: 'calc(56% - -3px)', left: '75%', transform: 'translate(-50%,-50%)', pointerEvents: 'auto' }}>
-                  <motion.div initial={{ rotate: -180, opacity: 0 }} animate={isInView ? { rotate: 0, opacity: 1 } : { rotate: -180, opacity: 0 }} transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.2 } : { duration: 0 }} style={{ width: '54px', height: '54px', borderRadius: '50%', overflow: 'hidden' }}>
-                    <img src="https://qclay.design/lovable/glass-menu/avatar-woman-3.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </motion.div>
-                </div>
-              </motion.div>
-
-              {/* Middle orbit */}
-              <motion.div
-                style={{ position: 'absolute', inset: 0, transformOrigin: 'calc(59% - 10px) 13.5px', willChange: 'transform' }}
-                initial={{ rotate: -180 }}
-                animate={isInView ? { rotate: 0 } : { rotate: -180 }}
-                transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.4 } : { duration: 0 }}
-              >
-                <div style={{ position: 'absolute', top: 'calc(26% - 25px)', left: 'calc(86% - 9px)', transform: 'translate(-50%,-50%)', pointerEvents: 'auto' }}>
-                  <motion.div initial={{ rotate: 180, opacity: 0 }} animate={isInView ? { rotate: 0, opacity: 1 } : { rotate: 180, opacity: 0 }} transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.4 } : { duration: 0 }} style={{ width: '34px', height: '34px', borderRadius: '50%', backdropFilter: 'blur(12px)', backgroundColor: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <img src="https://qclay.design/lovable/glass-menu/widget-box-icon.svg" alt="" style={{ width: '16px', height: '16px' }} />
-                  </motion.div>
-                </div>
-              </motion.div>
-
-              {/* Inner orbit */}
-              <motion.div
-                style={{ position: 'absolute', inset: 0, transformOrigin: 'calc(59% - 10px) 13.5px', willChange: 'transform' }}
-                initial={{ rotate: 180 }}
-                animate={isInView ? { rotate: 0 } : { rotate: 180 }}
-                transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.6 } : { duration: 0 }}
-              >
-                <div style={{ position: 'absolute', top: 'calc(27% - 20px)', left: 'calc(36% + 9px)', transform: 'translate(-50%,-50%)', pointerEvents: 'auto' }}>
-                  <motion.div initial={{ rotate: -180, opacity: 0 }} animate={isInView ? { rotate: 0, opacity: 1 } : { rotate: -180, opacity: 0 }} transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.6 } : { duration: 0 }} style={{ width: '46px', height: '46px', borderRadius: '50%', overflow: 'hidden' }}>
-                    <img src="https://qclay.design/lovable/glass-menu/avatar-man-1.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </motion.div>
-                </div>
-                <div style={{ position: 'absolute', top: 'calc(42% - 36px)', left: 'calc(56% + 5px)', transform: 'translate(-50%,-50%)', pointerEvents: 'auto' }}>
-                  <motion.div initial={{ rotate: -180, opacity: 0 }} animate={isInView ? { rotate: 0, opacity: 1 } : { rotate: -180, opacity: 0 }} transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.6 } : { duration: 0 }} style={{ width: '76px', height: '76px', borderRadius: '50%', overflow: 'hidden' }}>
-                    <img src="https://qclay.design/lovable/glass-menu/avatar-man-2.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </motion.div>
-                </div>
-                <div style={{ position: 'absolute', top: 'calc(21% - 30px)', left: 'calc(75% - 6px)', transform: 'translate(-50%,-50%)', pointerEvents: 'auto' }}>
-                  <motion.div initial={{ rotate: -180, opacity: 0 }} animate={isInView ? { rotate: 0, opacity: 1 } : { rotate: -180, opacity: 0 }} transition={isInView ? { duration: 2.4, ease: [0.16, 1, 0.3, 1], delay: 0.6 } : { duration: 0 }} style={{ width: '42px', height: '42px', borderRadius: '50%', overflow: 'hidden' }}>
-                    <img src="https://qclay.design/lovable/glass-menu/avatar-man-bottom.png" alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </motion.div>
-                </div>
-              </motion.div>
+              <h3 className="text-xl font-bold text-white mb-1">Spatial Layout ➔ AST AST Compiler</h3>
+              <p className="text-xs text-neutral-300 leading-relaxed">
+                Nodes, distance vectors, and edge connectors are parsed into structured AST representations before execution.
+              </p>
             </div>
 
-            <div style={{ position: 'absolute', left: '30px', bottom: '38px' }}>
-              <h3 style={{ fontFamily: 'var(--font-aeonik)', fontSize: '24px', fontWeight: 300, color: 'rgba(255,255,255,0.8)', margin: 0, marginBottom: '6px', letterSpacing: '-0.4px' }}>
-                <AnimatedWords text="Create a Team" baseDelay={0.8} isInView={isInView} />
-              </h3>
-              <p style={{ fontFamily: 'var(--font-aeonik)', fontSize: '14px', fontWeight: 300, color: 'rgba(255,255,255,0.4)', margin: 0, lineHeight: 1.4 }}>
-                <AnimatedWords text="Connect multi-modal context to form computational clusters." baseDelay={1.05} isInView={isInView} />
-              </p>
+            <div className="grid grid-cols-2 gap-2 mt-4">
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                <div className="text-[10px] text-neutral-400 font-mono">AST Node Count</div>
+                <div className="text-sm font-bold text-white">3 Active Contexts</div>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
+                <div className="text-[10px] text-neutral-400 font-mono">Distance Metric</div>
+                <div className="text-sm font-bold text-[#00ff87]">240px Proximity</div>
+              </div>
             </div>
 
             <MagicBorder color={MAGIC_BORDER_GREEN} radius="24px" isInView={isInView} />
           </motion.div>
         </div>
 
-        {/* Bottom Card: Personal Performance & Crypto Chart */}
+        {/* Bottom Card: MeshAPI Engine Execution */}
         <div style={{ flex: 1.07, overflow: 'hidden' }}>
           <motion.div
-            initial={{ opacity: 0, x: 200, rotateY: 90, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: 200, rotateY: 90, scale: 0.8 }}
-            transition={isInView ? { type: 'spring', stiffness: 32, damping: 22, mass: 1.2, delay: 0.15 } : { duration: 0 }}
-            style={{
-              width: '100.5%',
-              height: '100.5%',
-              marginTop: '-0.25%',
-              marginLeft: '-0.25%',
-              borderRadius: '24px',
-              backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s1-bottom-card-bg.png)',
-              backgroundSize: '100% 100%',
-              overflow: 'hidden',
-              position: 'relative',
-              transformOrigin: 'center center',
-              boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.01)',
-            }}
+            initial={{ opacity: 0, x: 100, rotateY: 45, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: 100, rotateY: 45, scale: 0.9 }}
+            transition={isInView ? { type: 'spring', stiffness: 40, damping: 22, mass: 1.1, delay: 0.15 } : { duration: 0 }}
+            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#00ff87]/30 bg-[#090a0f]/90 shadow-2xl backdrop-blur-2xl"
           >
-            <div style={{ position: 'absolute', top: '24px', left: '30px', right: '24px', marginBottom: '7px' }}>
-              <h3 style={{ fontFamily: 'var(--font-aeonik)', fontSize: '22px', fontWeight: 300, color: 'rgba(255,255,255,0.8)', margin: 0, letterSpacing: '-0.4px' }}>Personal Performance</h3>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#00ff87] uppercase tracking-wider">
+                  <Sparkles className="h-3.5 w-3.5" /> MeshAPI Reasoning Engine
+                </span>
+                <span className="font-mono text-[10px] text-neutral-400">Gemini 2.5 Flash</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Inspectable Execution Output</h3>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
+                  <span className="flex items-center gap-2 text-neutral-200">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> August Revenue Churn Highlight
+                  </span>
+                  <span className="font-mono font-bold text-amber-400">-38.0%</span>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
+                  <span className="flex items-center gap-2 text-neutral-200">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> Qualitative Feedback Synthesis
+                  </span>
+                  <span className="font-mono text-sky-400">Gateway v2 Migration</span>
+                </div>
+              </div>
             </div>
 
-            <motion.img
-              src="https://qclay.design/lovable/glass-menu/crypto-chart.svg"
-              alt=""
-              initial={{ clipPath: 'inset(0% 100% 0% 0%)' }}
-              animate={isInView ? { clipPath: 'inset(0% 0% 0% 0%)' } : { clipPath: 'inset(0% 100% 0% 0%)' }}
-              transition={isInView ? { delay: 0.9, duration: 1.5, ease: [0.22, 1, 0.36, 1] } : { duration: 0 }}
-              style={{ position: 'absolute', bottom: '48px', left: '25px', width: '390px', height: 'auto', pointerEvents: 'none' }}
-            />
-
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={isInView ? { scale: 1 } : { scale: 0 }}
-              transition={isInView ? { delay: 1.4, duration: 0.55, ease: [0.34, 1.56, 0.64, 1] } : { duration: 0 }}
-              style={{ position: 'absolute', bottom: '15px', left: '35px', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 16px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.12)' }}
-            >
-              <img src="https://qclay.design/lovable/glass-menu/zap-icon.svg" alt="" style={{ width: '16px', height: '16px' }} />
-              <span style={{ fontFamily: 'var(--font-aeonik)', fontSize: '14px', fontWeight: 400, color: 'rgba(255,255,255,0.8)', whiteSpace: 'nowrap' }}>Generate Custom</span>
-            </motion.div>
-
-            <div style={{ position: 'absolute', top: '65px', left: '20px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {[{ label: 'Weekly', border: '#868686' }, { label: 'Finance', border: '#868686' }, { label: 'Food', border: '#2B2B2B' }, { label: 'Works', border: '#2B2B2B' }, { label: 'Shopping', border: '#2B2B2B' }].map(({ label, border }, i) => (
-                <motion.div
-                  key={label}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: isInView ? 1 : 0 }}
-                  transition={{ delay: 0.9 + i * 0.13, duration: 0.45, ease: 'easeOut' }}
-                  style={{ padding: '6px 14px', borderRadius: '999px', border: `1px solid ${border}`, fontFamily: 'var(--font-aeonik)', fontSize: '13px', fontWeight: 400, color: 'rgba(255,255,255,0.75)', whiteSpace: 'nowrap' }}
-                >
-                  {label}
-                </motion.div>
-              ))}
+            <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
+              <span className="text-[11px] text-neutral-400">Target Outcome:</span>
+              <span className="text-xs font-bold text-[#00ff87]">Dynamic Living Result Rendered</span>
             </div>
 
             <MagicBorder color={MAGIC_BORDER_GREEN} radius="24px" reverse isInView={isInView} />

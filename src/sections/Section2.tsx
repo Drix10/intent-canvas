@@ -3,29 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { BlurFadeWords } from '../BlurFadeWords'
-
-function AnimatedWords({ text, baseDelay = 0, isInView }: {
-  text: string
-  baseDelay?: number
-  isInView: boolean
-}) {
-  const words = text.split(' ')
-  return (
-    <>
-      {words.map((word, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isInView ? 1 : 0 }}
-          transition={{ delay: baseDelay + i * 0.1, duration: 0.4, ease: 'easeOut' }}
-          style={{ display: 'inline' }}
-        >
-          {word}{i < words.length - 1 ? ' ' : ''}
-        </motion.span>
-      ))}
-    </>
-  )
-}
+import { Database, FileText, Layout, Network, Link, ArrowRight } from 'lucide-react'
 
 const MAGIC_BORDER_PURPLE = 'conic-gradient(from 0deg, transparent 0%, transparent 35%, rgba(144,106,255,0.12) 42%, #906AFF 50%, rgba(144,106,255,0.12) 58%, transparent 65%, transparent 100%)'
 
@@ -96,7 +74,6 @@ export function Section2() {
         backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s2-card-bg.png)',
         backgroundSize: '115%',
         backgroundPosition: 'center',
-        justifyContent: 'center',
         overflow: 'hidden',
         boxShadow:
           '0 0 0 1px rgba(144,106,255,0.01), 0 40px 120px rgba(0,0,0,0.75), 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)',
@@ -145,7 +122,7 @@ export function Section2() {
         <AnimatedNetworkLines isInView={isInView} color="#906AFF" />
       </div>
 
-      {/* ── Right Half Rich Glass Cards ── */}
+      {/* ── Right Half Tailored Project Cards ── */}
       <div
         style={{
           position: 'absolute',
@@ -156,62 +133,81 @@ export function Section2() {
           display: 'flex',
           flexDirection: 'column',
           gap: '12px',
-          padding: '6px 0 6px 73px',
+          padding: '24px 28px 24px 73px',
           boxSizing: 'border-box',
           perspective: '1200px',
+          zIndex: 15,
         }}
       >
-        {/* Top Card */}
+        {/* Top Card: Multi-Modal Node Links */}
         <div style={{ flex: 0.93, position: 'relative', overflow: 'hidden' }}>
           <motion.div
-            initial={{ opacity: 0, x: -200, rotateY: -90, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: -200, rotateY: -90, scale: 0.8 }}
-            transition={isInView ? { type: 'spring', stiffness: 32, damping: 22, mass: 1.2 } : { duration: 0 }}
-            style={{
-              width: '100.5%',
-              height: '100.5%',
-              marginTop: '-0.25%',
-              marginLeft: '-0.25%',
-              borderRadius: '24px',
-              backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s2-card-bg.png)',
-              backgroundSize: '100% 100%',
-              overflow: 'hidden',
-              position: 'relative',
-              boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.01)',
-            }}
+            initial={{ opacity: 0, x: -100, rotateY: -45, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: -100, rotateY: -45, scale: 0.9 }}
+            transition={isInView ? { type: 'spring', stiffness: 40, damping: 22, mass: 1.1 } : { duration: 0 }}
+            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#906AFF]/40 bg-[#090a0f]/90 shadow-2xl backdrop-blur-2xl"
           >
-            <div style={{ position: 'absolute', inset: 0, padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', fontFamily: 'var(--font-aeonik)', fontWeight: 600, color: '#906AFF', letterSpacing: '1px', textTransform: 'uppercase' }}>Spatial Context Matrix</span>
-              <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-jakarta)', fontWeight: 300, color: '#fff', margin: '6px 0' }}>Multi-Modal Correlation</h3>
-              <p style={{ fontSize: '13px', fontFamily: 'var(--font-aeonik)', color: 'rgba(255,255,255,0.6)', margin: 0 }}>AST nodes dynamically calculate distance vectors for AI reasoning.</p>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#906AFF] uppercase tracking-wider">
+                  <Network className="h-3.5 w-3.5" /> Spatial Context Matrix
+                </span>
+                <span className="rounded-full border border-[#906AFF]/30 bg-[#906AFF]/10 px-2 py-0.5 text-[9px] font-bold text-[#906AFF]">
+                  Multi-Modal
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Connected Node Contexts</h3>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-[#00ff87]" />
+                    <span className="text-xs font-semibold text-white">Sales_Q3_Metrics.csv</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-neutral-400">Quantitative</span>
+                </div>
+
+                <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-2.5">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-sky-400" />
+                    <span className="text-xs font-semibold text-white">Customer_Feedback.txt</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-neutral-400">Qualitative</span>
+                </div>
+              </div>
             </div>
+
             <MagicBorder color={MAGIC_BORDER_PURPLE} radius="24px" isInView={isInView} />
           </motion.div>
         </div>
 
-        {/* Bottom Card */}
+        {/* Bottom Card: Spatial Vector Distance */}
         <div style={{ flex: 1.07, overflow: 'hidden' }}>
           <motion.div
-            initial={{ opacity: 0, x: 200, rotateY: 90, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: 200, rotateY: 90, scale: 0.8 }}
-            transition={isInView ? { type: 'spring', stiffness: 32, damping: 22, mass: 1.2, delay: 0.15 } : { duration: 0 }}
-            style={{
-              width: '100.5%',
-              height: '100.5%',
-              marginTop: '-0.25%',
-              marginLeft: '-0.25%',
-              borderRadius: '24px',
-              backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s2-card-bg.png)',
-              backgroundSize: '100% 100%',
-              overflow: 'hidden',
-              position: 'relative',
-              boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.01)',
-            }}
+            initial={{ opacity: 0, x: 100, rotateY: 45, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: 100, rotateY: 45, scale: 0.9 }}
+            transition={isInView ? { type: 'spring', stiffness: 40, damping: 22, mass: 1.1, delay: 0.15 } : { duration: 0 }}
+            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#906AFF]/40 bg-[#090a0f]/90 shadow-2xl backdrop-blur-2xl"
           >
-            <div style={{ position: 'absolute', inset: 0, padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-aeonik)', fontWeight: 300, color: 'rgba(255,255,255,0.85)', margin: '0 0 8px 0' }}>Context Cluster graph</h3>
-              <p style={{ fontSize: '13px', fontFamily: 'var(--font-aeonik)', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Automatic cluster grouping connects related datasets without complex queries.</p>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#906AFF] uppercase tracking-wider">
+                  <Link className="h-3.5 w-3.5" /> Spatial Proximity Vector
+                </span>
+                <span className="font-mono text-[10px] text-purple-300">240px Link</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Automatic Relationship Inference</h3>
+              
+              <p className="text-xs text-neutral-300 leading-relaxed mb-3">
+                Connecting nodes creates cubic bezier vector links that instruct MeshAPI to perform cross-dataset join operations.
+              </p>
+
+              <div className="flex items-center justify-between rounded-xl border border-purple-500/30 bg-purple-500/10 p-2.5">
+                <span className="text-xs font-bold text-purple-300">Joint Data Analysis</span>
+                <span className="text-[10px] font-mono text-purple-200">Active Relation</span>
+              </div>
             </div>
+
             <MagicBorder color={MAGIC_BORDER_PURPLE} radius="24px" reverse isInView={isInView} />
           </motion.div>
         </div>

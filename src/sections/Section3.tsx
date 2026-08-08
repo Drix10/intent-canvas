@@ -3,29 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { BlurFadeWords } from '../BlurFadeWords'
-
-function AnimatedWords({ text, baseDelay = 0, isInView }: {
-  text: string
-  baseDelay?: number
-  isInView: boolean
-}) {
-  const words = text.split(' ')
-  return (
-    <>
-      {words.map((word, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isInView ? 1 : 0 }}
-          transition={{ delay: baseDelay + i * 0.1, duration: 0.4, ease: 'easeOut' }}
-          style={{ display: 'inline' }}
-        >
-          {word}{i < words.length - 1 ? ' ' : ''}
-        </motion.span>
-      ))}
-    </>
-  )
-}
+import { Sparkles, AlertCircle, CheckCircle2, ShieldCheck, HelpCircle } from 'lucide-react'
 
 const MAGIC_BORDER_BLUE = 'conic-gradient(from 0deg, transparent 0%, transparent 35%, rgba(76,109,255,0.12) 42%, #4C6DFF 50%, rgba(76,109,255,0.12) 58%, transparent 65%, transparent 100%)'
 
@@ -144,7 +122,7 @@ export function Section3() {
         <AnimatedNetworkLines isInView={isInView} color="#4C6DFF" />
       </div>
 
-      {/* ── Right Half Rich Glass Cards ── */}
+      {/* ── Right Half Tailored Project Cards ── */}
       <div
         style={{
           position: 'absolute',
@@ -155,62 +133,74 @@ export function Section3() {
           display: 'flex',
           flexDirection: 'column',
           gap: '12px',
-          padding: '6px 0 6px 73px',
+          padding: '24px 28px 24px 73px',
           boxSizing: 'border-box',
           perspective: '1200px',
+          zIndex: 15,
         }}
       >
-        {/* Top Card */}
+        {/* Top Card: Inspectable Step Pipeline */}
         <div style={{ flex: 0.93, position: 'relative', overflow: 'hidden' }}>
           <motion.div
-            initial={{ opacity: 0, x: -200, rotateY: -90, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: -200, rotateY: -90, scale: 0.8 }}
-            transition={isInView ? { type: 'spring', stiffness: 32, damping: 22, mass: 1.2 } : { duration: 0 }}
-            style={{
-              width: '100.5%',
-              height: '100.5%',
-              marginTop: '-0.25%',
-              marginLeft: '-0.25%',
-              borderRadius: '24px',
-              backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s3-card-bg.png)',
-              backgroundSize: '100% 100%',
-              overflow: 'hidden',
-              position: 'relative',
-              boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.01)',
-            }}
+            initial={{ opacity: 0, x: -100, rotateY: -45, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: -100, rotateY: -45, scale: 0.9 }}
+            transition={isInView ? { type: 'spring', stiffness: 40, damping: 22, mass: 1.1 } : { duration: 0 }}
+            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#4C6DFF]/40 bg-[#090a0f]/90 shadow-2xl backdrop-blur-2xl"
           >
-            <div style={{ position: 'absolute', inset: 0, padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <span style={{ fontSize: '11px', fontFamily: 'var(--font-aeonik)', fontWeight: 600, color: '#4C6DFF', letterSpacing: '1px', textTransform: 'uppercase' }}>MeshAPI Reasoning Pipeline</span>
-              <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-jakarta)', fontWeight: 300, color: '#fff', margin: '6px 0' }}>Step-by-Step Deconstruction</h3>
-              <p style={{ fontSize: '13px', fontFamily: 'var(--font-aeonik)', color: 'rgba(255,255,255,0.6)', margin: 0 }}>Every step maps directly to capability engines with 94%+ confidence scoring.</p>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#4C6DFF] uppercase tracking-wider">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Inspectable Plan Steps
+                </span>
+                <span className="rounded-full border border-[#4C6DFF]/30 bg-[#4C6DFF]/10 px-2 py-0.5 text-[9px] font-bold text-[#4C6DFF]">
+                  94% Confidence
+                </span>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Step Decomposition</h3>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs text-neutral-200">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87] shrink-0" />
+                  <span className="truncate font-medium">1. Aggregate Monthly Sales Totals</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs text-neutral-200">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87] shrink-0" />
+                  <span className="truncate font-medium">2. Correlate August Drop with Feedback</span>
+                </div>
+              </div>
             </div>
+
             <MagicBorder color={MAGIC_BORDER_BLUE} radius="24px" isInView={isInView} />
           </motion.div>
         </div>
 
-        {/* Bottom Card */}
+        {/* Bottom Card: Disambiguation Option Gate */}
         <div style={{ flex: 1.07, overflow: 'hidden' }}>
           <motion.div
-            initial={{ opacity: 0, x: 200, rotateY: 90, scale: 0.8 }}
-            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: 200, rotateY: 90, scale: 0.8 }}
-            transition={isInView ? { type: 'spring', stiffness: 32, damping: 22, mass: 1.2, delay: 0.15 } : { duration: 0 }}
-            style={{
-              width: '100.5%',
-              height: '100.5%',
-              marginTop: '-0.25%',
-              marginLeft: '-0.25%',
-              borderRadius: '24px',
-              backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s3-card-bg.png)',
-              backgroundSize: '100% 100%',
-              overflow: 'hidden',
-              position: 'relative',
-              boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.01)',
-            }}
+            initial={{ opacity: 0, x: 100, rotateY: 45, scale: 0.9 }}
+            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: 100, rotateY: 45, scale: 0.9 }}
+            transition={isInView ? { type: 'spring', stiffness: 40, damping: 22, mass: 1.1, delay: 0.15 } : { duration: 0 }}
+            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-amber-500/30 bg-[#090a0f]/90 shadow-2xl backdrop-blur-2xl"
           >
-            <div style={{ position: 'absolute', inset: 0, padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <h3 style={{ fontSize: '20px', fontFamily: 'var(--font-aeonik)', fontWeight: 300, color: 'rgba(255,255,255,0.85)', margin: '0 0 8px 0' }}>Disambiguation Gate (&lt; 85%)</h3>
-              <p style={{ fontSize: '13px', fontFamily: 'var(--font-aeonik)', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Interactive option chips let humans resolve low-confidence intent ambiguities.</p>
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-[11px] font-bold text-amber-400 uppercase tracking-wider">
+                  <AlertCircle className="h-3.5 w-3.5" /> Disambiguation Gate
+                </span>
+                <span className="font-mono text-[10px] text-amber-300">Confidence &lt; 85%</span>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Human-in-the-Loop Options</h3>
+              
+              <div className="space-y-2">
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 p-2 text-xs text-amber-200">
+                  <span className="font-bold">Option A:</span> Analyze Customer Churn vs Sales
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-2 text-xs text-neutral-300">
+                  <span className="font-bold">Option B:</span> Generate Monthly Sales Trend Chart
+                </div>
+              </div>
             </div>
+
             <MagicBorder color={MAGIC_BORDER_BLUE} radius="24px" reverse isInView={isInView} />
           </motion.div>
         </div>
