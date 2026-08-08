@@ -90,6 +90,7 @@ const initialDemoEdges: CanvasEdge[] = [
 ];
 
 const WORKSPACE_STORAGE_KEY = 'intent-canvas.workspace';
+const LEGACY_GUIDED_PROMPT_PATTERN = /revenue dropped in august|why revenue dropped in august/i;
 const memoryStorage = {
   getItem: () => null,
   setItem: () => undefined,
@@ -173,7 +174,7 @@ function mergePersistedWorkspace(current: CanvasState, persisted: unknown): Canv
     ...current,
     nodes: normalizedNodes,
     edges: storedEdges,
-    activeIntentPrompt: typeof stored.activeIntentPrompt === 'string' ? stored.activeIntentPrompt.slice(0, 3000) : current.activeIntentPrompt,
+    activeIntentPrompt: typeof stored.activeIntentPrompt === 'string' && !LEGACY_GUIDED_PROMPT_PATTERN.test(stored.activeIntentPrompt) ? stored.activeIntentPrompt.slice(0, 3000) : current.activeIntentPrompt,
     customPrimitives: Array.isArray(stored.customPrimitives) ? stored.customPrimitives.filter(isValidPrimitive).slice(0, 30) : current.customPrimitives,
     viewMode: stored.viewMode === 'interactive' || stored.viewMode === 'showcase' ? stored.viewMode : current.viewMode,
   };

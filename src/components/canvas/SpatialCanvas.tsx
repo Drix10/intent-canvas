@@ -308,7 +308,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
             }}
             className="w-full rounded-xl border border-[#00ff87]/30 bg-[#00ff87]/10 px-3 py-2 text-left text-[11px] font-semibold text-[#b8ffd9] transition-colors hover:bg-[#00ff87]/20"
           >
-            Try Guided Intent: <span className="text-[#00ff87]">"Why revenue dropped in August"</span>
+             Try Guided Intent: <span className="text-[#00ff87]">"Identify the most important workspace risk"</span>
           </button>
         </div>
       ) : (

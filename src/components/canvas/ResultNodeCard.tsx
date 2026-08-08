@@ -145,7 +145,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
             <h4 className="mb-1 flex items-center gap-1 text-xs font-bold text-purple-300"><Palette className="h-3.5 w-3.5" /> {uiConcept.conceptTitle || 'UI Concept'}</h4>
             {!!uiConcept.componentHierarchy?.length && <p className="text-[10px] leading-snug text-neutral-300"><strong className="text-white">Components:</strong> {uiConcept.componentHierarchy.join(' • ')}</p>}
             {!!uiConcept.stylingDirectives?.length && <p className="mt-1 text-[10px] leading-snug text-neutral-300"><strong className="text-white">Style:</strong> {uiConcept.stylingDirectives.join(' • ')}</p>}
-            {uiConcept.themePalette && <div className="mt-2 grid grid-cols-2 gap-1 text-[9px] text-neutral-400">{Object.keys(uiConcept.themePalette).map((key) => <span key={key} className="rounded border border-white/10 px-1.5 py-1"><strong className="text-neutral-200">{key}</strong></span>)}</div>}
+            {uiConcept.themePalette && <div className="mt-2 grid grid-cols-2 gap-1 text-[9px] text-neutral-400">{Object.entries(uiConcept.themePalette).map(([key, value]) => <span key={key} className="rounded border border-white/10 px-1.5 py-1"><strong className="block text-neutral-200">{key}</strong><span className="mt-0.5 block truncate" title={String(value)}>{String(value)}</span></span>)}</div>}
           </div>
         )}
 

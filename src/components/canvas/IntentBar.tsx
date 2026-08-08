@@ -37,9 +37,9 @@ export const IntentBar: React.FC<IntentBarProps> = ({
         <div className="smoked-glass hairline-border flex max-w-[calc(100vw-1rem)] flex-wrap items-center justify-center gap-2 rounded-2xl px-4 py-2 shadow-2xl backdrop-blur-2xl">
           <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Guide:</span>
           {[
-            'Show me why revenue dropped in August',
-            'Analyze customer churn sentiment notes',
-            'Compare Q3 sales with design system',
+            'Identify the most important risk in this workspace',
+            'Synthesize the supplied customer and account evidence',
+            'Recommend grounded next steps using the connected sources',
           ].map((suggestion, idx) => (
              <button
                type="button"

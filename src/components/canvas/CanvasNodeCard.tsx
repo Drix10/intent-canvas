@@ -67,7 +67,7 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
         height: node.position.height,
       }}
     >
-      <SpotlightCard className="h-full w-full overflow-hidden p-4">
+      <SpotlightCard className="flex h-full w-full flex-col overflow-hidden p-4">
         {/* Node Header */}
         <div className="mb-2.5 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
@@ -85,16 +85,22 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
         </div>
 
         {node.type === 'example' && node.dataPayload.previewUrl && (
-          <img src={node.dataPayload.previewUrl} alt={`Preview of ${node.title}`} className="mb-2 h-16 w-full rounded-lg border border-white/10 object-cover" />
+          <img
+            src={node.dataPayload.previewUrl}
+            alt={`Preview of ${node.title}`}
+            draggable={false}
+            onDragStart={(event) => event.preventDefault()}
+            className="mb-2 h-12 w-full shrink-0 rounded-lg border border-white/10 object-cover"
+          />
         )}
 
         {/* Payload Summary */}
-        <p className="line-clamp-3 text-[11px] leading-relaxed text-neutral-300">
+        <p className="line-clamp-2 min-h-0 text-[11px] leading-relaxed text-neutral-300">
           {node.dataPayload.contentSummary}
         </p>
 
          {/* Connection Controls */}
-         {isConnectable && <div className="mt-3 flex gap-1.5">
+         {isConnectable && <div className="mt-auto flex shrink-0 gap-1.5 pt-2">
           <button
           type="button"
            aria-label={isConnectingSource ? `Cancel connection from ${node.title}` : `Connect ${node.title} to another node`}
