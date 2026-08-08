@@ -40,16 +40,18 @@ export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView
 
   return (
     <svg width="484" height="358" viewBox="0 0 593 453" fill="none" xmlns="http://www.w3.org/2000/svg"
+      shapeRendering="geometricPrecision"
       style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', overflow: 'hidden',
         WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 75%)',
         maskImage: 'radial-gradient(ellipse 65% 55% at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0) 75%)',
+        willChange: 'transform',
       }}
     >
       <defs>
         <filter id={glowId} x="17.6986" y="57.4109" width="280.88" height="283.716" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
           <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-          <feGaussianBlur stdDeviation="59.2282" result="effect1_foregroundBlur_0_1" />
+          <feGaussianBlur stdDeviation="30" result="effect1_foregroundBlur_0_1" />
         </filter>
       </defs>
 
@@ -57,15 +59,15 @@ export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView
         const pathId = `${uid}-pp-${i}`
         const maskId = `${uid}-pm-${i}`
         const gradId = `${uid}-pg-${i}`
-        const beginTime = i === 0 ? '2s' : '2.6s'
+        const beginTime = i === 0 ? '1s' : '1.4s'
         return (
           <g key={i}>
             <motion.path d={d} stroke="#272729" strokeWidth="1.55864" strokeLinecap="round" fill="none"
               initial={{ pathLength: 0, opacity: 0 }}
               animate={isInView ? { pathLength: 1, opacity: 1 } : { pathLength: 0, opacity: 0 }}
               transition={isInView ? {
-                pathLength: { delay: 0.1 + i * 0.1, duration: 1.9, ease: [0.25, 1, 0.5, 1] },
-                opacity: { delay: 0.1 + i * 0.1, duration: 0.2 },
+                pathLength: { delay: 0.05 + i * 0.05, duration: 1.2, ease: [0.25, 1, 0.5, 1] },
+                opacity: { delay: 0.05 + i * 0.05, duration: 0.15 },
               } : { duration: 0 }}
             />
             {(i === 0 || i === 1) && (
@@ -78,10 +80,10 @@ export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView
                   </radialGradient>
                   <mask id={maskId}>
                     <circle r="40" fill={`url(#${gradId})`}>
-                      <animateMotion dur="4.5s" repeatCount="indefinite" begin={beginTime} keyPoints="0;1;1" keyTimes="0;0.667;1" calcMode="linear">
+                      <animateMotion dur="3.5s" repeatCount="indefinite" begin={beginTime} keyPoints="0;1;1" keyTimes="0;0.667;1" calcMode="linear">
                         <mpath href={`#${pathId}`} />
                       </animateMotion>
-                      <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.067;0.6;0.667;1" dur="4.5s" repeatCount="indefinite" begin={beginTime} />
+                      <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.067;0.6;0.667;1" dur="3.5s" repeatCount="indefinite" begin={beginTime} />
                     </circle>
                   </mask>
                 </defs>
@@ -95,7 +97,7 @@ export function AnimatedNetworkLines({ isInView, color = '#24FF95' }: { isInView
       <motion.g filter={`url(#${glowId})`}
         initial={{ opacity: 0 }}
         animate={isInView ? { opacity: 0.8 } : { opacity: 0 }}
-        transition={isInView ? { delay: 1.1, duration: 0.8 } : { duration: 0 }}
+        transition={isInView ? { delay: 0.8, duration: 0.5 } : { duration: 0 }}
       >
         <path d="M136.155 197.851C136.155 185.71 145.998 175.867 158.139 175.867C170.279 175.867 180.122 185.71 180.122 197.851V200.687C180.122 212.828 170.279 222.671 158.139 222.671C145.998 222.671 136.155 212.828 136.155 200.687V197.851Z" fill={color} />
       </motion.g>

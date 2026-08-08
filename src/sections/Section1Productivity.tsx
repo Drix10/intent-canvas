@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { BlurFadeWords } from '../BlurFadeWords'
-import { Sparkles, Cpu, Layers, Workflow, CheckCircle2 } from 'lucide-react'
+import { Sparkles, Cpu, CheckCircle2 } from 'lucide-react'
 
 function AnimatedWords({ text, baseDelay = 0, isInView }: {
   text: string
@@ -18,7 +18,7 @@ function AnimatedWords({ text, baseDelay = 0, isInView }: {
           key={i}
           initial={{ opacity: 0 }}
           animate={{ opacity: isInView ? 1 : 0 }}
-          transition={{ delay: baseDelay + i * 0.1, duration: 0.4, ease: 'easeOut' }}
+          transition={{ delay: baseDelay + i * 0.08, duration: 0.35, ease: 'easeOut' }}
           style={{ display: 'inline' }}
         >
           {word}{i < words.length - 1 ? ' ' : ''}
@@ -30,13 +30,13 @@ function AnimatedWords({ text, baseDelay = 0, isInView }: {
 
 const MAGIC_BORDER_GREEN = 'conic-gradient(from 0deg, transparent 0%, transparent 35%, rgba(36,255,149,0.12) 42%, #24FF95 50%, rgba(36,255,149,0.12) 58%, transparent 65%, transparent 100%)'
 
-function MagicBorder({ color, radius = '24px', reverse = false, duration = 4, initialAngle = 0, isInView = true }: { color: string; radius?: string; reverse?: boolean; duration?: number; initialAngle?: number; isInView?: boolean }) {
+function MagicBorder({ color, radius = '24px', reverse = false, duration = 5, initialAngle = 0, isInView = true }: { color: string; radius?: string; reverse?: boolean; duration?: number; initialAngle?: number; isInView?: boolean }) {
   const fromAngle = reverse ? -initialAngle : initialAngle
   const toAngle = fromAngle + (reverse ? -360 : 360)
   return (
     <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, borderRadius: radius, pointerEvents: 'none', overflow: 'hidden', zIndex: 60, padding: '2px', WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)', WebkitMaskComposite: 'xor', maskComposite: 'exclude' }}>
       <motion.div
-        style={{ position: 'absolute', left: '50%', top: '50%', width: '250%', height: '250%', background: color, x: '-50%', y: '-50%', transformOrigin: 'center center', filter: 'drop-shadow(0 0 5px rgba(36, 255, 149, 0.5)) drop-shadow(0 0 10px rgba(36, 255, 149, 0.3))', willChange: 'transform' }}
+        style={{ position: 'absolute', left: '50%', top: '50%', width: '250%', height: '250%', background: color, x: '-50%', y: '-50%', transformOrigin: 'center center', filter: 'drop-shadow(0 0 4px rgba(36, 255, 149, 0.4))', willChange: 'transform' }}
         animate={isInView ? { rotate: [fromAngle, toAngle] } : false}
         transition={{ repeat: Infinity, duration, ease: 'linear' }}
       />
@@ -131,9 +131,9 @@ export function Section1Productivity() {
         }}
       >
         <motion.div
-          initial={{ opacity: 0, x: 48 }}
+          initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5, duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ delay: 0.3, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           style={{ position: 'relative', width: '320px', height: '80px', marginBottom: '25px', marginLeft: '-30px' }}
         >
           <img
@@ -161,7 +161,7 @@ export function Section1Productivity() {
             marginBottom: '8px',
           }}
         >
-          <BlurFadeWords text="Stop Clicking Buttons. Express Intent." baseDelay={0.5} isInView={isInView} />
+          <BlurFadeWords text="Stop Clicking Buttons. Express Intent." baseDelay={0.4} isInView={isInView} />
         </h1>
 
         <p
@@ -177,7 +177,7 @@ export function Section1Productivity() {
         >
           <BlurFadeWords
             text="No forms. No syntax. Just tell the computer what you want."
-            baseDelay={0.8}
+            baseDelay={0.65}
             isInView={isInView}
             wordStyle={{
               background: 'linear-gradient(180deg, #9BFFCF 0%, #24FF95 100%)',
@@ -198,9 +198,9 @@ export function Section1Productivity() {
             maxWidth: '420px',
           }}
         >
-          <BlurFadeWords text="Traditional software forces manual step-by-step procedures." baseDelay={1.1} isInView={isInView} />
+          <BlurFadeWords text="Traditional software forces manual step-by-step procedures." baseDelay={0.9} isInView={isInView} />
           <br />
-          <BlurFadeWords text="Intent Canvas turns your desires directly into automated computations." baseDelay={1.45} isInView={isInView} />
+          <BlurFadeWords text="Intent Canvas turns your desires directly into automated computations." baseDelay={1.15} isInView={isInView} />
         </p>
       </div>
 
@@ -218,7 +218,7 @@ export function Section1Productivity() {
         <AnimatedNetworkLines isInView={isInView} color="#24FF95" />
       </div>
 
-      {/* ── Right Half Tailored Project Cards ── */}
+      {/* ── Right Half Snappy Lightweight Cards ── */}
       <div
         style={{
           position: 'absolute',
@@ -231,17 +231,18 @@ export function Section1Productivity() {
           gap: '12px',
           padding: '24px 28px 24px 73px',
           boxSizing: 'border-box',
-          perspective: '1200px',
+          perspective: '1000px',
           zIndex: 15,
         }}
       >
         {/* Top Card: Spatial Graph AST Compiler */}
         <div style={{ flex: 0.93, position: 'relative', overflow: 'hidden' }}>
           <motion.div
-            initial={{ opacity: 0, x: -100, rotateY: -45, scale: 0.9 }}
-            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: -100, rotateY: -45, scale: 0.9 }}
-            transition={isInView ? { type: 'spring', stiffness: 40, damping: 22, mass: 1.1 } : { duration: 0 }}
-            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#00ff87]/30 bg-[#090a0f]/90 shadow-2xl backdrop-blur-2xl"
+            initial={{ opacity: 0, x: -60, scale: 0.95 }}
+            animate={isInView ? { opacity: 1, x: 0, scale: 1 } : { opacity: 0, x: -60, scale: 0.95 }}
+            transition={isInView ? { type: 'spring', stiffness: 50, damping: 20, mass: 0.9 } : { duration: 0 }}
+            style={{ willChange: 'transform, opacity' }}
+            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#00ff87]/30 bg-[#090a0f]/90 shadow-2xl backdrop-blur-xl"
           >
             <div>
               <div className="mb-2 flex items-center justify-between">
@@ -252,7 +253,7 @@ export function Section1Productivity() {
                   Primitive v1.0
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">Spatial Layout ➔ AST AST Compiler</h3>
+              <h3 className="text-xl font-bold text-white mb-1">Spatial Layout ➔ AST Compiler</h3>
               <p className="text-xs text-neutral-300 leading-relaxed">
                 Nodes, distance vectors, and edge connectors are parsed into structured AST representations before execution.
               </p>
@@ -276,10 +277,11 @@ export function Section1Productivity() {
         {/* Bottom Card: MeshAPI Engine Execution */}
         <div style={{ flex: 1.07, overflow: 'hidden' }}>
           <motion.div
-            initial={{ opacity: 0, x: 100, rotateY: 45, scale: 0.9 }}
-            animate={isInView ? { opacity: 1, x: 0, rotateY: 0, scale: 1 } : { opacity: 0, x: 100, rotateY: 45, scale: 0.9 }}
-            transition={isInView ? { type: 'spring', stiffness: 40, damping: 22, mass: 1.1, delay: 0.15 } : { duration: 0 }}
-            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#00ff87]/30 bg-[#090a0f]/90 shadow-2xl backdrop-blur-2xl"
+            initial={{ opacity: 0, x: 60, scale: 0.95 }}
+            animate={isInView ? { opacity: 1, x: 0, scale: 1 } : { opacity: 0, x: 60, scale: 0.95 }}
+            transition={isInView ? { type: 'spring', stiffness: 50, damping: 20, mass: 0.9, delay: 0.1 } : { duration: 0 }}
+            style={{ willChange: 'transform, opacity' }}
+            className="smoked-glass relative h-full w-full rounded-3xl p-6 flex flex-col justify-between border border-[#00ff87]/30 bg-[#090a0f]/90 shadow-2xl backdrop-blur-xl"
           >
             <div>
               <div className="mb-2 flex items-center justify-between">
