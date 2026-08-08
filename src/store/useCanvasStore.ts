@@ -33,6 +33,7 @@ interface CanvasState {
   setActivePlan: (plan: ExecutionPlan | null) => void;
   setExecutionResult: (result: ExecutionResult | null) => void;
   addCustomPrimitive: (primitive: CustomPrimitiveRecord) => void;
+  upsertOutputNode: (summary: string, payload: Record<string, unknown>) => void;
   resetDemoCanvas: () => void;
 }
 
@@ -142,7 +143,7 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   setViewMode: (viewMode) => set({ viewMode }),
   addNode: (node) => set((state) => {
     const { x, y, width, height } = node.position;
-    if (!node.id || state.nodes.some((existing) => existing.id === node.id) || ![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return state;
+    if (!node.id || state.nodes.length >= 30 || state.nodes.some((existing) => existing.id === node.id) || ![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return state;
     return { nodes: [...state.nodes, { ...node, position: freePosition(state.nodes, node) }] };
   }),
   updateNodePosition: (id, x, y) => {
@@ -165,7 +166,7 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     return result;
   },
   addEdge: (sourceNodeId, targetNodeId) => set((state) => {
-    if (sourceNodeId === targetNodeId || !state.nodes.some((node) => node.id === sourceNodeId) || !state.nodes.some((node) => node.id === targetNodeId)) return state;
+    if (state.edges.length >= 60 || sourceNodeId === targetNodeId || !state.nodes.some((node) => node.id === sourceNodeId) || !state.nodes.some((node) => node.id === targetNodeId)) return state;
     const exists = state.edges.some(
       (e) => (e.sourceNodeId === sourceNodeId && e.targetNodeId === targetNodeId) ||
              (e.sourceNodeId === targetNodeId && e.targetNodeId === sourceNodeId)
@@ -194,12 +195,19 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     };
   }),
   clearSelection: () => set({ selectedNodeIds: [] }),
-  setActiveIntentPrompt: (activeIntentPrompt) => set({ activeIntentPrompt }),
+  setActiveIntentPrompt: (activeIntentPrompt) => set({ activeIntentPrompt: activeIntentPrompt.slice(0, 3000) }),
   setIsEvaluatingPlan: (isEvaluatingPlan) => set({ isEvaluatingPlan }),
   setIsExecutingPlan: (isExecutingPlan) => set({ isExecutingPlan }),
   setActivePlan: (activePlan) => set({ activePlan }),
   setExecutionResult: (executionResult) => set({ executionResult }),
-  addCustomPrimitive: (primitive) => set((state) => ({ customPrimitives: [...state.customPrimitives, primitive] })),
+  addCustomPrimitive: (primitive) => set((state) => state.customPrimitives.some(existing => existing.primitiveId === primitive.primitiveId) ? state : ({ customPrimitives: [...state.customPrimitives, primitive] })),
+  upsertOutputNode: (summary, payload) => set((state) => {
+    const existing = state.nodes.find(node => node.type === 'output');
+    if (existing) return { nodes: state.nodes.map(node => node.id === existing.id ? { ...node, dataPayload: { ...node.dataPayload, contentSummary: summary, parsedMetrics: payload } } : node) };
+    if (state.nodes.length >= 30) return state;
+    const position = freePosition(state.nodes, { id: 'result', title: 'Computed Intent Result', type: 'output', position: { x: 420, y: 360, width: 300, height: 180 }, dataPayload: { mimeType: 'application/json', contentSummary: summary } });
+    return { nodes: [...state.nodes, { id: createId('node_output'), title: 'Computed Intent Result', type: 'output', position, dataPayload: { mimeType: 'application/json', contentSummary: summary, parsedMetrics: payload } }] };
+  }),
   resetDemoCanvas: () => set((state) => ({
     nodes: [...initialDemoNodes, ...primitiveNodes(state.customPrimitives)],
     edges: initialDemoEdges,

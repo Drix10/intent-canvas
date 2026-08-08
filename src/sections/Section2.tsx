@@ -99,7 +99,7 @@ export function Section2() {
         width: NATIVE_W,
         height: NATIVE_H,
         borderRadius: '24px',
-        backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s2-card-bg.png)',
+        backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s2-card-bg.png), linear-gradient(135deg, #0d0b18, #040406)',
         backgroundSize: '115%',
         backgroundPosition: 'center',
         overflow: 'hidden',
@@ -110,6 +110,7 @@ export function Section2() {
       <img
         src="https://qclay.design/lovable/glass-menu/card-light-overlay.png"
         alt=""
+        onError={(event) => { event.currentTarget.style.display = 'none' }}
         style={{
           position: 'absolute',
           top: 0, left: 0,

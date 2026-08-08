@@ -41,7 +41,8 @@ export function useDialog(ref: RefObject<HTMLElement>, onClose: () => void) {
         else appContent.setAttribute('aria-hidden', previousAriaHidden)
         appContent.inert = previousInert
       }
-      previousActiveElement?.focus?.()
+      if (previousActiveElement?.isConnected && !previousActiveElement.inert) previousActiveElement.focus()
+      else document.querySelector<HTMLElement>('#canvas-background')?.focus()
     }
   }, [onClose, ref])
 }

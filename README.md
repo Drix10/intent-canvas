@@ -50,7 +50,7 @@ The backend engine follows a strict fail-fast 3-tier layering architecture compl
 - **Route Layer**: `src/server.ts` exposes Zod-validated endpoints `/api/intent/parse`, `/api/intent/plan`, `/api/intent/execute`, and `/api/intent/create-primitive`. API routes support an optional bearer token through `INTENT_API_ACCESS_TOKEN`.
 - **Validation Layer**: `src/validators/spatialAstValidator.ts` uses Zod schemas (`SpatialGraphASTSchema`, `SpatialNodeSchema`) to validate every network boundary.
 - **Service Layer**:
-  - `MeshApiService`: Integrates with MeshAPI (`https://developers.meshapi.ai`) for LLM reasoning and intent decomposition, featuring deterministic fallback execution.
+  - `MeshApiService`: Integrates with MeshAPI (`https://developers.meshapi.ai`) for LLM reasoning and intent decomposition. Deterministic local planning is used only when no MeshAPI credential is configured; configured-provider failures return controlled errors.
   - `DataPatternFinderService`: Detects dataset anomalies (e.g. August revenue drop) and generates dynamic SVG charts.
   - `DocumentSynthesizerService`: Extracts semantic concepts, joint takeaways, and cross-document contradictions.
   - `MeetingInsightExtractorService`: Parses transcripts into decisions, action items, owner tags, and risk factors.
@@ -105,10 +105,23 @@ npm run dev
 
 ## 🛡️ Technical Verification & Judge Q&A Defense
 
+### MVP API Contract
+
+```text
+Canvas nodes + edges + intent
+        -> SpatialGraphAST
+        -> inspect plan
+        -> confirm exact plan
+        -> execute/adapt
+        -> output node + result panel
+```
+
+The current MVP supports text intent plus uploaded text/CSV/image nodes. Voice and sketch ingestion remain future extensions; the backend rejects unsupported intent/capability combinations instead of fabricating output.
+
 - **Q: Isn't this just an AI agent or chatbot?**  
   *Answer*: No. An agent is an execution mechanism. Intent Canvas introduces a new **input primitive** where spatial layout, edge distance vectors, and multimodal context compile into a formal `SpatialGraphAST` before computation.
 - **Q: How do you prevent infinite execution loops or memory leaks?**  
-  *Answer*: We enforce strict boundaries: `MAX_PLAN_STEPS = 5`, step timeout ceilings, 50KB tool output truncation, and client-side `AbortController` signal cancellation.
+  *Answer*: We enforce strict boundaries: `MAX_PLAN_STEPS = 5`, an 8-second provider timeout, a 50KB capability-output rejection limit, request-scoped abort cancellation, and structured errors.
 - **Q: Can users create new primitives?**  
   *Answer*: Yes! The system supports **Higher-Order Dynamic Primitive Composition**. Users can select executed result subgraphs and click *"Save as Custom Primitive"*, generating a new reusable node (`CustomPrimitiveDefinition`).
 

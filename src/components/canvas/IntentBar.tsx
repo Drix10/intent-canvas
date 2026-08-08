@@ -8,6 +8,7 @@ interface IntentBarProps {
   onExecuteComputation: () => void;
   onFilterEnterprise: () => void;
   onAddNewNode: () => void;
+  onAddFile: (file: File) => void;
 }
 
 export const IntentBar: React.FC<IntentBarProps> = ({
@@ -15,6 +16,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
   onExecuteComputation,
   onFilterEnterprise,
   onAddNewNode,
+  onAddFile,
 }) => {
   const {
     activeIntentPrompt,
@@ -24,6 +26,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
     resetDemoCanvas,
   } = useCanvasStore();
   const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   return (
     <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2">
@@ -76,7 +79,12 @@ export const IntentBar: React.FC<IntentBarProps> = ({
             className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
           >
             {isEvaluatingPlan ? 'Evaluating...' : 'Inspect Plan'}
-          </button>
+           </button>
+
+           <input ref={fileInputRef} type="file" accept=".csv,.txt,.md,.json,image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
+           <button type="button" aria-label="Add file or image node" onClick={() => fileInputRef.current?.click()} title="Add file or image" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white">
+             <Plus className="h-3.5 w-3.5" />
+           </button>
 
           <MagneticButton
             onClick={onExecuteComputation}

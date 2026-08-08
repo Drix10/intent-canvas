@@ -41,7 +41,7 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
   - `src/services/capabilities/uiConceptGeneratorService.ts`
   - `src/controllers/intentController.ts`
   - `src/server.ts`
-- **Summary**: Implemented 4 specialized capability execution engines. Built Express router endpoints: `/api/intent/plan`, `/api/intent/execute`, `/api/intent/adapt`, `/api/intent/create-primitive`, and `/health`.
+- **Summary**: Implemented 4 specialized capability execution engines. Built Express router endpoints: `/api/intent/plan`, `/api/intent/execute`, `/api/intent/create-primitive`, and `/health`.
 
 ### ✅ [COMPLETED] Checkpoint 4: 4-Section Dark Spatial Scrolling Showcase Engine
 - **Frontend Files**:
@@ -96,7 +96,7 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 | **NYC-R3-BACKEND** | `npm run build` | **Clean Build** | 🟢 PASS |
 | **NYC-R3-FRONTEND** | `npx tsc --noEmit` | **0 Errors** | 🟢 PASS |
 | **NYC-R3-FRONTEND** | `npm run build` | **Clean Build** | 🟢 PASS |
-| **HTTP Smoke Server** | `localhost:5055` with bearer auth | **Frontend contract verified** | 🟢 PASS |
+| **HTTP Smoke Server** | `localhost:5058` with bearer auth | **Frontend contract verified** | 🟢 PASS |
 
 ### ✅ [COMPLETED] Checkpoint 8: Frontend Contract Safety, Cancellation & Accessibility Hardening
 - **Frontend Files**:
@@ -117,3 +117,53 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
   - `src/index.css`
 - **Summary**: Accepted and rendered backend ambiguity plans with zero steps; added strict bounded runtime guards for plans, completed results, executed steps, disambiguation options, and recursive output payloads; typed adaptation option IDs (`opt_churn`/`opt_trend`) and mapped them to distinct supported execution modifiers; cancelled active requests and cleared stale UI when prompt/canvas inputs change; reduced Zustand subscription scope and optimized edge node lookup; paused hidden-page SVG/CSS animation; disabled Lenis on mobile to avoid nested scrolling conflicts; retained custom primitive state and nodes across demo reset; applied configured proximity consistently; and hardened canvas/modal semantics, focus trapping, scroll regions, and button types.
 - **Verification**: `npx tsc --noEmit` passed; `npm run build` passed. No separate test runner is configured in `package.json`, so no test suite was claimed.
+
+### ✅ [COMPLETED] Checkpoint 9: Shared API Boundary and Canvas Render Hardening
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/api.ts`
+  - `src/config.ts`
+  - `src/vite-env.d.ts`
+  - `src/types/canvas.ts`
+  - `src/App.tsx`
+  - `src/components/canvas/CanvasNodeCard.tsx`
+  - `.env.example`
+  - `README.md`
+- **Summary**: Sent adaptation data under the backend-validated `adaptation` object, surfaced structured backend errors, configured optional bearer authentication, removed frontend `any` payload types, memoized node cards, and documented the shared contract. The frontend accepts zero-step plans when they contain a disambiguation gate and validates bounded result payloads before rendering.
+- **Verification**: `npm run build` and `git diff --check` passed. Cross-repository HTTP smoke coverage passed against the backend for normal execution, ambiguity, adaptation, and auth rejection. No browser automation suite is configured.
+- **Next Checkpoint**: Browser-level responsive and accessibility verification.
+
+### ✅ [COMPLETED] Checkpoint 10: Deep Goal-Flow and Frontend Lifecycle Audit
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/App.tsx`
+  - `src/api.ts`
+  - `src/store/useCanvasStore.ts`
+  - `src/components/canvas/IntentBar.tsx`
+  - `src/components/canvas/PlanPreviewModal.tsx`
+  - `src/components/canvas/SpatialCanvas.tsx`
+  - `src/components/providers/SmoothScrollProvider.tsx`
+  - `src/hooks/useDialog.ts`
+  - `src/utils/sanitizeSvg.ts`
+  - `src/types/canvas.ts`
+  - `src/sections/Section1Productivity.tsx`
+  - `src/sections/Section2.tsx`
+  - `src/sections/Section3.tsx`
+  - `src/sections/Section4.tsx`
+  - `README.md`
+- **Summary**: Confirmed execution uses the inspected plan, added bounded text/CSV/image ingestion, created an in-canvas output node, capped client graph state, deduplicated custom primitives, tightened nested capability result validation and SVG sanitization, aligned the mobile Lenis breakpoint, made dialog focus restoration safe, and throttled pointer updates through requestAnimationFrame.
+- **Verification Result**: Frontend `npx tsc --noEmit`, `npm run build`, dependency audit, and `git diff --check` passed. Fresh backend smoke on `localhost:5058` passed for the shared contract. Browser automation and live-device checks remain pending.
+- **Next Checkpoint**: Browser-level responsive, accessibility, and real-file interaction verification.
+
+### ✅ [COMPLETED] Checkpoint 11: Targeted Result, Asset, and Canvas-Capacity Corrections
+- **Timestamp / Time Elapsed**: 2026-08-08
+- **Frontend Files**:
+  - `src/api.ts`
+  - `src/sections/Section1Productivity.tsx`
+  - `src/sections/Section2.tsx`
+  - `src/sections/Section3.tsx`
+  - `src/sections/Section4.tsx`
+  - `src/store/useCanvasStore.ts`
+- **Summary**: Rejected unknown capability output families, preserved the notification badge text for failed images, restored card image visibility while keeping gradient fallbacks, and prevented output-node creation from exceeding the shared 30-node limit.
+- **Verification Result**: Frontend typecheck, build, and `git diff --check` passed.
+- **Next Checkpoint**: Browser-level responsive, accessibility, and real-file interaction verification.

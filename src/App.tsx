@@ -53,6 +53,7 @@ export default function App() {
   const setViewMode = useCanvasStore((state) => state.setViewMode)
   const addNode = useCanvasStore((state) => state.addNode)
   const addCustomPrimitive = useCanvasStore((state) => state.addCustomPrimitive)
+  const upsertOutputNode = useCanvasStore((state) => state.upsertOutputNode)
 
   const [showPlanModal, setShowPlanModal] = useState(false)
   const [disambiguationData, setDisambiguationData] = useState<NonNullable<ExecutionPlan['disambiguation']> | null>(null)
@@ -63,6 +64,7 @@ export default function App() {
   const closeDisambiguation = useCallback(() => setDisambiguationData(null), [])
   const requestRef = useRef<{ id: number; controller: AbortController; canvasKey: string } | null>(null)
   const requestSequence = useRef(0)
+  const inputGraphKey = JSON.stringify({ nodes: nodes.filter(node => node.type !== 'output'), edges, activeIntentPrompt })
 
   const getCanvasKey = () => {
     const state = useCanvasStore.getState()
@@ -105,7 +107,7 @@ export default function App() {
     setActivePlan(null)
     setExecutionResult(null)
     setErrorMessage(null)
-  }, [nodes, edges, activeIntentPrompt])
+  }, [inputGraphKey])
   useEffect(() => {
     cancelRequest()
     setShowPlanModal(false)
@@ -179,7 +181,11 @@ export default function App() {
       }
       if (res.data?.success && isExecutionPlan(res.data.data)) {
         setActivePlan(res.data.data)
-        setShowPlanModal(true)
+        if (res.data.data.disambiguation?.requiresUserClarification) {
+          setDisambiguationData(res.data.data.disambiguation)
+        } else {
+          setShowPlanModal(true)
+        }
       } else {
         setErrorMessage(res.data?.message ?? 'The service returned an invalid execution plan.')
       }
@@ -206,7 +212,8 @@ export default function App() {
     try {
       const res = await intentApi.post(intentPath('/api/intent/execute'), {
         ...getASTPayload(),
-         adaptation,
+        adaptation,
+        executionPlan: adaptation ? undefined : activePlan ?? undefined,
       }, { signal: request.controller.signal })
 
       if (!isCurrentRequest(request)) {
@@ -221,6 +228,7 @@ export default function App() {
           setErrorMessage('The service requested clarification but returned no options.')
         } else {
           setExecutionResult(data)
+          upsertOutputNode(data.goalSummary ?? 'Computed intent result', data.outputPayload ?? {})
           setViewMode('interactive')
         }
       } else setErrorMessage(res.data?.message ?? 'The service returned an invalid execution result.')
@@ -257,6 +265,27 @@ export default function App() {
       },
     }
     addNode(newNode)
+  }
+
+  const handleAddFile = async (file: File) => {
+    try {
+      if (file.size > 10_000_000) {
+        setErrorMessage('Files must be 10 MB or smaller.')
+        return
+      }
+      const isImage = file.type.startsWith('image/')
+      const isDataset = file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')
+      const contentSummary = isImage ? `Image reference: ${file.name}` : (await file.text()).slice(0, 10_000) || `Uploaded file: ${file.name}`
+      addNode({
+        id: createId('node_upload'),
+        title: file.name,
+        type: isImage ? 'example' : isDataset ? 'dataset' : 'document',
+        position: findVisibleNodePosition(280, 160),
+        dataPayload: { mimeType: file.type || 'application/octet-stream', contentSummary, rawReference: file.name },
+      })
+    } catch {
+      setErrorMessage('The selected file could not be read.')
+    }
   }
 
   // Save Executed Output as Higher-Order Custom Primitive
@@ -309,6 +338,7 @@ export default function App() {
     onExecuteComputation: () => handleExecuteComputation(),
     onFilterEnterprise: handleFilterEnterprise,
     onAddNewNode: handleAddNewNode,
+    onAddFile: handleAddFile,
   };
 
   return (

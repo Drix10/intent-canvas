@@ -93,12 +93,12 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
             >
               Dismiss
             </button>
-            <MagneticButton
-              onClick={onExecute}
-              disabled={isExecuting}
+             <MagneticButton
+               onClick={onExecute}
+               disabled={isExecuting || plan.steps.length === 0}
               className="bg-[#00ff87] px-6 py-2 text-xs font-bold text-black hover:bg-[#00ff87]/90"
             >
-              {isExecuting ? (
+               {plan.steps.length === 0 ? 'Choose an intent direction' : isExecuting ? (
                 <span className="flex items-center gap-2">
                   <div className="h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent" />
                   Executing Plan...

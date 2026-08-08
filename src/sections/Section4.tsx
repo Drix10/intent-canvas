@@ -124,7 +124,7 @@ export function Section4({
         width: NATIVE_W,
         height: NATIVE_H,
         borderRadius: '24px',
-        backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s4-card-bg.png)',
+        backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s4-card-bg.png), linear-gradient(135deg, #0c1518, #040406)',
         backgroundSize: '115%',
         backgroundPosition: 'center',
         overflow: 'hidden',
@@ -135,6 +135,7 @@ export function Section4({
       <img
         src="https://qclay.design/lovable/glass-menu/card-light-overlay.png"
         alt=""
+        onError={(event) => { event.currentTarget.style.display = 'none' }}
         style={{
           position: 'absolute',
           top: 0, left: 0,

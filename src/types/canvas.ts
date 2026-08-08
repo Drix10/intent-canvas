@@ -61,6 +61,13 @@ export interface AdaptationRequest {
   filterModifier: 'enterprise' | 'trend';
 }
 
+export interface CapabilityOutputPayload {
+  dataPattern?: Record<string, unknown>;
+  documentSynthesis?: Record<string, unknown>;
+  meetingInsights?: Record<string, unknown>;
+  uiConcept?: Record<string, unknown>;
+}
+
 export interface CustomPrimitiveRecord {
   primitiveId: string;
   title: string;

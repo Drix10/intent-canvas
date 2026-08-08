@@ -28,16 +28,32 @@ export const SpatialCanvas: React.FC = () => {
   const activePointerId = useRef<number | null>(null);
   const captureElement = useRef<HTMLElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<number | null>(null);
+  const pendingPan = useRef<{ x: number; y: number } | null>(null);
+  const pendingNode = useRef<{ id: string; x: number; y: number } | null>(null);
+
+  const flushPointerUpdate = useCallback(() => {
+    if (pendingPan.current) setPan(pendingPan.current);
+    if (pendingNode.current) setDragBlocked(updateNodePosition(pendingNode.current.id, pendingNode.current.x, pendingNode.current.y) === 'collision');
+    pendingPan.current = null;
+    pendingNode.current = null;
+    frameRef.current = null;
+  }, [setPan, updateNodePosition]);
+
+  const schedulePointerUpdate = useCallback(() => {
+    if (frameRef.current === null) frameRef.current = requestAnimationFrame(flushPointerUpdate);
+  }, [flushPointerUpdate]);
 
   const finishPointer = useCallback((pointerId: number) => {
     if (activePointerId.current !== pointerId) return;
+    flushPointerUpdate();
     if (captureElement.current?.hasPointerCapture(pointerId)) captureElement.current.releasePointerCapture(pointerId);
     activePointerId.current = null;
     captureElement.current = null;
     setIsPanning(false);
     setActiveDraggingNodeId(null);
     setDragBlocked(false);
-  }, []);
+  }, [flushPointerUpdate]);
 
   useEffect(() => {
     const handleGlobalPointerEnd = (event: PointerEvent) => finishPointer(event.pointerId);
@@ -46,6 +62,7 @@ export const SpatialCanvas: React.FC = () => {
     return () => {
       window.removeEventListener('pointerup', handleGlobalPointerEnd);
       window.removeEventListener('pointercancel', handleGlobalPointerEnd);
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     };
   }, [finishPointer]);
 
@@ -69,13 +86,15 @@ export const SpatialCanvas: React.FC = () => {
   const handlePointerMove = (event: React.PointerEvent) => {
     if (activePointerId.current !== event.pointerId) return;
     if (isPanning) {
-      setPan({ x: event.clientX - dragStart.x, y: event.clientY - dragStart.y });
+      pendingPan.current = { x: event.clientX - dragStart.x, y: event.clientY - dragStart.y };
+      schedulePointerUpdate();
       return;
     }
     if (!activeDraggingNodeId) return;
     const newX = (event.clientX - pan.x) / zoom - nodeOffset.x;
     const newY = (event.clientY - pan.y) / zoom - nodeOffset.y;
-    setDragBlocked(updateNodePosition(activeDraggingNodeId, newX, newY) === 'collision');
+    pendingNode.current = { id: activeDraggingNodeId, x: newX, y: newY };
+    schedulePointerUpdate();
   };
 
   const handlePointerUp = (event: React.PointerEvent) => finishPointer(event.pointerId);
@@ -153,7 +172,8 @@ export const SpatialCanvas: React.FC = () => {
     <div
       ref={containerRef}
       id="canvas-background"
-      role="application"
+      tabIndex={-1}
+      role="region"
       aria-label="Spatial intent canvas"
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -175,6 +195,7 @@ export const SpatialCanvas: React.FC = () => {
              role="group"
              aria-roledescription="canvas node"
              aria-grabbed={activeDraggingNodeId === node.id}
+             aria-selected={selectedNodeIds.includes(node.id)}
             tabIndex={0}
             aria-label={`${node.title}, ${node.type.replace('_', ' ')}. Use arrow keys to move.`}
             style={{ position: 'absolute', transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0px)`, willChange: 'transform', zIndex: connectingSourceId === node.id ? 30 : 20 }}
@@ -209,6 +230,11 @@ export const SpatialCanvas: React.FC = () => {
       {dragBlocked && (
         <div role="status" className="absolute bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full border border-amber-400/40 bg-[#090a0f]/95 px-4 py-2 text-xs font-semibold text-amber-300 shadow-2xl">
           Move blocked: nodes keep a clear working gap.
+        </div>
+      )}
+      {nodes.length === 0 && (
+        <div role="status" className="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-neutral-400">
+          Add a file, image, or document to begin shaping an intent.
         </div>
       )}
     </div>

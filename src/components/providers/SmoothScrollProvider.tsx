@@ -4,7 +4,7 @@ import Lenis from 'lenis'
 export const SmoothScrollProvider: React.FC<{ children: React.ReactNode; enabled?: boolean }> = ({ children, enabled = true }) => {
   useEffect(() => {
     if (!enabled) return
-    const isMobile = window.matchMedia('(max-width: 768px)').matches
+    const isMobile = window.matchMedia('(max-width: 1024px)').matches
     if (isMobile) return
     const lenis = new Lenis({
       duration: 1.1,

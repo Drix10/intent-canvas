@@ -5,6 +5,7 @@ import { ExecutionPlan, ExecutionResult } from './types/canvas'
 const MAX_SHORT_STRING = 500
 const MAX_LONG_STRING = 3000
 const MAX_OUTPUT_DEPTH = 5
+const MAX_SVG_BYTES = 50_000
 const isBoundedString = (value: unknown, max = MAX_SHORT_STRING): value is string => typeof value === 'string' && value.length <= max
 
 function isDisambiguation(value: unknown): value is NonNullable<ExecutionPlan['disambiguation']> {
@@ -14,7 +15,7 @@ function isDisambiguation(value: unknown): value is NonNullable<ExecutionPlan['d
     isBoundedString(gate.reason, MAX_LONG_STRING) &&
     Array.isArray(gate.options) &&
     gate.options.length > 0 && gate.options.length <= 10 &&
-    gate.options.every((option) => option && isBoundedString(option.optionId) && isBoundedString(option.label) && isBoundedString(option.actionHint, MAX_LONG_STRING))
+     gate.options.every((option) => option && ['opt_churn', 'opt_trend'].includes(option.optionId ?? '') && isBoundedString(option.label) && isBoundedString(option.actionHint, MAX_LONG_STRING))
 }
 
 function isSafePayload(value: unknown, depth = 0): boolean {
@@ -27,12 +28,32 @@ function isSafePayload(value: unknown, depth = 0): boolean {
   return entries.length <= 100 && entries.every(([key, item]) => isBoundedString(key) && isSafePayload(item, depth + 1))
 }
 
+function isStringArray(value: unknown, maxLength = 30): value is string[] {
+  return Array.isArray(value) && value.length <= maxLength && value.every(item => isBoundedString(item, MAX_LONG_STRING))
+}
+
+function hasStringFields(value: unknown, fields: string[]): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const record = value as Record<string, unknown>
+  return fields.every(field => isBoundedString(record[field], MAX_LONG_STRING))
+}
+
+function isCapabilityPayload(key: string, value: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const payload = value as Record<string, unknown>
+  if (key === 'dataPattern') return typeof payload.anomalyDetected === 'boolean' && (!payload.anomalyDetails || hasStringFields(payload.anomalyDetails, ['month', 'metric', 'deviationPercent', 'probableCause'])) && (!payload.chartSvg || (typeof payload.chartSvg === 'string' && new TextEncoder().encode(payload.chartSvg).length <= MAX_SVG_BYTES)) && (!payload.insights || isStringArray(payload.insights))
+  if (key === 'documentSynthesis') return isBoundedString(payload.synthesisTitle, MAX_LONG_STRING) && isStringArray(payload.keyTakeaways) && (!payload.crossDocumentConnections || (Array.isArray(payload.crossDocumentConnections) && payload.crossDocumentConnections.every(item => hasStringFields(item, ['sourceDoc', 'targetDoc', 'connection']))))
+  if (key === 'meetingInsights') return isBoundedString(payload.summary, MAX_LONG_STRING) && isStringArray(payload.decisions) && isStringArray(payload.riskFactors) && (!payload.actionItems || (Array.isArray(payload.actionItems) && payload.actionItems.every(item => hasStringFields(item, ['task', 'owner', 'deadline']))))
+  if (key === 'uiConcept') return isBoundedString(payload.conceptTitle, MAX_LONG_STRING) && isStringArray(payload.componentHierarchy) && isStringArray(payload.stylingDirectives) && (!payload.themePalette || hasStringFields(payload.themePalette, ['background', 'surface', 'accent', 'border']))
+  return false
+}
+
 function isPlanStep(value: unknown): value is ExecutionPlan['steps'][number] {
   if (!value || typeof value !== 'object') return false
   const step = value as Partial<ExecutionPlan['steps'][number]>
   return Number.isInteger(step.stepId) && isBoundedString(step.title) && isBoundedString(step.description, MAX_LONG_STRING) &&
     ['DataPatternFinder', 'DocumentSynthesizer', 'MeetingInsightExtractor', 'UIConceptGenerator'].includes(step.requiredCapability ?? '') &&
-    Array.isArray(step.inputNodeIds) && step.inputNodeIds.length <= 30 && step.inputNodeIds.every((id) => isBoundedString(id)) &&
+     Array.isArray(step.inputNodeIds) && step.inputNodeIds.length > 0 && step.inputNodeIds.length <= 30 && step.inputNodeIds.every((id) => isBoundedString(id)) &&
     ['pending', 'running', 'completed', 'failed'].includes(step.status ?? '')
 }
 
@@ -82,6 +103,6 @@ export function isExecutionResult(value: unknown): value is ExecutionResult {
       isBoundedString(result.planId) && isBoundedString(result.goalSummary, MAX_LONG_STRING) &&
       typeof result.confidenceScore === 'number' && Number.isFinite(result.confidenceScore) && result.confidenceScore >= 0 && result.confidenceScore <= 1 &&
       Array.isArray(result.executedSteps) && result.executedSteps.length <= 5 && result.executedSteps.every(isPlanStep) &&
-      typeof result.outputPayload === 'object' && result.outputPayload !== null && !Array.isArray(result.outputPayload) && isSafePayload(result.outputPayload) : isDisambiguation(result.disambiguation)) &&
+       typeof result.outputPayload === 'object' && result.outputPayload !== null && !Array.isArray(result.outputPayload) && isSafePayload(result.outputPayload) && Object.entries(result.outputPayload).every(([key, payload]) => isCapabilityPayload(key, payload)) : isDisambiguation(result.disambiguation)) &&
     (!result.disambiguation || isDisambiguation(result.disambiguation))
 }

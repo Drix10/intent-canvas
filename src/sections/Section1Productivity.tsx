@@ -100,7 +100,7 @@ export function Section1Productivity() {
         width: NATIVE_W,
         height: NATIVE_H,
         borderRadius: '24px',
-        backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s1-main-card-bg.png)',
+        backgroundImage: 'url(https://qclay.design/lovable/glass-menu/s1-main-card-bg.png), linear-gradient(135deg, #09130f, #040406)',
         backgroundSize: '115%',
         backgroundPosition: 'center',
         overflow: 'hidden',
@@ -111,6 +111,7 @@ export function Section1Productivity() {
       <img
         src="https://qclay.design/lovable/glass-menu/card-light-overlay.png"
         alt=""
+        onError={(event) => { event.currentTarget.style.display = 'none' }}
         style={{
           position: 'absolute',
           top: 0, left: 0,
@@ -144,9 +145,11 @@ export function Section1Productivity() {
         >
           <img
             src="https://qclay.design/lovable/glass-menu/s1-notification-badge.svg"
-            alt="01/04"
+            alt=""
+            onError={(event) => { event.currentTarget.style.display = 'none' }}
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center', display: 'block' }}
           />
+          <span className="sr-only">01/04</span>
           <div style={{
             position: 'absolute', width: '155px', height: '155px',
             top: '50%', left: '44px', transform: 'translate(-50%, -50%)',
