@@ -105,18 +105,25 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   updateNodePosition: (id, x, y) => set((state) => ({
     nodes: state.nodes.map((n) => (n.id === id ? { ...n, position: { ...n.position, x, y } } : n)),
   })),
-  addEdge: (sourceNodeId, targetNodeId) => set((state) => ({
-    edges: [
-      ...state.edges,
-      {
-        id: `edge_${Date.now()}`,
-        sourceNodeId,
-        targetNodeId,
-        relationType: 'explicit_connector',
-        label: 'Spatial Relation',
-      },
-    ],
-  })),
+  addEdge: (sourceNodeId, targetNodeId) => set((state) => {
+    const exists = state.edges.some(
+      (e) => (e.sourceNodeId === sourceNodeId && e.targetNodeId === targetNodeId) ||
+             (e.sourceNodeId === targetNodeId && e.targetNodeId === sourceNodeId)
+    );
+    if (exists) return state;
+    return {
+      edges: [
+        ...state.edges,
+        {
+          id: `edge_${Date.now()}`,
+          sourceNodeId,
+          targetNodeId,
+          relationType: 'explicit_connector',
+          label: 'Spatial Relation',
+        },
+      ],
+    };
+  }),
   removeEdge: (edgeId) => set((state) => ({
     edges: state.edges.filter((e) => e.id !== edgeId),
   })),

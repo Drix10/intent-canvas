@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useCanvasStore } from '../../store/useCanvasStore';
 import { CanvasNodeCard } from './CanvasNodeCard';
 import { CanvasSVGEdges } from './CanvasSVGEdges';
@@ -26,10 +26,25 @@ export const SpatialCanvas: React.FC = () => {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Global mouse release safety listener to prevent stuck drag states
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsPanning(false);
+      setActiveDraggingNodeId(null);
+    };
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('mouseleave', handleGlobalMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('mouseleave', handleGlobalMouseUp);
+    };
+  }, []);
+
   // Pan Canvas Mouse Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.target === containerRef.current || (e.target as HTMLElement).id === 'canvas-background') {
       clearSelection();
+      setConnectingSourceId(null);
       setIsPanning(true);
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
@@ -98,41 +113,39 @@ export const SpatialCanvas: React.FC = () => {
         style={{
           transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) scale(${zoom})`,
           transformOrigin: '0 0',
+          willChange: 'transform',
         }}
-        className="absolute inset-0 h-full w-full transition-transform duration-75 ease-out"
+        className="absolute inset-0 h-full w-full"
       >
-        {/* SVG Relationship Edge Connectors */}
+        {/* Render Bezier Connector Lines */}
         <CanvasSVGEdges nodes={nodes} edges={edges} />
 
-        {/* Spatial Node Cards */}
+        {/* Render Spatial Canvas Nodes */}
         {nodes.map((node) => (
           <div
             key={node.id}
             onMouseDown={(e) => handleNodeMouseDown(e, node)}
             style={{
               position: 'absolute',
-              left: node.position.x,
-              top: node.position.y,
+              transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0px)`,
+              willChange: 'transform',
+              zIndex: connectingSourceId === node.id ? 30 : 20,
             }}
           >
             <CanvasNodeCard
               node={node}
               isSelected={selectedNodeIds.includes(node.id)}
-              onSelect={(e) => {
-                if (connectingSourceId && connectingSourceId !== node.id) {
-                  handleStartConnection(node.id);
-                }
-              }}
+              onSelect={(e) => handleNodeMouseDown(e, node)}
               onStartConnection={handleStartConnection}
             />
           </div>
         ))}
       </div>
 
-      {/* Active Edge Connecting Indicator Banner */}
+      {/* Active Connection Helper Toast Banner */}
       {connectingSourceId && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 rounded-full border border-[#00ff87]/40 bg-[#090a0f]/90 px-4 py-1.5 text-xs font-semibold text-[#00ff87] shadow-xl backdrop-blur-md">
-          Click any target node card to create a Spatial Graph Edge connection
+        <div className="absolute top-6 left-1/2 z-40 -translate-x-1/2 rounded-full border border-[#00ff87]/40 bg-[#090a0f]/90 px-4 py-1.5 text-xs font-semibold text-[#00ff87] shadow-2xl backdrop-blur-xl animate-pulse">
+          Click "Connect Relation" on target node to link edge...
         </div>
       )}
     </div>
