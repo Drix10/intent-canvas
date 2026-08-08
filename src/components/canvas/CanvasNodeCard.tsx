@@ -1,13 +1,18 @@
 import React from 'react';
 import { SpotlightCard } from '../ui/SpotlightCard';
 import { CanvasNode } from '../../types/canvas';
-import { FileText, Database, Layout, Sparkles, Box, Trash2 } from 'lucide-react';
+import { FileText, Database, Layout, Sparkles, Box, Trash2, Plus, Minus } from 'lucide-react';
 
 interface CanvasNodeCardProps {
   node: CanvasNode;
   isSelected: boolean;
   onStartConnection: (nodeId: string) => void;
   onRemove: (nodeId: string) => void;
+  isConnectingSource: boolean;
+  hasConnections: boolean;
+  onRemoveConnection: (nodeId: string) => void;
+  isConnectionTarget: boolean;
+  isConnectable: boolean;
 }
 
 export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
@@ -15,6 +20,11 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
   isSelected,
   onStartConnection,
   onRemove,
+  isConnectingSource,
+  hasConnections,
+  onRemoveConnection,
+  isConnectionTarget,
+  isConnectable,
 }) => {
   const getIcon = () => {
     switch (node.type) {
@@ -49,7 +59,8 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
   return (
     <div
       className={`relative cursor-grab active:cursor-grabbing select-none transition-all ${
-        isSelected ? 'ring-2 ring-[#00ff87] ring-offset-2 ring-offset-[#040406] shadow-[0_0_25px_rgba(0,255,135,0.25)]' : ''
+        isSelected ? 'ring-2 ring-[#00ff87] ring-offset-2 ring-offset-[#040406] shadow-[0_0_25px_rgba(0,255,135,0.25)]' :
+        isConnectionTarget ? 'ring-2 ring-sky-400 shadow-[0_0_28px_rgba(56,189,248,0.35)]' : ''
       }`}
       style={{
         width: node.position.width,
@@ -82,20 +93,27 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
           {node.dataPayload.contentSummary}
         </p>
 
-        {/* Connection Handle Button */}
-         <button
+         {/* Connection Controls */}
+         {isConnectable && <div className="mt-3 flex gap-1.5">
+          <button
           type="button"
-          aria-label={`Connect ${node.title} to another node`}
+           aria-label={isConnectingSource ? `Cancel connection from ${node.title}` : `Connect ${node.title} to another node`}
           onPointerDown={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
           onClick={(e) => {
             e.stopPropagation();
             onStartConnection(node.id);
           }}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] py-1.5 text-[10px] font-bold text-neutral-200 transition-colors hover:border-[#00ff87]/50 hover:bg-[#00ff87]/10 hover:text-[#00ff87]"
+           className="flex min-w-0 flex-1 items-center justify-center gap-1 rounded-xl border border-white/[0.1] bg-white/[0.04] py-1.5 text-[10px] font-bold text-neutral-200 transition-colors hover:border-[#00ff87]/50 hover:bg-[#00ff87]/10 hover:text-[#00ff87]"
         >
-          <Sparkles className="h-3 w-3" /> Connect Relation
-        </button>
+           {isConnectingSource ? <Minus className="h-3 w-3" /> : <Plus className="h-3 w-3" />} {isConnectingSource ? 'Cancel Connection' : isConnectionTarget ? 'Connect Here' : 'Connect Relation'}
+         </button>
+          {hasConnections && !isConnectingSource && (
+            <button type="button" aria-label={`Remove a relation from ${node.title}`} onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onRemoveConnection(node.id); }} className="flex shrink-0 items-center justify-center rounded-xl border border-red-400/20 bg-red-400/5 px-2 text-red-300 hover:bg-red-400/10">
+              <Minus className="h-3 w-3" />
+            </button>
+          )}
+         </div>}
       </SpotlightCard>
     </div>
   );

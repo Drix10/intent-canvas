@@ -12,6 +12,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const pan = useCanvasStore((state) => state.pan);
   const zoom = useCanvasStore((state) => state.zoom);
   const selectedNodeIds = useCanvasStore((state) => state.selectedNodeIds);
+  const hasResult = useCanvasStore((state) => Boolean(state.executionResult));
   const setActiveIntentPrompt = useCanvasStore((state) => state.setActiveIntentPrompt);
   const resetVersion = useCanvasStore((state) => state.resetVersion);
   const resetDemoCanvas = useCanvasStore((state) => state.resetDemoCanvas);
@@ -21,6 +22,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const selectNode = useCanvasStore((state) => state.selectNode);
   const clearSelection = useCanvasStore((state) => state.clearSelection);
   const addEdge = useCanvasStore((state) => state.addEdge);
+  const removeEdge = useCanvasStore((state) => state.removeEdge);
   const removeNode = useCanvasStore((state) => state.removeNode);
 
   const [isPanning, setIsPanning] = useState(false);
@@ -32,7 +34,9 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const [movementMessage, setMovementMessage] = useState('');
   const [showGuide, setShowGuide] = useState(false);
   const [isFileOver, setIsFileOver] = useState(false);
-  const spatialEdges = buildSpatialEdges(nodes, edges);
+  const contextNodes = nodes.filter(node => node.type !== 'output');
+  const contextEdges = edges.filter(edge => contextNodes.some(node => node.id === edge.sourceNodeId) && contextNodes.some(node => node.id === edge.targetNodeId));
+  const contextSpatialEdges = buildSpatialEdges(contextNodes, contextEdges);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activePointerId = useRef<number | null>(null);
   const captureElement = useRef<HTMLElement | null>(null);
@@ -40,6 +44,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const frameRef = useRef<number | null>(null);
   const pendingPan = useRef<{ x: number; y: number } | null>(null);
   const pendingNode = useRef<{ id: string; x: number; y: number } | null>(null);
+  const dragDepth = useRef(0);
 
   const flushPointerUpdate = useCallback(() => {
     if (pendingPan.current) setPan(pendingPan.current);
@@ -138,6 +143,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
 
   const handleFileDrop = (event: React.DragEvent) => {
     event.preventDefault();
+    dragDepth.current = 0;
     setIsFileOver(false);
     const file = event.dataTransfer.files[0];
     if (file && onAddFile) onAddFile(file);
@@ -194,6 +200,11 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
     }
   }, [addEdge, connectingSourceId]);
 
+  const handleRemoveConnection = useCallback((nodeId: string) => {
+    const relation = edges.find(edge => edge.sourceNodeId === nodeId || edge.targetNodeId === nodeId);
+    if (relation) removeEdge(relation.id);
+  }, [edges, removeEdge]);
+
   const resetView = () => {
     setPan({ x: 0, y: 0 });
     setZoom(1);
@@ -209,8 +220,9 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onWheel={handleWheel}
+      onDragEnter={(event) => { event.preventDefault(); dragDepth.current += 1; setIsFileOver(true); }}
       onDragOver={(event) => { event.preventDefault(); setIsFileOver(true); }}
-      onDragLeave={() => setIsFileOver(false)}
+      onDragLeave={(event) => { event.preventDefault(); dragDepth.current = Math.max(0, dragDepth.current - 1); if (!dragDepth.current) setIsFileOver(false); }}
       onDrop={handleFileDrop}
       style={{ touchAction: 'none' }}
       className="relative h-full w-full overflow-hidden bg-[#040406] bg-obsidian-grid cursor-grab active:cursor-grabbing select-none"
@@ -220,7 +232,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
         style={{ transform: `translate3d(${pan.x}px, ${pan.y}px, 0px) scale(${zoom})`, transformOrigin: '0 0', willChange: 'transform' }}
         className="absolute inset-0 h-full w-full"
       >
-         <CanvasSVGEdges nodes={nodes} edges={spatialEdges} />
+          <CanvasSVGEdges nodes={nodes} edges={contextSpatialEdges} />
         {nodes.map((node) => (
           <div
             key={node.id}
@@ -235,7 +247,17 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
             style={{ position: 'absolute', transform: `translate3d(${node.position.x}px, ${node.position.y}px, 0px)`, willChange: 'transform', zIndex: connectingSourceId === node.id ? 30 : 20 }}
             className="rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-[#00ff87] focus-visible:ring-offset-2 focus-visible:ring-offset-[#040406]"
           >
-             <CanvasNodeCard node={node} isSelected={selectedNodeIds.includes(node.id)} onStartConnection={handleStartConnection} onRemove={removeNode} />
+             <CanvasNodeCard
+               node={node}
+               isSelected={selectedNodeIds.includes(node.id)}
+               onStartConnection={handleStartConnection}
+               onRemove={removeNode}
+               isConnectingSource={connectingSourceId === node.id}
+               hasConnections={contextEdges.some(edge => edge.sourceNodeId === node.id || edge.targetNodeId === node.id)}
+               onRemoveConnection={handleRemoveConnection}
+               isConnectionTarget={node.type !== 'output' && Boolean(connectingSourceId && connectingSourceId !== node.id && !contextSpatialEdges.some(edge => (edge.sourceNodeId === connectingSourceId && edge.targetNodeId === node.id) || (edge.sourceNodeId === node.id && edge.targetNodeId === connectingSourceId)))}
+               isConnectable={node.type !== 'output'}
+             />
           </div>
         ))}
       </div>
@@ -248,7 +270,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
       )}
 
       {/* Top-Right Collapsible Guidance HUD */}
-      {showGuide ? (
+      {!hasResult && (showGuide ? (
         <div className="absolute top-20 right-6 z-40 w-[min(24rem,calc(100vw-2rem))] rounded-3xl border border-[#00ff87]/25 bg-[#090a0f]/95 p-5 text-xs text-neutral-300 shadow-2xl backdrop-blur-2xl">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
@@ -297,33 +319,31 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
         >
           <HelpCircle className="h-3.5 w-3.5 text-[#00ff87]" /> How Spatial Canvas Works
         </button>
-      )}
+      ))}
 
       {/* Bottom-Left Spatial Status HUD */}
-      <div className="absolute top-24 left-6 z-40 flex max-w-[calc(100vw-3rem)] flex-wrap items-center gap-2 rounded-2xl border border-white/15 bg-[#090a0f]/95 px-4 py-2.5 text-xs font-medium text-neutral-300 shadow-2xl backdrop-blur-2xl">
-        <span className="flex items-center gap-1.5 font-bold text-white pr-2 border-r border-white/10">
-          <Layers className="h-3.5 w-3.5 text-[#00ff87]" /> Spatial AST
-        </span>
-        <span className="text-neutral-400">Nodes: <strong className="text-white font-mono">{nodes.length}</strong></span>
-        <span className="text-neutral-500">•</span>
-         <span className="text-neutral-400">Edges: <strong className="text-white font-mono">{spatialEdges.length}</strong></span>
-        <span className="text-neutral-500">•</span>
-         <span className="text-neutral-400">Cluster Radius: <strong className="text-emerald-400 font-mono">{APP_CONFIG.proximityDistancePixels}px</strong></span>
-        <span className="text-neutral-500">•</span>
-        <span className="text-neutral-400">Retention: <strong className="text-emerald-400">Local</strong></span>
-
+      <div className="absolute top-1/2 left-3 z-40 flex w-14 -translate-y-1/2 flex-col items-center gap-3 rounded-2xl border border-white/15 bg-[#090a0f]/95 px-2 py-3 text-[10px] font-medium text-neutral-300 shadow-2xl backdrop-blur-2xl">
+        <div className="flex flex-col items-center gap-1 border-b border-white/10 pb-2 font-bold text-[#00ff87]">
+          <Layers className="h-4 w-4" />
+          <span style={{ writingMode: 'vertical-rl' }}>AST</span>
+        </div>
+        <div className="flex flex-col items-center"><span className="text-neutral-500">N</span><strong className="font-mono text-white">{nodes.length}</strong></div>
+        <div className="flex flex-col items-center"><span className="text-neutral-500">E</span><strong className="font-mono text-white">{contextSpatialEdges.length}</strong></div>
+        <div className="flex flex-col items-center"><span className="text-neutral-500">R</span><strong className="font-mono text-emerald-400">{APP_CONFIG.proximityDistancePixels}</strong></div>
+        <div className="flex flex-col items-center"><span className="text-neutral-500">L</span><strong className="text-emerald-400">On</strong></div>
         <button
           type="button"
           onClick={resetDemoCanvas}
           title="Restore Initial Starter Context"
-          className="ml-2 flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-neutral-300 hover:bg-white/10 hover:text-white"
+          aria-label="Restore starter context"
+          className="flex items-center justify-center rounded-lg border border-white/10 bg-white/5 p-1.5 text-neutral-300 hover:bg-white/10 hover:text-white"
         >
-          <RotateCcw className="h-3 w-3 text-sky-400" /> Restore Starter Context
+          <RotateCcw className="h-3 w-3 text-sky-400" />
         </button>
       </div>
 
       {/* Bottom-Right Zoom HUD Controls */}
-      <div className="absolute bottom-28 right-6 z-40 flex items-center gap-1 rounded-2xl border border-white/15 bg-[#090a0f]/95 p-1.5 text-xs text-neutral-300 shadow-2xl backdrop-blur-2xl">
+      {!hasResult && <div className="absolute bottom-28 right-6 z-40 flex items-center gap-1 rounded-2xl border border-white/15 bg-[#090a0f]/95 p-1.5 text-xs text-neutral-300 shadow-2xl backdrop-blur-2xl">
         <button
           type="button"
           aria-label="Zoom out"
@@ -353,7 +373,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
         >
           <Maximize2 className="h-4 w-4" />
         </button>
-      </div>
+      </div>}
 
       {/* Drag Collision Warning */}
       {dragBlocked && (
@@ -367,7 +387,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
       {isFileOver && (
         <div role="status" className="absolute inset-0 z-50 flex items-center justify-center bg-[#040406]/80 p-6 text-center backdrop-blur-sm">
           <div className="rounded-3xl border border-[#00ff87]/50 bg-[#090a0f]/95 px-8 py-10 text-[#b8ffd9] shadow-2xl">
-            Drop CSV, text, JSON, or image files to add them to the canvas.
+            Drop PDF, CSV, text, JSON, or image files to add them to the canvas.
           </div>
         </div>
       )}
@@ -381,12 +401,12 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
             </div>
             <h3 className="text-lg font-bold text-white">Spatial Intent Workspace Ready</h3>
             <p className="mt-2 text-xs leading-relaxed text-neutral-400">
-               Your spatial graph AST is currently empty. Drop a supported file anywhere onto the canvas, or restore the starter context.
+               Your spatial graph AST is currently empty. Drop a PDF, CSV, text, JSON, or image file anywhere onto the canvas, or restore the starter context.
             </p>
              <div className="mt-6 flex flex-col gap-2">
               {onAddFile && (
                 <>
-                  <input ref={fileInputRef} type="file" accept=".csv,.txt,.md,.json,image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
+                  <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded-xl border border-[#00ff87]/30 bg-[#00ff87]/10 px-4 py-2.5 text-xs font-bold text-[#b8ffd9] hover:bg-[#00ff87]/20">
                     Add a supported file
                   </button>

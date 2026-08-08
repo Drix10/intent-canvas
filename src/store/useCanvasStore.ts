@@ -35,7 +35,7 @@ interface CanvasState {
   setActivePlan: (plan: ExecutionPlan | null) => void;
   setExecutionResult: (result: ExecutionResult | null) => void;
   addCustomPrimitive: (primitive: CustomPrimitiveRecord) => void;
-  upsertOutputNode: (summary: string, payload: Record<string, unknown>) => void;
+  upsertOutputNode: (summary: string, payload: Record<string, unknown>) => boolean;
   resetDemoCanvas: () => void;
 }
 
@@ -47,7 +47,7 @@ const initialDemoNodes: CanvasNode[] = [
     position: { x: 100, y: 140, width: 280, height: 160 },
     dataPayload: {
       mimeType: 'text/csv',
-      contentSummary: 'Quarterly Sales Records (May - Oct). Contains revenue, customer ID, tier, and transaction timestamps.',
+      contentSummary: 'Intent Canvas demo sales ledger. Six monthly records with revenue, customer tier, transaction count, and enterprise revenue. The August revenue drop is intentional and traceable to the supplied rows.\nmonth,revenue,customer_tier,transactions,enterprise_revenue\nMay,82000,Enterprise,412,51000\nJun,84500,Enterprise,428,53200\nJul,86100,Enterprise,439,54800\nAug,55200,Enterprise,301,33100\nSep,90300,Enterprise,461,58700\nOct,94700,Enterprise,479,62300',
     },
   },
   {
@@ -57,7 +57,7 @@ const initialDemoNodes: CanvasNode[] = [
     position: { x: 560, y: 140, width: 280, height: 160 },
     dataPayload: {
       mimeType: 'text/plain',
-      contentSummary: 'Qualitative Customer Feedback logs. Contains churn notes, gateway migration complaints, and enterprise NRR notes.',
+      contentSummary: 'Intent Canvas demo customer feedback. Enterprise customers reported a gateway migration slowdown in August. Three accounts requested follow-up, two cited onboarding friction, and one reported improved retention after support intervention. Review these notes alongside the sales ledger; do not treat qualitative notes as numeric measurements.',
     },
   },
   {
@@ -312,13 +312,20 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
     persistCustomPrimitives(customPrimitives);
     return { customPrimitives };
   }),
-  upsertOutputNode: (summary, payload) => set((state) => {
-    const existing = state.nodes.find(node => node.type === 'output');
-    if (existing) return { nodes: state.nodes.map(node => node.id === existing.id ? { ...node, dataPayload: { ...node.dataPayload, contentSummary: summary, parsedMetrics: payload } } : node) };
-    if (state.nodes.length >= 30) return state;
-    const position = freePosition(state.nodes, { id: 'result', title: 'Computed Intent Result', type: 'output', position: { x: 420, y: 360, width: 300, height: 180 }, dataPayload: { mimeType: 'application/json', contentSummary: summary } });
-    return { nodes: [...state.nodes, { id: createId('node_output'), title: 'Computed Intent Result', type: 'output', position, dataPayload: { mimeType: 'application/json', contentSummary: summary, parsedMetrics: payload } }] };
-  }),
+  upsertOutputNode: (summary, payload) => {
+    let inserted = true;
+    set((state) => {
+      const existing = state.nodes.find(node => node.type === 'output');
+      if (existing) return { nodes: state.nodes.map(node => node.id === existing.id ? { ...node, dataPayload: { ...node.dataPayload, contentSummary: summary, parsedMetrics: payload } } : node) };
+      if (state.nodes.length >= 30) {
+        inserted = false;
+        return state;
+      }
+      const position = freePosition(state.nodes, { id: 'result', title: 'Computed Intent Result', type: 'output', position: { x: 420, y: 360, width: 300, height: 180 }, dataPayload: { mimeType: 'application/json', contentSummary: summary } });
+      return { nodes: [...state.nodes, { id: createId('node_output'), title: 'Computed Intent Result', type: 'output', position, dataPayload: { mimeType: 'application/json', contentSummary: summary, parsedMetrics: payload } }] };
+    });
+    return inserted;
+  },
   resetDemoCanvas: () => set((state) => ({
     nodes: [...initialDemoNodes, ...primitiveNodes(state.customPrimitives)],
     edges: initialDemoEdges,
@@ -336,7 +343,10 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
   name: WORKSPACE_STORAGE_KEY,
   storage: createJSONStorage(() => typeof localStorage === 'undefined' ? memoryStorage : localStorage),
   partialize: (state) => ({
-    nodes: state.nodes,
+    nodes: state.nodes.map(node => ({
+      ...node,
+      dataPayload: (({ previewUrl: _previewUrl, ...payload }) => payload)(node.dataPayload),
+    })),
     edges: state.edges,
     activeIntentPrompt: state.activeIntentPrompt,
     customPrimitives: state.customPrimitives,

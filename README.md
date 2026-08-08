@@ -117,9 +117,11 @@ Canvas nodes + edges + intent
         -> output node + result panel
 ```
 
-The current MVP supports typed intent, spatial arrangement, explicit connections, and uploaded CSV, TXT, MD, JSON, and image nodes. PDF parsing, voice, sketch, and gesture ingestion remain future extensions. Numeric CSV rows are analyzed directly; nodes without parseable numeric rows produce an explicitly labeled preview instead of pretending to be source data.
+The current MVP supports typed intent, spatial arrangement, explicit connections, and uploaded PDF, CSV, TXT, MD, JSON, and image nodes. Voice, sketch, and gesture ingestion remain future extensions. PDFs are parsed by the backend into bounded text before becoming document nodes. Numeric CSV rows are analyzed directly; nodes without parseable numeric rows produce an explicitly labeled preview instead of pretending to be source data.
 
 Uploading context never starts computation. The user must type a non-empty outcome in the intent field before plan inspection or execution controls become available.
+
+Nodes are actionable before intent exists: `+ Connect Relation` enters connection mode, valid unconnected targets glow, and connected nodes expose `− Remove Relation`. Uploaded and custom-primitive nodes use the same controls as starter nodes.
 
 - **Q: Isn't this just an AI agent or chatbot?**  
   *Answer*: No. An agent is an execution mechanism. Intent Canvas introduces a constrained interaction model where typed intent, spatial proximity, explicit connections, and uploaded context compile into a validated `SpatialGraphAST` before computation.
@@ -131,6 +133,13 @@ Uploading context never starts computation. The user must type a non-empty outco
 The backend provider timeout is 8 seconds. The browser HTTP timeout defaults to 10 seconds (`VITE_API_TIMEOUT_MS`) to leave room for response handling. A configured API token is an access gate, not a browser secret.
 
 Canvas nodes, explicit edges, prompts, and custom-primitive metadata are retained in browser `localStorage`. This is single-browser retention, not shared account or server persistence. Uploaded image binaries are not stored; image nodes retain their file name and visual-reference metadata.
+
+### Vercel Deployment Checklist
+
+- Set `VITE_API_BASE_URL` to the backend origin, for example `https://api.example.com`, without `/api` and without a trailing slash.
+- Set `VITE_API_ACCESS_TOKEN` only if the backend token gate is enabled; it is exposed in the browser bundle.
+- Keep `VITE_API_PROXY_TARGET` only for local development; Vercel uses `VITE_API_BASE_URL`.
+- After deployment, open the workspace, upload a PDF, inspect a plan, and confirm execution against the custom backend domain.
 
 ---
 

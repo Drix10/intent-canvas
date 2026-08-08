@@ -24,7 +24,7 @@ export const Navbar: React.FC = () => {
              aria-pressed={viewMode === 'showcase'}
             onClick={() => {
               setViewMode('showcase');
-              window.dispatchEvent(new CustomEvent('showcase-navigate', { detail: 1 }));
+              window.setTimeout(() => window.dispatchEvent(new CustomEvent('showcase-navigate', { detail: 1 })), 0);
             }}
             className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[11px] font-semibold transition-all ${
               viewMode === 'showcase'

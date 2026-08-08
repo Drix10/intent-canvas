@@ -39,23 +39,22 @@ function findVisibleNodePosition(width: number, height: number): CanvasNode['pos
 
 async function readImagePreview(file: File): Promise<string | undefined> {
   if (typeof createImageBitmap === 'function') {
+    let bitmap: ImageBitmap | undefined
     try {
-      const bitmap = await createImageBitmap(file)
+      bitmap = await createImageBitmap(file)
       const scale = Math.min(1, 480 / bitmap.width, 240 / bitmap.height)
       const canvas = document.createElement('canvas')
       canvas.width = Math.max(1, Math.round(bitmap.width * scale))
       canvas.height = Math.max(1, Math.round(bitmap.height * scale))
       const context = canvas.getContext('2d')
-      if (!context) {
-        bitmap.close()
-        return undefined
-      }
+      if (!context) return undefined
       context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-      bitmap.close()
       const preview = canvas.toDataURL('image/jpeg', 0.72)
       return preview.length <= 600_000 ? preview : undefined
     } catch {
       // Fall through to the small-file reader for browsers without bitmap decoding support.
+    } finally {
+      bitmap?.close()
     }
   }
   if (file.size > 400_000) return undefined
@@ -64,6 +63,18 @@ async function readImagePreview(file: File): Promise<string | undefined> {
     reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : undefined)
     reader.onerror = () => resolve(undefined)
     reader.readAsDataURL(file)
+  })
+}
+
+function readTextFile(file: File, signal: AbortSignal): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    const abort = () => reader.abort()
+    signal.addEventListener('abort', abort, { once: true })
+    reader.onload = () => { signal.removeEventListener('abort', abort); resolve(typeof reader.result === 'string' ? reader.result : '') }
+    reader.onerror = () => { signal.removeEventListener('abort', abort); reject(reader.error || new Error('File read failed')) }
+    reader.onabort = () => { signal.removeEventListener('abort', abort); reject(new DOMException('File read aborted', 'AbortError')) }
+    reader.readAsText(file)
   })
 }
 
@@ -96,6 +107,7 @@ export default function App() {
   const requestRef = useRef<{ id: number; controller: AbortController; canvasKey: string } | null>(null)
   const requestSequence = useRef(0)
   const fileReadSequence = useRef(0)
+  const fileReadController = useRef<AbortController | null>(null)
   const suppressNextInputReset = useRef(false)
   const clearPromptAfterExecution = useRef(false)
   const inputGraphKey = JSON.stringify({ nodes: nodes.filter(node => node.type !== 'output'), edges, activeIntentPrompt })
@@ -124,7 +136,10 @@ export default function App() {
   )
   const isActiveRequest = (request: typeof requestRef.current) => Boolean(request && requestRef.current?.id === request.id)
 
-  useEffect(() => () => cancelRequest(false), [])
+  useEffect(() => () => {
+    cancelRequest(false)
+    fileReadController.current?.abort()
+  }, [])
   useEffect(() => {
     const updateVisibility = () => document.body.dataset.pageHidden = String(document.hidden)
     updateVisibility()
@@ -148,6 +163,8 @@ export default function App() {
   }, [inputGraphKey])
   useEffect(() => {
     fileReadSequence.current += 1
+    fileReadController.current?.abort()
+    fileReadController.current = null
     cancelRequest()
     setShowPlanModal(false)
     setDisambiguationData(null)
@@ -277,10 +294,10 @@ export default function App() {
           setErrorMessage('The service requested clarification but returned no options.')
          } else {
            setExecutionResult(data)
-           upsertOutputNode(data.goalSummary ?? 'Computed intent result', data.outputPayload ?? {})
+           const outputInserted = upsertOutputNode(data.goalSummary ?? 'Computed intent result', data.outputPayload ?? {})
            setViewMode('interactive')
            clearPromptAfterExecution.current = true
-           setStatusMessage('Computation complete. The result was added to the workspace.')
+           setStatusMessage(outputInserted ? 'Computation complete. The result was added to the workspace.' : 'Computation complete. The result is available in the result panel; remove a node to place it on the canvas.')
         }
       } else setErrorMessage(res.data?.message ?? 'The service returned an invalid execution result.')
     } catch (err) {
@@ -336,6 +353,9 @@ export default function App() {
   const handleAddFile = async (file: File) => {
     const readId = ++fileReadSequence.current
     const resetAtStart = useCanvasStore.getState().resetVersion
+    fileReadController.current?.abort()
+    const readController = new AbortController()
+    fileReadController.current = readController
     try {
       const safeFileName = file.name.slice(0, 200) || 'uploaded-file'
       if (file.size > 10_000_000) {
@@ -343,14 +363,23 @@ export default function App() {
         return
       }
       const isImage = file.type.startsWith('image/')
+      const isPdf = file.type === 'application/pdf' || safeFileName.toLowerCase().endsWith('.pdf')
       const isDataset = file.type === 'text/csv' || safeFileName.toLowerCase().endsWith('.csv')
       const isText = file.type.startsWith('text/') || /\.(txt|md|json)$/i.test(safeFileName)
-      if (!isImage && !isText && !isDataset) {
-        setErrorMessage('Supported uploads are CSV, TXT, MD, JSON, and images. PDF parsing is not enabled.')
+      if (!isImage && !isText && !isDataset && !isPdf) {
+        setErrorMessage('Supported uploads are PDF, CSV, TXT, MD, JSON, and images.')
         return
       }
+      setStatusMessage(isPdf ? `Extracting text from "${safeFileName}"...` : `Reading "${safeFileName}"...`)
       const previewUrl = isImage ? await readImagePreview(file) : undefined
-      const contentSummary = isImage ? `Image reference: ${safeFileName}` : (await file.text()).slice(0, 10_000) || `Uploaded file: ${safeFileName}`
+      let contentSummary = isImage ? `Image reference: ${safeFileName}` : ''
+      if (isPdf) {
+        const response = await intentApi.post(intentPath('/api/files/pdf-text'), file, { signal: readController.signal, headers: { 'Content-Type': 'application/pdf' } })
+        if (!response.data?.success || typeof response.data.data?.text !== 'string') throw new Error('The PDF text service returned an invalid response.')
+        contentSummary = response.data.data.text
+      } else if (!isImage) {
+        contentSummary = (await readTextFile(file, readController.signal)).slice(0, 10_000) || `Uploaded file: ${safeFileName}`
+      }
       if (readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
       if (useCanvasStore.getState().nodes.length >= 30) {
         setErrorMessage('The canvas is full. Remove a node before uploading another file.')
@@ -359,14 +388,16 @@ export default function App() {
       addNode({
         id: createId('node_upload'),
          title: safeFileName,
-        type: isImage ? 'example' : isDataset ? 'dataset' : 'document',
+         type: isImage ? 'example' : isDataset ? 'dataset' : 'document',
         position: findVisibleNodePosition(280, 160),
-         dataPayload: { mimeType: file.type.slice(0, 160) || 'application/octet-stream', contentSummary, rawReference: safeFileName, previewUrl },
+         dataPayload: { mimeType: isPdf ? 'application/pdf' : file.type.slice(0, 160) || 'application/octet-stream', contentSummary, rawReference: safeFileName, previewUrl },
       })
       setViewMode('interactive')
       setStatusMessage(`Added "${safeFileName}" to the Intent Canvas workspace. The workspace node is retained in this browser.`)
-    } catch {
-      setErrorMessage('The selected file could not be read.')
+    } catch (error) {
+      if (!isRequestCancelled(error)) setErrorMessage(getApiErrorMessage(error, 'The selected file could not be read or parsed.'))
+    } finally {
+      if (fileReadController.current === readController) fileReadController.current = null
     }
   }
 
@@ -457,7 +488,7 @@ export default function App() {
 
         {/* In-Canvas Result Overlay Container */}
         {executionResult && viewMode === 'interactive' && (
-          <div className="absolute top-20 right-6 z-30 animate-in fade-in slide-in-from-bottom-4 duration-300">
+           <div className="absolute top-20 right-6 z-30 max-h-[calc(100dvh-7rem)] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
             <ResultNodeCard
               result={executionResult}
               onSaveAsPrimitive={handleSaveAsPrimitive}

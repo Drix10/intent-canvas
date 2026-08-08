@@ -255,7 +255,7 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
   - `src/App.tsx`
   - `src/sections/Section4.tsx`
   - `src/SpatialScroll.tsx`
-- **Summary**: Upgraded the "Upload / Add File" control to support CSV, TXT, MD, JSON, and image files. Text content is bounded before it is added to the canvas; unsupported binary formats such as PDF are rejected because no PDF parser is included. File-picker and canvas-drop paths share the same validation and stale-read protection.
+- **Summary**: Upgraded the "Upload / Add File" control to support PDF, CSV, TXT, MD, JSON, and image files. PDFs are sent to the bounded backend extraction endpoint and become document nodes with extracted text; text content is bounded before it is added to the canvas. File-picker and canvas-drop paths share the same validation and stale-read protection.
 - **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed in 3.11s.
 
 ### ✅ [COMPLETED] Checkpoint 22: World-Class Interactive Spatial Workspace HUD & Guidance Overhaul
@@ -278,7 +278,7 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Timestamp / Time Elapsed**: 2026-08-08
 - **Frontend Files**:
   - `src/components/canvas/SpatialCanvas.tsx`
-- **Summary**: Resolved the pitch-black viewport issue when entering the interactive workspace. Added automatic viewport matrix centering (`setPan({ x: (window.innerWidth - 1100) / 2, y: (window.innerHeight - 450) / 2 })`) so context nodes are prominently framed in the middle of any display resolution; added a top-center **Active Context Indicator Banner** (`3 Nodes Loaded (Dataset + Feedback + Design Spec) • Center View 🎯`); and added in-canvas floating **Spatial Cluster Tags** above node groups explaining spatial proximity distance.
+- **Summary**: Resolved the pitch-black viewport issue when entering the interactive workspace by giving the canvas parent an explicit full height and centering the initial matrix. The workspace now uses a non-overlapping AST status HUD, compact zoom controls, and direct relation controls on each node.
 - **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed in 6.81s.
 
 ### ✅ [COMPLETED] Checkpoint 25: 100vw/100vh Grid Alignment & Deferred Entrance Animation Stabilization
@@ -336,19 +336,16 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 
 - Spatial proximity edges are derived from node-center distance and included in the AST; disconnected nodes remain separate clusters.
 - The execution button opens plan inspection when no current plan exists. Execution submits only the short-lived plan bound to the current AST.
-- Uploads supported by the current client are CSV, TXT, MD, JSON, and images. PDF parsing is not implemented.
+- Uploads supported by the current client are PDF, CSV, TXT, MD, JSON, and images. PDFs are extracted by the bounded backend endpoint.
 - Custom primitive metadata is persisted in browser storage. There is no shared server registry in this MVP.
 
 ## Audit Corrections
 
 - The current navigation has two controls: `How It Works` and `Workspace`.
-- The current upload flow supports CSV, TXT, MD, JSON, and images. PDF parsing is not implemented.
+- The current upload flow supports PDF, CSV, TXT, MD, JSON, and images. PDF text extraction is bounded by the backend endpoint.
 - The showcase owns desktop wheel navigation; Lenis is disabled to avoid competing wheel handlers.
 - The browser timeout defaults to 10 seconds; the backend provider timeout is 8 seconds.
 - Saved custom primitives are local records and are not executable with new inputs yet.
-
-
-
 
 
 

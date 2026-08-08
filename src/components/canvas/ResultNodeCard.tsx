@@ -1,7 +1,7 @@
 import React from 'react';
 import { SpotlightCard } from '../ui/SpotlightCard';
 import { ExecutionResult } from '../../types/canvas';
-import { Sparkles, AlertTriangle, CheckCircle2, TrendingUp, Box, X } from 'lucide-react';
+import { Sparkles, AlertTriangle, CheckCircle2, TrendingUp, Box, X, ListChecks, Palette } from 'lucide-react';
 import { useCanvasStore } from '../../store/useCanvasStore';
 import { sanitizeSvg } from '../../utils/sanitizeSvg';
 
@@ -24,6 +24,18 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
   const docSynthesis = result.outputPayload?.documentSynthesis as {
     synthesisTitle?: string;
     keyTakeaways?: string[];
+  } | undefined;
+  const meetingInsights = result.outputPayload?.meetingInsights as {
+    summary?: string;
+    decisions?: string[];
+    actionItems?: { task?: string; owner?: string; deadline?: string }[];
+    riskFactors?: string[];
+  } | undefined;
+  const uiConcept = result.outputPayload?.uiConcept as {
+    conceptTitle?: string;
+    componentHierarchy?: string[];
+    stylingDirectives?: string[];
+    themePalette?: { background?: string; surface?: string; accent?: string; border?: string };
   } | undefined;
   const safeChartSvg = sanitizeSvg(dataPattern?.chartSvg);
 
@@ -115,6 +127,25 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
                 <li key={idx} className="leading-snug">{takeaway}</li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {meetingInsights && (
+          <div className="mb-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-2.5">
+            <h4 className="mb-1 flex items-center gap-1 text-xs font-bold text-amber-300"><ListChecks className="h-3.5 w-3.5" /> Meeting Insights</h4>
+            {meetingInsights.summary && <p className="mb-2 text-[10px] leading-snug text-neutral-300">{meetingInsights.summary}</p>}
+            {!!meetingInsights.decisions?.length && <p className="text-[10px] text-neutral-300"><strong className="text-white">Decisions:</strong> {meetingInsights.decisions.join(' • ')}</p>}
+            {!!meetingInsights.actionItems?.length && <ul className="mt-1 space-y-1 text-[10px] text-neutral-300">{meetingInsights.actionItems.map((item, index) => <li key={index}><strong className="text-white">Action:</strong> {item.task} <span className="text-neutral-500">({item.owner}, {item.deadline})</span></li>)}</ul>}
+            {!!meetingInsights.riskFactors?.length && <p className="mt-1 text-[10px] text-amber-200"><strong>Risks:</strong> {meetingInsights.riskFactors.join(' • ')}</p>}
+          </div>
+        )}
+
+        {uiConcept && (
+          <div className="mb-3 rounded-xl border border-purple-500/20 bg-purple-500/5 p-2.5">
+            <h4 className="mb-1 flex items-center gap-1 text-xs font-bold text-purple-300"><Palette className="h-3.5 w-3.5" /> {uiConcept.conceptTitle || 'UI Concept'}</h4>
+            {!!uiConcept.componentHierarchy?.length && <p className="text-[10px] leading-snug text-neutral-300"><strong className="text-white">Components:</strong> {uiConcept.componentHierarchy.join(' • ')}</p>}
+            {!!uiConcept.stylingDirectives?.length && <p className="mt-1 text-[10px] leading-snug text-neutral-300"><strong className="text-white">Style:</strong> {uiConcept.stylingDirectives.join(' • ')}</p>}
+            {uiConcept.themePalette && <div className="mt-2 grid grid-cols-2 gap-1 text-[9px] text-neutral-400">{Object.keys(uiConcept.themePalette).map((key) => <span key={key} className="rounded border border-white/10 px-1.5 py-1"><strong className="text-neutral-200">{key}</strong></span>)}</div>}
           </div>
         )}
 

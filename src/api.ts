@@ -93,7 +93,7 @@ export function isCustomPrimitiveRecord(value: unknown): value is CustomPrimitiv
 }
 
 export function isRequestCancelled(error: unknown): boolean {
-  return axios.isCancel(error)
+  return axios.isCancel(error) || (typeof DOMException !== 'undefined' && error instanceof DOMException && error.name === 'AbortError')
 }
 
 export function isExecutionPlan(value: unknown): value is ExecutionPlan {

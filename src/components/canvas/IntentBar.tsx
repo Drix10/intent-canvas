@@ -89,7 +89,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
              {isEvaluatingPlan ? 'Evaluating...' : hasIntent ? 'Inspect Plan' : 'Guide Me & Inspect'}
            </button>
 
-           <input ref={fileInputRef} type="file" accept=".csv,.txt,.md,.json,image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
+            <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
            <button type="button" aria-label="Add file or image node" onClick={() => fileInputRef.current?.click()} title="Add file or image" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white">
              <Plus className="h-3.5 w-3.5" />
            </button>
@@ -106,7 +106,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
               </span>
             ) : (
               <span className="flex items-center gap-1.5">
-                 <Play className="h-3 w-3 fill-black" /> {hasIntent ? (activePlan ? 'Execute' : 'Inspect & Execute') : 'Guide Me & Inspect'}
+                 <Play className="h-3 w-3 fill-black" /> {hasIntent ? (activePlan ? 'Execute' : 'Inspect & Execute') : 'Start Guided Demo'}
               </span>
             )}
           </MagneticButton>
@@ -115,7 +115,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
             type="button"
             aria-label="Adapt computation for enterprise customers"
             onClick={onFilterEnterprise}
-            disabled={!hasIntent || !activePlan}
+             disabled={!hasIntent || !activePlan || isEvaluatingPlan || isExecutingPlan}
             title="Step 2 Adaptability Demo: Filter Enterprise"
             className="flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-40"
           >
