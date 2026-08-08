@@ -57,7 +57,7 @@ export function SpatialScroll() {
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault()
       if (isAnimating.current) return
-      if (Math.abs(e.deltaY) < 5) return
+      if (Math.abs(e.deltaY) < 35) return
       const dir = e.deltaY > 0 ? 1 : -1
       if (!hasLooped.current && sectionRef.current === 0 && dir === -1) return
       goTo((sectionRef.current + dir + 4) % 4)

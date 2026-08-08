@@ -57,8 +57,8 @@ export const SpatialCanvas: React.FC = () => {
   // Wheel Zoom Handler
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
-    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-    const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.4), 2.5);
+    const zoomFactor = e.deltaY > 0 ? 0.96 : 1.04;
+    const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.5), 2.0);
     setZoom(newZoom);
   };
 

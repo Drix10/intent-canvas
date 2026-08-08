@@ -1,7 +1,11 @@
 import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
+import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { BlurFadeWords } from '../BlurFadeWords'
+import { useCanvasStore } from '../store/useCanvasStore'
+import { MagneticButton } from '../components/ui/MagneticButton'
+import { ArrowRight, Sparkles } from 'lucide-react'
 
 const NATIVE_W = 1040
 const NATIVE_H = 684
@@ -11,6 +15,7 @@ export function Section4() {
   const [isInView, setIsInView] = useState(false)
   const isMobile = useIsMobile()
   const [scale, setScale] = useState(1)
+  const setViewMode = useCanvasStore((state) => state.setViewMode)
 
   useEffect(() => {
     const update = () => {
@@ -75,6 +80,7 @@ export function Section4() {
         }}
       />
 
+      {/* Main Text Header */}
       <div style={{ position: 'absolute', top: '40px', left: '65px', width: '480px', display: 'flex', flexDirection: 'column', zIndex: 10 }}>
         <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '60px', fontWeight: 300, color: '#ffffff', margin: 0 }}>
           <BlurFadeWords text="Higher-Order Primitives" baseDelay={0.5} isInView={isInView} />
@@ -91,11 +97,33 @@ export function Section4() {
             }}
           />
         </p>
-        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '19px', fontWeight: 300, color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+        <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '19px', fontWeight: 300, color: 'rgba(255,255,255,0.6)', margin: 0, marginBottom: '24px' }}>
           <BlurFadeWords text="Compose executed subgraphs into reusable" baseDelay={1.1} isInView={isInView} />
           <br />
           <BlurFadeWords text="dynamic primitives that adapt over time." baseDelay={1.45} isInView={isInView} />
         </p>
+
+        {/* High-Impact Call-To-Action (CTA) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ delay: 1.8, duration: 0.6, ease: 'easeOut' }}
+          className="mt-2"
+        >
+          <MagneticButton
+            onClick={() => setViewMode('interactive')}
+            className="group bg-[#00ff87] px-8 py-3.5 text-sm font-bold text-black hover:bg-[#00ff87]/90 shadow-[0_0_30px_rgba(0,255,135,0.4)]"
+          >
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 fill-black" /> Launch Interactive Spatial Canvas <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </span>
+          </MagneticButton>
+        </motion.div>
+      </div>
+
+      {/* Network Lines */}
+      <div style={{ position: 'absolute', left: '35px', bottom: '-25px', width: '570px', height: '358px', zIndex: 10 }}>
+        <AnimatedNetworkLines isInView={isInView} color="#ffffff" />
       </div>
     </div>
   )

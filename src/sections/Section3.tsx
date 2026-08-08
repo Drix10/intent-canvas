@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useState, useEffect, useRef } from 'react'
+import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { BlurFadeWords } from '../BlurFadeWords'
 
@@ -96,6 +97,11 @@ export function Section3() {
           <br />
           <BlurFadeWords text="and intent becomes executable computation." baseDelay={1.45} isInView={isInView} />
         </p>
+      </div>
+
+      {/* Network Lines */}
+      <div style={{ position: 'absolute', left: '35px', bottom: '-25px', width: '570px', height: '358px', zIndex: 10 }}>
+        <AnimatedNetworkLines isInView={isInView} color="#4C6DFF" />
       </div>
     </div>
   )
