@@ -181,14 +181,33 @@ export function Section4({
           </div>
 
           {/* Prompt Input Box */}
-          <div className="relative mb-3.5">
+          <div className="relative mb-2.5">
             <input
               type="text"
               value={activeIntentPrompt}
               onChange={(e) => setActiveIntentPrompt(e.target.value)}
-              placeholder="Express your natural computing intent..."
-              className="w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-[#00ff87]/60 focus:bg-white/[0.08]"
+              placeholder="Type what outcome you desire (e.g. 'Show me why revenue dropped in August')..."
+              className="w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-xs text-white placeholder-neutral-400 outline-none transition-colors focus:border-[#00ff87]/60 focus:bg-white/[0.08]"
             />
+          </div>
+
+          {/* Quick Guided Prompt Suggestion Chips */}
+          <div className="mb-3.5 flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">Try intent:</span>
+            {[
+              'Show me why revenue dropped in August',
+              'Analyze customer churn sentiment notes',
+              'Compare Q3 metrics with design system',
+            ].map((suggestion, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setActiveIntentPrompt(suggestion)}
+                className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-neutral-300 transition-colors hover:border-[#00ff87]/50 hover:bg-[#00ff87]/10 hover:text-[#00ff87]"
+              >
+                "{suggestion}"
+              </button>
+            ))}
           </div>
 
           {/* Console Action Bar */}

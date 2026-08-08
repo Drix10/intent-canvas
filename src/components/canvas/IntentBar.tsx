@@ -23,9 +23,34 @@ export const IntentBar: React.FC<IntentBarProps> = ({
     isExecutingPlan,
     resetDemoCanvas,
   } = useCanvasStore();
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
 
   return (
-    <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3">
+    <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2">
+      {/* Quick Intent Suggestions Popover */}
+      {showSuggestions && (
+        <div className="smoked-glass hairline-border flex items-center gap-2 rounded-2xl px-4 py-2 shadow-2xl backdrop-blur-2xl">
+          <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Guide:</span>
+          {[
+            'Show me why revenue dropped in August',
+            'Analyze customer churn sentiment notes',
+            'Compare Q3 sales with design system',
+          ].map((suggestion, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => {
+                setActiveIntentPrompt(suggestion);
+                setShowSuggestions(false);
+              }}
+              className="rounded-lg border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] font-medium text-neutral-200 transition-colors hover:border-[#00ff87]/50 hover:bg-[#00ff87]/10 hover:text-[#00ff87]"
+            >
+              "{suggestion}"
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="smoked-glass hairline-border flex items-center gap-3 rounded-full px-5 py-3 shadow-2xl backdrop-blur-2xl">
         {/* Intent Input Prompt Bar */}
         <div className="relative flex items-center">
@@ -34,8 +59,9 @@ export const IntentBar: React.FC<IntentBarProps> = ({
             type="text"
             value={activeIntentPrompt}
             onChange={(e) => setActiveIntentPrompt(e.target.value)}
-            placeholder="Express your natural computing intent..."
-            className="w-[300px] sm:w-[420px] rounded-full border border-white/10 bg-white/[0.04] pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-500 outline-none transition-colors focus:border-[#00ff87]/50 focus:bg-white/[0.08]"
+            onFocus={() => setShowSuggestions(true)}
+            placeholder="Type your natural computing intent..."
+            className="w-[300px] sm:w-[420px] rounded-full border border-white/10 bg-white/[0.04] pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-400 outline-none transition-colors focus:border-[#00ff87]/50 focus:bg-white/[0.08]"
           />
         </div>
 

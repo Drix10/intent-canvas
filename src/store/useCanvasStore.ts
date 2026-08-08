@@ -90,7 +90,7 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   pan: { x: 0, y: 0 },
   zoom: 1,
   selectedNodeIds: [],
-  activeIntentPrompt: 'Show me why revenue dropped in August and present it like this design system example.',
+  activeIntentPrompt: '',
   isEvaluatingPlan: false,
   isExecutingPlan: false,
   activePlan: null,
@@ -142,6 +142,6 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     edges: initialDemoEdges,
     activePlan: null,
     executionResult: null,
-    activeIntentPrompt: 'Show me why revenue dropped in August and present it like this design system example.',
+    activeIntentPrompt: '',
   }),
 }));

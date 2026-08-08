@@ -58,7 +58,7 @@ export default function App() {
     ],
     activeIntentInput: {
       modality: 'text' as const,
-      rawPrompt: activeIntentPrompt,
+      rawPrompt: activeIntentPrompt.trim() || 'Show me why revenue dropped in August and present it like this design system example.',
       timestamp: Date.now(),
     },
   })
