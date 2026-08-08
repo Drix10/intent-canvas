@@ -19,15 +19,15 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = ({
   const getIcon = () => {
     switch (node.type) {
       case 'dataset':
-        return <Database className="h-4 w-4 text-[#00ff87]" />;
+        return <Database className="h-3.5 w-3.5 text-[#00ff87]" />;
       case 'document':
-        return <FileText className="h-4 w-4 text-sky-400" />;
+        return <FileText className="h-3.5 w-3.5 text-sky-400" />;
       case 'example':
-        return <Layout className="h-4 w-4 text-purple-400" />;
+        return <Layout className="h-3.5 w-3.5 text-purple-400" />;
       case 'custom_primitive':
-        return <Box className="h-4 w-4 text-amber-400" />;
+        return <Box className="h-3.5 w-3.5 text-amber-400" />;
       default:
-        return <Sparkles className="h-4 w-4 text-[#00ff87]" />;
+        return <Sparkles className="h-3.5 w-3.5 text-[#00ff87]" />;
     }
   };
 
@@ -49,28 +49,28 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = ({
   return (
     <div
       onClick={onSelect}
-      className={`relative cursor-grab active:cursor-grabbing select-none transition-shadow ${
-        isSelected ? 'ring-2 ring-[#00ff87] ring-offset-2 ring-offset-[#040406]' : ''
+      className={`relative cursor-grab active:cursor-grabbing select-none transition-all ${
+        isSelected ? 'ring-2 ring-[#00ff87] ring-offset-2 ring-offset-[#040406] shadow-[0_0_25px_rgba(0,255,135,0.25)]' : ''
       }`}
       style={{
         width: node.position.width,
         minHeight: node.position.height,
       }}
     >
-      <SpotlightCard className="h-full w-full">
+      <SpotlightCard className="h-full w-full p-4">
         {/* Node Header */}
-        <div className="mb-2 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="rounded-lg border border-white/10 bg-white/5 p-1.5">{getIcon()}</div>
-            <h3 className="truncate text-xs font-semibold text-white/90">{node.title}</h3>
+        <div className="mb-2.5 flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-1.5">{getIcon()}</div>
+            <h3 className="truncate text-xs font-bold text-white/95">{node.title}</h3>
           </div>
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${getTypeBadge()}`}>
+          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${getTypeBadge()}`}>
             {node.type.replace('_', ' ')}
           </span>
         </div>
 
         {/* Payload Summary */}
-        <p className="line-clamp-3 text-[11px] leading-relaxed text-neutral-400">
+        <p className="line-clamp-3 text-[11px] leading-relaxed text-neutral-300">
           {node.dataPayload.contentSummary}
         </p>
 
@@ -80,7 +80,7 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = ({
             e.stopPropagation();
             onStartConnection(node.id);
           }}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/[0.08] bg-white/[0.03] py-1 text-[10px] font-medium text-neutral-300 transition-colors hover:border-[#00ff87]/40 hover:bg-[#00ff87]/10 hover:text-[#00ff87]"
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/[0.1] bg-white/[0.04] py-1.5 text-[10px] font-bold text-neutral-200 transition-colors hover:border-[#00ff87]/50 hover:bg-[#00ff87]/10 hover:text-[#00ff87]"
         >
           <Sparkles className="h-3 w-3" /> Connect Relation
         </button>

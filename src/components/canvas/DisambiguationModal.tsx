@@ -16,37 +16,37 @@ export const DisambiguationModal: React.FC<DisambiguationModalProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md">
-      <div className="w-full max-w-md p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+      <div className="w-full max-w-md">
         <SpotlightCard spotlightColor="rgba(255, 183, 3, 0.25)" className="smoked-glass border-amber-500/40 relative rounded-3xl p-6">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 rounded-full border border-white/10 bg-white/5 p-1.5 text-neutral-400 hover:text-white"
+            className="absolute top-4 right-4 rounded-full border border-white/10 bg-white/5 p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
 
-          <div className="mb-3 flex items-center gap-2 text-amber-400">
-            <AlertCircle className="h-5 w-5" />
+          <div className="mb-3 flex items-center gap-2 text-amber-400 pr-8">
+            <AlertCircle className="h-5 w-5 shrink-0" />
             <h3 className="text-base font-bold">Intent Disambiguation Gate</h3>
           </div>
 
-          <p className="mb-4 text-xs text-neutral-300 leading-relaxed">
+          <p className="mb-4 text-xs text-neutral-300 leading-relaxed border-b border-amber-500/20 pb-3">
             {reason}
           </p>
 
-          <div className="space-y-2">
+          <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
             {options.map((opt) => (
               <button
                 key={opt.optionId}
                 onClick={() => onSelectOption(opt.optionId)}
-                className="group flex w-full items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-left transition-colors hover:border-amber-400 hover:bg-amber-500/15"
+                className="group flex w-full items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-left transition-colors hover:border-amber-400 hover:bg-amber-500/20"
               >
-                <div>
-                  <h4 className="text-xs font-semibold text-white">{opt.label}</h4>
-                  <p className="text-[10px] text-neutral-400">{opt.actionHint}</p>
+                <div className="min-w-0 flex-1">
+                  <h4 className="truncate text-xs font-bold text-white">{opt.label}</h4>
+                  <p className="mt-0.5 text-[10px] text-neutral-300">{opt.actionHint}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-amber-400 transition-transform group-hover:translate-x-1" />
+                <ArrowRight className="h-4 w-4 shrink-0 text-amber-400 transition-transform group-hover:translate-x-1" />
               </button>
             ))}
           </div>

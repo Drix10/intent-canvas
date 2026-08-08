@@ -2,7 +2,7 @@ import React from 'react';
 import { ExecutionPlan } from '../../types/canvas';
 import { SpotlightCard } from '../ui/SpotlightCard';
 import { MagneticButton } from '../ui/MagneticButton';
-import { CheckCircle2, Play, AlertCircle, X, Sparkles } from 'lucide-react';
+import { CheckCircle2, Play, X, Sparkles } from 'lucide-react';
 
 interface PlanPreviewModalProps {
   plan: ExecutionPlan;
@@ -18,39 +18,39 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
   onClose,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md">
-      <div className="w-full max-w-xl p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+      <div className="w-full max-w-xl">
         <SpotlightCard className="smoked-glass hairline-border relative overflow-hidden rounded-3xl p-6">
           {/* Close Button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 rounded-full border border-white/10 bg-white/5 p-1.5 text-neutral-400 hover:text-white"
+            className="absolute top-4 right-4 rounded-full border border-white/10 bg-white/5 p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>
 
           {/* Modal Header */}
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-4 flex items-center gap-2 pr-8">
             <Sparkles className="h-5 w-5 text-[#00ff87]" />
-            <h2 className="text-lg font-bold text-white">Inspectable Execution Plan</h2>
+            <h2 className="text-base font-bold text-white">Inspectable Execution Plan</h2>
           </div>
 
-          <div className="mb-4 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3">
-            <p className="text-xs font-medium text-neutral-300">{plan.goalSummary}</p>
-            <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-400">
+          <div className="mb-4 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+            <p className="text-xs font-semibold leading-relaxed text-neutral-200">{plan.goalSummary}</p>
+            <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-400 border-t border-white/5 pt-2">
               <span>Evaluation Confidence</span>
               <span className="font-bold text-[#00ff87]">{(plan.confidenceScore * 100).toFixed(0)}%</span>
             </div>
           </div>
 
-          {/* Plan Steps */}
-          <div className="mb-6 space-y-2.5">
+          {/* Plan Steps (Scrollable Container) */}
+          <div className="mb-6 max-h-[50vh] overflow-y-auto space-y-2.5 pr-1">
             {plan.steps.map((step) => (
               <div
                 key={step.stepId}
-                className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-left transition-colors hover:border-white/15"
+                className="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] p-3 text-left transition-colors hover:border-white/20"
               >
-                <div className="mt-0.5 rounded-full bg-[#00ff87]/10 p-1 text-[#00ff87]">
+                <div className="mt-0.5 shrink-0 rounded-full bg-[#00ff87]/10 p-1 text-[#00ff87]">
                   {step.status === 'completed' ? (
                     <CheckCircle2 className="h-4 w-4" />
                   ) : step.status === 'running' ? (
@@ -61,14 +61,14 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
                     </span>
                   )}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-semibold text-white/90">{step.title}</h4>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-mono text-neutral-300">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="truncate text-xs font-bold text-white">{step.title}</h4>
+                    <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-mono text-neutral-300">
                       {step.requiredCapability}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[11px] text-neutral-400">{step.description}</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -85,7 +85,7 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
             <MagneticButton
               onClick={onExecute}
               disabled={isExecuting}
-              className="bg-[#00ff87] px-6 py-2 text-xs text-black hover:bg-[#00ff87]/90"
+              className="bg-[#00ff87] px-6 py-2 text-xs font-bold text-black hover:bg-[#00ff87]/90"
             >
               {isExecuting ? (
                 <span className="flex items-center gap-2">
