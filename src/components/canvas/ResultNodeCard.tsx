@@ -85,7 +85,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
               <AlertTriangle className="h-3.5 w-3.5" /> Anomaly Highlight: {dataPattern.anomalyDetails?.month}
             </div>
             <p className="mt-1 text-[10px] leading-relaxed text-amber-200/90">
-              Deviation: <span className="font-mono font-bold text-amber-300">{dataPattern.anomalyDetails?.deviationPercent}</span> — {dataPattern.anomalyDetails?.probableCause}
+              Deviation: <span className="font-mono font-bold text-amber-300">{dataPattern.anomalyDetails?.deviationPercent}</span>: {dataPattern.anomalyDetails?.probableCause}
             </p>
           </div>
         )}

@@ -102,7 +102,7 @@ export function isExecutionPlan(value: unknown): value is ExecutionPlan {
   const confidenceScore = plan.confidenceScore
   const steps = Array.isArray(plan.steps) ? plan.steps : []
   const stepIds = steps.map(step => typeof step === 'object' && step !== null ? (step as { stepId?: unknown }).stepId : undefined)
-  return (!plan.planningMode || plan.planningMode === 'provider' || plan.planningMode === 'local_fallback') &&
+  return (!plan.planningMode || plan.planningMode === 'provider' || plan.planningMode === 'local_fallback') && (!plan.planningNotice || isBoundedString(plan.planningNotice, MAX_SHORT_STRING)) &&
     isBoundedString(plan.planId) &&
     isBoundedString(plan.goalSummary, MAX_LONG_STRING) &&
     typeof confidenceScore === 'number' && Number.isFinite(confidenceScore) &&

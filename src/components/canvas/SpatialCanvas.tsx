@@ -3,7 +3,7 @@ import { useCanvasStore } from '../../store/useCanvasStore';
 import { CanvasNodeCard } from './CanvasNodeCard';
 import { CanvasSVGEdges } from './CanvasSVGEdges';
 import { APP_CONFIG } from '../../config';
-import { Sparkles, Plus, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, FileUp } from 'lucide-react';
+import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, GitBranch, Ruler, HardDrive } from 'lucide-react';
 import { buildSpatialEdges } from '../../utils/spatialRelations';
 
 export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ onAddFile }) => {
@@ -327,10 +327,10 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
           <Layers className="h-4 w-4" />
           <span style={{ writingMode: 'vertical-rl' }}>AST</span>
         </div>
-        <div className="flex flex-col items-center"><span className="text-neutral-500">N</span><strong className="font-mono text-white">{nodes.length}</strong></div>
-        <div className="flex flex-col items-center"><span className="text-neutral-500">E</span><strong className="font-mono text-white">{contextSpatialEdges.length}</strong></div>
-        <div className="flex flex-col items-center"><span className="text-neutral-500">R</span><strong className="font-mono text-emerald-400">{APP_CONFIG.proximityDistancePixels}</strong></div>
-        <div className="flex flex-col items-center"><span className="text-neutral-500">L</span><strong className="text-emerald-400">On</strong></div>
+        <div className="flex flex-col items-center" title="Nodes"><Network className="h-3.5 w-3.5 text-neutral-500" aria-label="Nodes" /><strong className="font-mono text-white">{nodes.length}</strong></div>
+        <div className="flex flex-col items-center" title="Edges"><GitBranch className="h-3.5 w-3.5 text-neutral-500" aria-label="Edges" /><strong className="font-mono text-white">{contextSpatialEdges.length}</strong></div>
+        <div className="flex flex-col items-center" title="Proximity radius"><Ruler className="h-3.5 w-3.5 text-neutral-500" aria-label="Proximity radius" /><strong className="font-mono text-emerald-400">{APP_CONFIG.proximityDistancePixels}</strong></div>
+        <div className="flex flex-col items-center" title="Local retention"><HardDrive className="h-3.5 w-3.5 text-neutral-500" aria-label="Local retention" /><strong className="text-emerald-400">On</strong></div>
         <button
           type="button"
           onClick={resetDemoCanvas}

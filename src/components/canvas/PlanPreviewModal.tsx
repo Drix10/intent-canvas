@@ -40,7 +40,7 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
             <Sparkles className="h-5 w-5 text-[#00ff87]" />
              <div>
                <h2 id="plan-modal-title" className="text-base font-bold text-white">Inspectable Execution Plan</h2>
-               {plan.planningMode === 'local_fallback' && <p className="mt-0.5 text-[10px] text-amber-300">Provider unavailable. Using bounded local planning.</p>}
+               {plan.planningMode === 'local_fallback' && <p className="mt-0.5 text-[10px] text-amber-300">{plan.planningNotice || 'Provider unavailable. Using bounded local planning.'}</p>}
              </div>
           </div>
 

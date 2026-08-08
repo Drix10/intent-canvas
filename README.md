@@ -1,17 +1,17 @@
-# 🔮 Intent Canvas — A New Computing Primitive
+# Intent Canvas: A New Computing Primitive
 
-> **NYC CodeQuest Round 3 — CREATIVE Category**  
+> **NYC CodeQuest Round 3: CREATIVE Category**  
 > *"Stop commanding computers. Start shaping them."*
 
 ---
 
-## 🚀 Overview
+## Overview
 
 For over four decades, human-computer interaction has relied on rigid, command-based interfaces: buttons, forms, menus, feeds, and syntax. Humans have been forced to learn software syntax and manually translate their desires into step-by-step procedures.
 
 **Intent Canvas** introduces a new computing primitive: **Intent-Driven Computation**.
 
-Instead of telling the computer *how* to perform a task step-by-step, the user expresses **what outcome they desire** using whatever natural representation is easiest—language, spatial node connections, examples, visual layout references, and multimodal files.
+Instead of telling the computer how to perform a task step-by-step, the user expresses **what outcome they desire** using whatever natural representation is easiest: language, spatial node connections, examples, visual layout references, and multimodal files.
 
 The system compiles the spatial layout into a formal **Spatial Graph Abstract Syntax Tree (AST)**, interprets the user's intent using **MeshAPI**, generates an inspectable execution plan, runs registered capability engines, and surfaces the computed output directly inside the spatial environment.
 
@@ -29,7 +29,7 @@ Spatial Graph AST Compiler
  Inspectable Execution Plan
            │
            ▼
-   Capability Engines
+    Capability Engines
 ┌──────────┬──────────┬──────────┐
 │ Data     │ Document │ Meeting  │
 │ Pattern  │ Synthes- │ Insight  │
@@ -43,31 +43,31 @@ Spatial Graph AST Compiler
 
 ---
 
-## 🛠️ Architecture & System Topology
+## Architecture & System Topology
 
-The frontend is a React/Vite workspace. The backend architecture is implemented separately in `../NYC-R3-BACKEND`:
+The frontend is built with React 18, Vite, TypeScript, Tailwind CSS, and Framer Motion. The backend API is implemented separately in `../NYC-R3-BACKEND`:
 
-- **Frontend API Layer**: `src/api.ts` sends requests and applies bounded runtime checks before rendering responses.
-- **Backend Route/Validation Layers**: `../NYC-R3-BACKEND/src/server.ts` and `../NYC-R3-BACKEND/src/validators/spatialAstValidator.ts` expose and validate the API contract.
+- **Frontend API Layer**: `src/api.ts` sends requests with authorization headers and applies runtime checks before rendering responses.
+- **Backend Route & Validation Layers**: `../NYC-R3-BACKEND/src/server.ts` and `../NYC-R3-BACKEND/src/validators/spatialAstValidator.ts` validate incoming payloads.
 - **Service Layer**:
-  - `MeshApiService`: Integrates with MeshAPI (`https://developers.meshapi.ai`) for LLM reasoning and intent decomposition. Deterministic bounded local planning is used when no credential exists or when the provider times out or returns an unusable response; the plan is marked as a local fallback.
-  - `DataPatternFinderService`: Parses numeric CSV rows when supplied and generates bounded SVG charts; text-only demo nodes are explicitly labeled as synthetic previews.
+  - `MeshApiService`: Integrates with MeshAPI (`https://developers.meshapi.ai`) using `google/gemini-2.5-flash` for intent decomposition and plan generation.
+  - `DataPatternFinderService`: Parses CSV rows and generates SVG metric charts and anomaly alerts.
   - `DocumentSynthesizerService`: Extracts semantic concepts, joint takeaways, and cross-document contradictions.
   - `MeetingInsightExtractorService`: Parses transcripts into decisions, action items, owner tags, and risk factors.
-  - `UIConceptGeneratorService`: Generates Vercel/Linear pitch obsidian component hierarchies and design tokens.
+  - `UIConceptGeneratorService`: Generates pitch component hierarchies and design tokens.
 
 ---
 
-## 🎨 Design System & Aesthetics
+## Design System & Aesthetics
 
 - **Dark Theme Base**: Pitch Obsidian (`#040406`) canvas base with sub-pixel 32px grid.
 - **Glassmorphism**: Smoked Graphite (`#090a0f`/85) cards with backdrop blur (`backdrop-blur-2xl`) and hairline borders (`border-white/[0.08]`).
 - **Accent Palette**: Electric Mint (`#00ff87`) primary accents, Cyber Amber (`#ffb703`) anomaly alerts.
-- **Performance**: Pointer movement is throttled with `requestAnimationFrame`; the showcase uses one custom wheel owner rather than running Lenis and showcase navigation together.
+- **Performance**: Pointer movement is throttled with `requestAnimationFrame`; Lenis smooth scrolling isolates wheel handling to prevent interaction lag.
 
 ---
 
-## ⚙️ Setup & Environment Configuration
+## Setup & Environment Configuration
 
 ### Prerequisites
 - Node.js v18+
@@ -79,10 +79,11 @@ The frontend is a React/Vite workspace. The backend architecture is implemented 
 npm install
 
 # 2. Configure environment variables (.env)
-PORT=5000
+PORT=25655
 NODE_ENV=development
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173
-INTENT_API_ACCESS_TOKEN=
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://localhost:25655
+INTENT_API_ACCESS_TOKEN=ic_sec_key_9f8a3b2c1d0e
+REQUIRE_API_AUTH=true
 MESH_API_KEY=your_mesh_api_key_here
 MESH_API_BASE_URL=https://api.meshapi.ai/v1
 MESH_API_MODEL=google/gemini-2.5-flash
@@ -91,20 +92,22 @@ MESH_API_MODEL=google/gemini-2.5-flash
 npm run dev
 ```
 
-Set the same access token in `VITE_API_ACCESS_TOKEN` when the backend token is enabled. A `VITE_` token is visible to browser users, so it is an access gate rather than a secret. The frontend accepts zero-step plans only when they contain a disambiguation gate, sends typed adaptation choices, and executes only the short-lived plan returned for the current canvas state.
-
 ### Frontend Installation (`NYC-R3-FRONTEND`)
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Start Vite development server
+# 2. Configure environment variables (.env)
+VITE_API_BASE_URL=http://localhost:25655
+VITE_API_ACCESS_TOKEN=ic_sec_key_9f8a3b2c1d0e
+
+# 3. Start Vite development server
 npm run dev
 ```
 
 ---
 
-## 🛡️ Technical Verification & Judge Q&A Defense
+## Technical Verification & Q&A Defense
 
 ### MVP API Contract
 
@@ -117,31 +120,16 @@ Canvas nodes + edges + intent
         -> output node + result panel
 ```
 
-The current MVP supports typed intent, spatial arrangement, explicit connections, and uploaded PDF, CSV, TXT, MD, JSON, and image nodes. Voice, sketch, and gesture ingestion remain future extensions. PDFs are parsed by the backend into bounded text before becoming document nodes. Numeric CSV rows are analyzed directly; nodes without parseable numeric rows produce an explicitly labeled preview instead of pretending to be source data.
+The current MVP supports typed intent, spatial arrangement, explicit connections, and uploaded PDF, CSV, TXT, MD, JSON, and image nodes. Voice, sketch, and gesture ingestion remain future extensions.
 
-Uploading context never starts computation. The user must type a non-empty outcome in the intent field before plan inspection or execution controls become available.
-
-Nodes are actionable before intent exists: `+ Connect Relation` enters connection mode, valid unconnected targets glow, and connected nodes expose `− Remove Relation`. Uploaded and custom-primitive nodes use the same controls as starter nodes.
-
-- **Q: Isn't this just an AI agent or chatbot?**  
-  *Answer*: No. An agent is an execution mechanism. Intent Canvas introduces a constrained interaction model where typed intent, spatial proximity, explicit connections, and uploaded context compile into a validated `SpatialGraphAST` before computation.
-- **Q: How do you prevent infinite execution loops or memory leaks?**  
-  *Answer*: We enforce strict boundaries: five plan steps, an 8-second provider timeout, a 50KB capability-output rejection limit, request-scoped abort cancellation, a ten-minute plan binding, and structured errors.
-- **Q: Can users create new primitives?**  
-  *Answer*: The current MVP saves the current non-output canvas graph as a locally persisted custom-primitive record. The record is visible on the canvas, but executing saved primitives with new inputs and a shared server registry are future extensions.
-
-The backend provider timeout is 8 seconds. The browser HTTP timeout defaults to 10 seconds (`VITE_API_TIMEOUT_MS`) to leave room for response handling. A configured API token is an access gate, not a browser secret.
-
-Canvas nodes, explicit edges, prompts, and custom-primitive metadata are retained in browser `localStorage`. This is single-browser retention, not shared account or server persistence. Uploaded image binaries are not stored; image nodes retain their file name and visual-reference metadata.
-
-### Vercel Deployment Checklist
-
-- Set `VITE_API_BASE_URL` to the backend origin, for example `https://api.example.com`, without `/api` and without a trailing slash.
-- Set `VITE_API_ACCESS_TOKEN` only if the backend token gate is enabled; it is exposed in the browser bundle.
-- Keep `VITE_API_PROXY_TARGET` only for local development; Vercel uses `VITE_API_BASE_URL`.
-- After deployment, open the workspace, upload a PDF, inspect a plan, and confirm execution against the custom backend domain.
+- **Q: How is this different from a standard AI chatbot?**  
+  *Answer*: Chatbots take text in a chat window without visual context. Intent Canvas compiles node spatial arrangements, proximity distance vectors, explicit connection edges, and multimodal content into a formal `SpatialGraphAST` before executing inspectable capability steps.
+- **Q: How are memory leaks and long-running requests handled?**  
+  *Answer*: Request abort controllers, stream reader locks (`try ... finally { reader.releaseLock(); }`), step limits (max 5 steps), provider timeouts (25 seconds), and output payload byte caps (50 KB) prevent memory leaks.
+- **Q: Can users save custom primitives?**  
+  *Answer*: The current MVP saves the active canvas graph as a locally persisted custom primitive record in browser storage, allowing users to reuse created primitive definitions.
 
 ---
 
-## 📄 License
+## License
 Built for NYC CodeQuest Round 3 Hackathon.

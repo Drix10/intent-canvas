@@ -39,6 +39,7 @@ export interface ExecutionPlan {
   goalSummary: string;
   confidenceScore: number;
   planningMode?: 'provider' | 'local_fallback';
+  planningNotice?: string;
   steps: PlanStep[];
   disambiguation?: {
     requiresUserClarification: boolean;

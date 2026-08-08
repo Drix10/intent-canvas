@@ -1,6 +1,6 @@
-# 📍 Intent Canvas — Master System Checkpoints & Audit Log
+# 📍 Intent Canvas: Master System Checkpoints & Audit Log
 
-> **Project**: Intent Canvas / Living Interfaces — A New Computing Primitive  
+> **Project**: Intent Canvas / Living Interfaces: A New Computing Primitive  
 > **Hackathon**: NYC CodeQuest Round 3 (8-Hour Challenge)  
 > **Repositories**:
 > - Backend: `https://github.com/Drix10/intent-canvas-backend.git`
