@@ -11,6 +11,7 @@ export interface CanvasNode {
     mimeType: string;
     contentSummary: string;
     rawReference?: string;
+    previewUrl?: string;
     parsedMetrics?: Record<string, unknown>;
   };
 }
@@ -21,6 +22,7 @@ export interface CanvasEdge {
   targetNodeId: string;
   relationType: RelationType;
   label?: string;
+  distancePixels?: number;
 }
 
 export interface PlanStep {
@@ -36,6 +38,7 @@ export interface ExecutionPlan {
   planId: string;
   goalSummary: string;
   confidenceScore: number;
+  planningMode?: 'provider' | 'local_fallback';
   steps: PlanStep[];
   disambiguation?: {
     requiresUserClarification: boolean;

@@ -20,7 +20,7 @@ export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) 
   };
 
   return (
-    <svg className="pointer-events-none absolute inset-0 h-full w-full overflow-visible z-10">
+    <svg aria-label="Spatial relationships" role="img" className="pointer-events-none absolute inset-0 h-full w-full overflow-visible z-10">
       <defs>
         <linearGradient id="edgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="#00ff87" stopOpacity="0.9" />
@@ -47,11 +47,11 @@ export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) 
         const pathD = `M ${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`;
 
         // Exact Cubic Bezier Midpoint Calculation at t = 0.5
-        const midX = 0.125 * start.x + 0.375 * cx1 + 0.375 * cx2 + 0.125 * end.x;
-        const midY = 0.125 * start.y + 0.375 * cy1 + 0.375 * cy2 + 0.125 * end.y;
-
+         const midX = 0.125 * start.x + 0.375 * cx1 + 0.375 * cx2 + 0.125 * end.x;
+         const midY = 0.125 * start.y + 0.375 * cy1 + 0.375 * cy2 + 0.125 * end.y;
         return (
           <g key={edge.id}>
+            <title>{`${source.title} to ${target.title}: ${edge.label || edge.relationType}`}</title>
             {/* Ambient Background Glow Path */}
             <path
               d={pathD}
@@ -79,7 +79,7 @@ export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) 
                 className="overflow-visible pointer-events-none"
               >
                 <div className="flex h-full w-full items-center justify-center">
-                  <span className="whitespace-nowrap rounded-full border border-[#00ff87]/40 bg-[#040406]/95 px-3 py-1 text-[10px] font-bold text-[#00ff87] shadow-xl backdrop-blur-xl">
+                    <span className="whitespace-nowrap rounded-full border border-[#00ff87]/40 bg-[#040406]/95 px-3 py-1 text-[10px] font-bold text-[#00ff87] shadow-xl backdrop-blur-xl">
                     {edge.label}
                   </span>
                 </div>

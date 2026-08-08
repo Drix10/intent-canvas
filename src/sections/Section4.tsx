@@ -5,8 +5,7 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import { MobileShowcasePanel } from '../components/showcase/MobileShowcasePanel'
 import { BlurFadeWords } from '../BlurFadeWords'
 import { useCanvasStore } from '../store/useCanvasStore'
-import { MagneticButton } from '../components/ui/MagneticButton'
-import { Sparkles, Play, Plus, RefreshCw, Filter, Database, ArrowRight } from 'lucide-react'
+import { Sparkles, Play, Database, ArrowRight } from 'lucide-react'
 
 const MAGIC_BORDER_WHITE = 'conic-gradient(from 0deg, transparent 0%, transparent 35%, rgba(255,255,255,0.12) 42%, #ffffff 50%, rgba(255,255,255,0.12) 58%, transparent 65%, transparent 100%)'
 
@@ -29,38 +28,20 @@ const NATIVE_W = 1040
 const NATIVE_H = 684
 
 interface Section4Props {
-  onEvaluatePlan: () => void;
-  onExecuteComputation: () => void;
-  onFilterEnterprise: () => void;
-  onAddNewNode: () => void;
-  onAddFile?: (file: File) => void;
   isInView?: boolean;
 }
 
 export function Section4({
-  onEvaluatePlan,
-  onExecuteComputation,
-  onFilterEnterprise,
-  onAddNewNode,
-  onAddFile,
   isInView: propIsInView,
 }: Section4Props) {
   const sectionRef = useRef<HTMLElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [internalIsInView, setInternalIsInView] = useState(true)
   const isMobile = useIsMobile()
   const [scale, setScale] = useState(1)
 
   const isInView = propIsInView ?? internalIsInView
 
-  const {
-    activeIntentPrompt,
-    setActiveIntentPrompt,
-    isEvaluatingPlan,
-    isExecutingPlan,
-    resetDemoCanvas,
-    setViewMode,
-  } = useCanvasStore()
+  const setViewMode = useCanvasStore((state) => state.setViewMode)
 
   useEffect(() => {
     const update = () => {
@@ -98,30 +79,11 @@ export function Section4({
 
   if (isMobile) {
     return (
-      <MobileShowcasePanel eyebrow="04 / Try It Live" title="Shape an outcome, then make it real." description="Start with a plain-language goal. Inspect the generated plan when you want confidence, or execute directly to see the result in the workspace." accentClass="text-[#00ff87]">
-        <label htmlFor="mobile-showcase-intent" className="sr-only">Describe the outcome you want</label>
-        <input
-          id="mobile-showcase-intent"
-          type="text"
-          value={activeIntentPrompt}
-          onChange={(event) => setActiveIntentPrompt(event.target.value)}
-          placeholder="e.g. Explain the August revenue drop"
-          className="mt-6 w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-3 text-sm text-white outline-none placeholder:text-neutral-500 focus:border-[#00ff87]/60"
-        />
-        <div className="mt-3 grid grid-cols-1 gap-2">
-          <button type="button" onClick={onEvaluatePlan} disabled={isEvaluatingPlan} className="rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">
-            {isEvaluatingPlan ? 'Preparing plan...' : 'Inspect plan first'}
-          </button>
-          <MagneticButton type="button" onClick={onExecuteComputation} disabled={isExecutingPlan} className="w-full bg-[#00ff87] px-4 py-3 text-sm font-bold text-black disabled:opacity-50">
-            {isExecutingPlan ? 'Computing...' : 'Execute computation'}
-          </MagneticButton>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button type="button" onClick={onFilterEnterprise} className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-300">Adapt for enterprise</button>
-          <button type="button" onClick={onAddNewNode} className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-xs text-neutral-200">Add document</button>
-        </div>
-        <button type="button" onClick={() => setViewMode('interactive')} className="mt-4 w-full text-xs text-neutral-400 underline underline-offset-4 hover:text-white">Open the full workspace</button>
-      </MobileShowcasePanel>
+       <MobileShowcasePanel eyebrow="04 / Workspace" title="Shape the outcome in one place." description="Arrange context, type your intent, inspect the plan, and execute from the full spatial workspace." accentClass="text-[#00ff87]">
+         <button type="button" onClick={() => setViewMode('interactive')} className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[#00ff87] px-4 py-3 text-sm font-bold text-black shadow-[0_0_24px_rgba(0,255,135,0.25)] hover:bg-[#00ff87]/90">
+           Open the Intent Workspace <ArrowRight className="h-4 w-4" />
+         </button>
+       </MobileShowcasePanel>
     )
   }
 
@@ -180,7 +142,7 @@ export function Section4({
         </h1>
 
         <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '17px', fontWeight: 300, color: 'rgba(255,255,255,0.7)', margin: 0, marginBottom: '18px' }}>
-          <BlurFadeWords text="Type your natural intent below, inspect the execution plan, or execute the dynamic computation live." baseDelay={0.7} isInView={isInView} />
+           <BlurFadeWords text="Take the full interaction into the workspace, where you can shape context and review computation before execution." baseDelay={0.7} isInView={isInView} />
         </p>
 
         {/* User Guidance Step Pills */}
@@ -209,145 +171,28 @@ export function Section4({
           </div>
 
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-400">
-              <Play className="h-3.5 w-3.5" /> 3. Live Execution & Adaptation
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+               <Play className="h-3.5 w-3.5" /> 3. Inspect & Execute
             </div>
             <p className="mt-1 text-[11px] text-neutral-400">
-              Inspect step-by-step Gemini plans & render SVG metrics directly on canvas.
+               Review the bounded plan, then execute it in the workspace.
             </p>
           </div>
         </motion.div>
 
-        {/* Embedded Interactive Intent Console */}
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.96 }}
           transition={{ delay: 1.1, duration: 0.6 }}
-          className="relative z-30 pointer-events-auto rounded-2xl border border-white/15 bg-[#090a0f]/90 p-4 shadow-2xl backdrop-blur-2xl"
+          className="relative z-30 flex items-center justify-between gap-5 rounded-2xl border border-[#00ff87]/30 bg-[#090a0f]/90 p-5 shadow-2xl backdrop-blur-2xl"
         >
-          <div className="mb-3 flex items-center justify-between">
-            <span className="flex items-center gap-1.5 text-xs font-bold text-white">
-              <Sparkles className="h-4 w-4 text-[#00ff87]" /> Natural Intent Input Console
-            </span>
-            <button
-              type="button"
-              onClick={() => setViewMode('interactive')}
-              className="flex items-center gap-1 text-[11px] font-semibold text-neutral-400 hover:text-[#00ff87]"
-            >
-              Open Full Drag & Drop Spatial Workspace <ArrowRight className="h-3 w-3" />
-            </button>
+          <div>
+            <p className="text-xs font-bold text-[#00ff87]">One workspace. One clear flow.</p>
+            <p className="mt-1 text-[11px] text-neutral-400">Arrange context, type intent, inspect the plan, and execute when you are ready.</p>
           </div>
-
-          {/* Prompt Input Box */}
-          <div className="relative mb-2.5">
-            <label htmlFor="showcase-intent-prompt" className="sr-only">Describe the outcome you want</label>
-            <input
-              id="showcase-intent-prompt"
-              type="text"
-              value={activeIntentPrompt}
-              onChange={(e) => setActiveIntentPrompt(e.target.value)}
-              placeholder="Type what outcome you desire (e.g. 'Show me why revenue dropped in August')..."
-              className="w-full rounded-xl border border-white/15 bg-white/[0.05] px-4 py-2.5 text-xs text-white placeholder-neutral-400 outline-none transition-colors focus:border-[#00ff87]/60 focus:bg-white/[0.08]"
-            />
-          </div>
-
-          {/* Quick Guided Prompt Suggestion Chips */}
-          <div className="mb-3.5 flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">Try intent:</span>
-            {[
-              'Show me why revenue dropped in August',
-              'Analyze customer churn sentiment notes',
-              'Compare Q3 metrics with design system',
-            ].map((suggestion, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setActiveIntentPrompt(suggestion)}
-                className="rounded-lg border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-neutral-300 transition-colors hover:border-[#00ff87]/50 hover:bg-[#00ff87]/10 hover:text-[#00ff87]"
-              >
-                "{suggestion}"
-              </button>
-            ))}
-          </div>
-
-          {/* Console Action Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={onFilterEnterprise}
-                title="Filter Enterprise Adaptability Demo"
-                className="flex items-center gap-1 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-400 hover:bg-amber-500/20"
-              >
-                <Filter className="h-3 w-3" /> Adapt (Filter Enterprise)
-              </button>
-
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept=".pdf,.csv,.txt,.png,.jpg,.jpeg,.json"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file && onAddFile) onAddFile(file)
-                  e.target.value = ''
-                }}
-                className="hidden"
-              />
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (onAddFile && fileInputRef.current) {
-                    fileInputRef.current.click()
-                  } else {
-                    onAddNewNode()
-                  }
-                }}
-                title="Upload Document or CSV File from Computer"
-                className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:bg-white/10 hover:text-white"
-              >
-                <Plus className="h-3.5 w-3.5" /> Upload / Add File
-              </button>
-
-              <button
-                type="button"
-                aria-label="Reset demo canvas"
-                onClick={resetDemoCanvas}
-                title="Reset Demo State"
-                className="rounded-xl border border-white/10 bg-white/5 p-1.5 text-neutral-400 hover:bg-white/10 hover:text-white"
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={onEvaluatePlan}
-                disabled={isEvaluatingPlan}
-                className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
-              >
-                {isEvaluatingPlan ? 'Evaluating...' : 'Inspect Plan'}
-              </button>
-
-              <MagneticButton
-                onClick={onExecuteComputation}
-                disabled={isExecutingPlan}
-                className="bg-[#00ff87] px-6 py-2 text-xs font-bold text-black hover:bg-[#00ff87]/90 shadow-[0_0_20px_rgba(0,255,135,0.3)]"
-              >
-                {isExecutingPlan ? (
-                  <span className="flex items-center gap-1.5">
-                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent" />
-                    Computing...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1.5">
-                    <Play className="h-3.5 w-3.5 fill-black" /> Confirm & Execute Computation
-                  </span>
-                )}
-              </MagneticButton>
-            </div>
-          </div>
+          <button type="button" onClick={() => setViewMode('interactive')} className="flex shrink-0 items-center gap-2 rounded-xl bg-[#00ff87] px-4 py-2.5 text-xs font-bold text-black shadow-[0_0_20px_rgba(0,255,135,0.25)] hover:bg-[#00ff87]/90">
+            Open Workspace <ArrowRight className="h-3.5 w-3.5" />
+          </button>
         </motion.div>
       </div>
 

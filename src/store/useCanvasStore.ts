@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import { CanvasNode, CanvasEdge, ExecutionPlan, ExecutionResult, CustomPrimitiveRecord } from '../types/canvas';
 import { createId } from '../utils/id';
 
@@ -22,6 +23,7 @@ interface CanvasState {
   setZoom: (zoom: number) => void;
   setViewMode: (mode: 'showcase' | 'interactive') => void;
   addNode: (node: CanvasNode) => void;
+  removeNode: (id: string) => void;
   updateNodePosition: (id: string, x: number, y: number) => 'updated' | 'collision' | 'invalid' | 'missing';
   addEdge: (sourceId: string, targetId: string) => void;
   removeEdge: (edgeId: string) => void;
@@ -52,7 +54,7 @@ const initialDemoNodes: CanvasNode[] = [
     id: 'node-customer-txt',
     title: 'Customer_Feedback.txt',
     type: 'document',
-    position: { x: 440, y: 140, width: 280, height: 160 },
+    position: { x: 560, y: 140, width: 280, height: 160 },
     dataPayload: {
       mimeType: 'text/plain',
       contentSummary: 'Qualitative Customer Feedback logs. Contains churn notes, gateway migration complaints, and enterprise NRR notes.',
@@ -62,7 +64,7 @@ const initialDemoNodes: CanvasNode[] = [
     id: 'node-example-ui',
     title: 'Executive_Dashboard_Style.png',
     type: 'example',
-    position: { x: 780, y: 140, width: 280, height: 160 },
+    position: { x: 1020, y: 140, width: 280, height: 160 },
     dataPayload: {
       mimeType: 'image/png',
       contentSummary: 'Design System Reference: Pitch Obsidian palette, hairline mint borders, micro-sparkline charts, and high-contrast typography.',
@@ -86,6 +88,96 @@ const initialDemoEdges: CanvasEdge[] = [
     label: 'Presentation Style',
   },
 ];
+
+const WORKSPACE_STORAGE_KEY = 'intent-canvas.workspace';
+const memoryStorage = {
+  getItem: () => null,
+  setItem: () => undefined,
+  removeItem: () => undefined,
+};
+
+const CUSTOM_PRIMITIVES_KEY = 'intent-canvas.custom-primitives';
+
+function readCustomPrimitives(): CustomPrimitiveRecord[] {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const value: unknown = JSON.parse(localStorage.getItem(CUSTOM_PRIMITIVES_KEY) || '[]');
+    if (!Array.isArray(value)) return [];
+    return value.filter((primitive): primitive is CustomPrimitiveRecord => isValidPrimitive(primitive)).slice(0, 30);
+  } catch {
+    return [];
+  }
+}
+
+function isValidPrimitive(value: unknown): value is CustomPrimitiveRecord {
+  if (!value || typeof value !== 'object') return false;
+  const primitive = value as Partial<CustomPrimitiveRecord>;
+  const allowedTypes = ['document', 'dataset', 'example', 'instruction', 'output', 'custom_primitive'];
+  return typeof primitive.primitiveId === 'string' && /^[A-Za-z0-9_.:-]{1,120}$/.test(primitive.primitiveId) &&
+    typeof primitive.title === 'string' && primitive.title.length <= 160 &&
+    (!primitive.description || (typeof primitive.description === 'string' && primitive.description.length <= 500)) &&
+    (!primitive.inputNodeTypes || (Array.isArray(primitive.inputNodeTypes) && primitive.inputNodeTypes.length <= 6 && primitive.inputNodeTypes.every(type => allowedTypes.includes(type)))) &&
+    (!primitive.createdAt || (typeof primitive.createdAt === 'number' && Number.isFinite(primitive.createdAt) && primitive.createdAt >= 0)) &&
+    JSON.stringify(value).length <= 10_000;
+}
+
+function persistCustomPrimitives(primitives: CustomPrimitiveRecord[]) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(CUSTOM_PRIMITIVES_KEY, JSON.stringify(primitives.slice(-30)));
+  } catch {
+    // Browser storage can be unavailable in private browsing; in-memory state remains usable.
+  }
+}
+
+function isStoredNode(value: unknown): value is CanvasNode {
+  if (!value || typeof value !== 'object') return false;
+  const node = value as Partial<CanvasNode>;
+  const payload = node.dataPayload;
+  const position = node.position;
+  let parsedMetricsWithinLimit = true;
+  try {
+    parsedMetricsWithinLimit = !payload?.parsedMetrics || JSON.stringify(payload.parsedMetrics).length <= 50_000;
+  } catch {
+    parsedMetricsWithinLimit = false;
+  }
+  return typeof node.id === 'string' && node.id.length <= 120 && typeof node.title === 'string' && node.title.length <= 300 &&
+    ['document', 'dataset', 'example', 'instruction', 'output', 'custom_primitive'].includes(node.type ?? '') &&
+    Boolean(position && [position.x, position.y, position.width, position.height].every(value => typeof value === 'number' && Number.isFinite(value))) &&
+    Boolean(payload && typeof payload.mimeType === 'string' && payload.mimeType.length <= 160 && typeof payload.contentSummary === 'string' && payload.contentSummary.length <= 10_000 && (!payload.previewUrl || (typeof payload.previewUrl === 'string' && payload.previewUrl.startsWith('data:image/') && payload.previewUrl.length <= 600_000)) && parsedMetricsWithinLimit);
+}
+
+function isStoredEdge(value: unknown, nodeIds: Set<string>): value is CanvasEdge {
+  if (!value || typeof value !== 'object') return false;
+  const edge = value as Partial<CanvasEdge>;
+  return typeof edge.id === 'string' && edge.id.length <= 120 && typeof edge.sourceNodeId === 'string' && nodeIds.has(edge.sourceNodeId) &&
+    typeof edge.targetNodeId === 'string' && nodeIds.has(edge.targetNodeId) && edge.sourceNodeId !== edge.targetNodeId &&
+    ['explicit_connector', 'spatial_proximity', 'enclosure_group'].includes(edge.relationType ?? '');
+}
+
+function mergePersistedWorkspace(current: CanvasState, persisted: unknown): CanvasState {
+  if (!persisted || typeof persisted !== 'object') return current;
+  const stored = persisted as Partial<CanvasState>;
+  if (!Array.isArray(stored.nodes)) return current;
+  const storedNodeIds = new Set<string>();
+  const storedNodes = stored.nodes.filter((node): node is CanvasNode => isStoredNode(node) && !storedNodeIds.has(node.id) && Boolean(storedNodeIds.add(node.id))).slice(0, 30);
+  if (stored.nodes.length && !storedNodes.length) return current;
+  const legacyStarterPositions: Record<string, CanvasNode['position']> = {
+    'node-customer-txt': { x: 560, y: 140, width: 280, height: 160 },
+    'node-example-ui': { x: 1020, y: 140, width: 280, height: 160 },
+  };
+  const normalizedNodes = storedNodes.map(node => legacyStarterPositions[node.id] && node.position.x === (node.id === 'node-customer-txt' ? 520 : 940) ? { ...node, position: legacyStarterPositions[node.id] } : node);
+  const nodeIds = new Set(normalizedNodes.map(node => node.id));
+  const storedEdges = Array.isArray(stored.edges) ? stored.edges.filter(edge => isStoredEdge(edge, nodeIds)).slice(0, 60) : [];
+  return {
+    ...current,
+    nodes: normalizedNodes,
+    edges: storedEdges,
+    activeIntentPrompt: typeof stored.activeIntentPrompt === 'string' ? stored.activeIntentPrompt.slice(0, 3000) : current.activeIntentPrompt,
+    customPrimitives: Array.isArray(stored.customPrimitives) ? stored.customPrimitives.filter(isValidPrimitive).slice(0, 30) : current.customPrimitives,
+    viewMode: stored.viewMode === 'interactive' || stored.viewMode === 'showcase' ? stored.viewMode : current.viewMode,
+  };
+}
 
 const NODE_GAP = 16;
 
@@ -121,8 +213,8 @@ function freePosition(nodes: CanvasNode[], node: CanvasNode): CanvasNode['positi
   return { ...start, x: start.x, y: lowestNode + NODE_GAP };
 }
 
-export const useCanvasStore = create<CanvasState>((set) => ({
-  nodes: initialDemoNodes,
+export const useCanvasStore = create<CanvasState>()(persist((set) => ({
+  nodes: [...initialDemoNodes, ...primitiveNodes(readCustomPrimitives())],
   edges: initialDemoEdges,
   pan: { x: 0, y: 0 },
   zoom: 1,
@@ -132,7 +224,7 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   isExecutingPlan: false,
   activePlan: null,
   executionResult: null,
-  customPrimitives: [],
+  customPrimitives: readCustomPrimitives(),
   viewMode: 'showcase',
   resetVersion: 0,
 
@@ -146,6 +238,19 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     if (!node.id || state.nodes.length >= 30 || state.nodes.some((existing) => existing.id === node.id) || ![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return state;
     return { nodes: [...state.nodes, { ...node, position: freePosition(state.nodes, node) }] };
   }),
+  removeNode: (id) => set((state) => ({
+    nodes: state.nodes.filter(node => node.id !== id),
+    edges: state.edges.filter(edge => edge.sourceNodeId !== id && edge.targetNodeId !== id),
+    selectedNodeIds: state.selectedNodeIds.filter(selectedId => selectedId !== id),
+    customPrimitives: (() => {
+      const removedNode = state.nodes.find(node => node.id === id);
+      const remainingPrimitives = removedNode?.type === 'custom_primitive'
+        ? state.customPrimitives.filter(primitive => primitive.primitiveId !== id)
+        : state.customPrimitives;
+      if (removedNode?.type === 'custom_primitive') persistCustomPrimitives(remainingPrimitives);
+      return remainingPrimitives;
+    })(),
+  })),
   updateNodePosition: (id, x, y) => {
     let result: 'updated' | 'collision' | 'invalid' | 'missing' = 'missing';
     set((state) => {
@@ -200,7 +305,13 @@ export const useCanvasStore = create<CanvasState>((set) => ({
   setIsExecutingPlan: (isExecutingPlan) => set({ isExecutingPlan }),
   setActivePlan: (activePlan) => set({ activePlan }),
   setExecutionResult: (executionResult) => set({ executionResult }),
-  addCustomPrimitive: (primitive) => set((state) => state.customPrimitives.some(existing => existing.primitiveId === primitive.primitiveId) ? state : ({ customPrimitives: [...state.customPrimitives, primitive] })),
+  addCustomPrimitive: (primitive) => set((state) => {
+    if (!isValidPrimitive(primitive)) return state;
+    if (state.customPrimitives.some(existing => existing.primitiveId === primitive.primitiveId)) return state;
+    const customPrimitives = [...state.customPrimitives, primitive].slice(-30);
+    persistCustomPrimitives(customPrimitives);
+    return { customPrimitives };
+  }),
   upsertOutputNode: (summary, payload) => set((state) => {
     const existing = state.nodes.find(node => node.type === 'output');
     if (existing) return { nodes: state.nodes.map(node => node.id === existing.id ? { ...node, dataPayload: { ...node.dataPayload, contentSummary: summary, parsedMetrics: payload } } : node) };
@@ -221,4 +332,15 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     isExecutingPlan: false,
     resetVersion: state.resetVersion + 1,
   })),
+}), {
+  name: WORKSPACE_STORAGE_KEY,
+  storage: createJSONStorage(() => typeof localStorage === 'undefined' ? memoryStorage : localStorage),
+  partialize: (state) => ({
+    nodes: state.nodes,
+    edges: state.edges,
+    activeIntentPrompt: state.activeIntentPrompt,
+    customPrimitives: state.customPrimitives,
+    viewMode: state.viewMode,
+  }),
+  merge: (persisted, current) => mergePersistedWorkspace(current, persisted),
 }));

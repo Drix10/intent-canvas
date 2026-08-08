@@ -1,11 +1,12 @@
 import axios from 'axios'
 import { APP_CONFIG, apiUrl } from './config'
-import { ExecutionPlan, ExecutionResult } from './types/canvas'
+import { CustomPrimitiveRecord, ExecutionPlan, ExecutionResult, NodeType } from './types/canvas'
 
 const MAX_SHORT_STRING = 500
 const MAX_LONG_STRING = 3000
 const MAX_OUTPUT_DEPTH = 5
 const MAX_SVG_BYTES = 50_000
+const MAX_PRIMITIVE_BYTES = 10_000
 const isBoundedString = (value: unknown, max = MAX_SHORT_STRING): value is string => typeof value === 'string' && value.length <= max
 
 function isDisambiguation(value: unknown): value is NonNullable<ExecutionPlan['disambiguation']> {
@@ -14,7 +15,7 @@ function isDisambiguation(value: unknown): value is NonNullable<ExecutionPlan['d
   return typeof gate.requiresUserClarification === 'boolean' &&
     isBoundedString(gate.reason, MAX_LONG_STRING) &&
     Array.isArray(gate.options) &&
-    gate.options.length > 0 && gate.options.length <= 10 &&
+     gate.options.length > 0 && gate.options.length <= 2 &&
      gate.options.every((option) => option && ['opt_churn', 'opt_trend'].includes(option.optionId ?? '') && isBoundedString(option.label) && isBoundedString(option.actionHint, MAX_LONG_STRING))
 }
 
@@ -75,9 +76,20 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
     if (error.code === 'ECONNABORTED') return 'The request timed out. Please try again.'
     if (!error.response) return 'The intent service is unavailable. Check that the backend is running.'
     const message = error.response.data?.error?.message ?? error.response.data?.message
-    if (typeof message === 'string') return message
+     if (typeof message === 'string') return message.slice(0, MAX_SHORT_STRING)
   }
   return fallback
+}
+
+export function isCustomPrimitiveRecord(value: unknown): value is CustomPrimitiveRecord {
+  if (!value || typeof value !== 'object') return false
+  const primitive = value as Partial<CustomPrimitiveRecord>
+  const allowedTypes: NodeType[] = ['document', 'dataset', 'example', 'instruction', 'output', 'custom_primitive']
+  return typeof primitive.primitiveId === 'string' && /^[A-Za-z0-9_.:-]{1,120}$/.test(primitive.primitiveId) &&
+    isBoundedString(primitive.title, 160) && (!primitive.description || isBoundedString(primitive.description, 500)) &&
+    (!primitive.inputNodeTypes || (Array.isArray(primitive.inputNodeTypes) && primitive.inputNodeTypes.length <= 6 && primitive.inputNodeTypes.every(type => allowedTypes.includes(type)))) &&
+    (!primitive.createdAt || (typeof primitive.createdAt === 'number' && Number.isFinite(primitive.createdAt) && primitive.createdAt >= 0)) &&
+    new TextEncoder().encode(JSON.stringify(value)).length <= MAX_PRIMITIVE_BYTES
 }
 
 export function isRequestCancelled(error: unknown): boolean {
@@ -88,12 +100,16 @@ export function isExecutionPlan(value: unknown): value is ExecutionPlan {
   if (!value || typeof value !== 'object') return false
   const plan = value as Partial<ExecutionPlan>
   const confidenceScore = plan.confidenceScore
-  return isBoundedString(plan.planId) &&
+  const steps = Array.isArray(plan.steps) ? plan.steps : []
+  const stepIds = steps.map(step => typeof step === 'object' && step !== null ? (step as { stepId?: unknown }).stepId : undefined)
+  return (!plan.planningMode || plan.planningMode === 'provider' || plan.planningMode === 'local_fallback') &&
+    isBoundedString(plan.planId) &&
     isBoundedString(plan.goalSummary, MAX_LONG_STRING) &&
     typeof confidenceScore === 'number' && Number.isFinite(confidenceScore) &&
     confidenceScore >= 0 && confidenceScore <= 1 &&
-    Array.isArray(plan.steps) && plan.steps.length <= 5 && plan.steps.every(isPlanStep) &&
-    (plan.steps.length > 0 || Boolean(plan.disambiguation?.requiresUserClarification)) && (!plan.disambiguation || isDisambiguation(plan.disambiguation))
+     Array.isArray(plan.steps) && plan.steps.length <= 5 && plan.steps.every(isPlanStep) && new Set(stepIds).size === stepIds.length &&
+     (plan.steps.length > 0 || Boolean(plan.disambiguation?.requiresUserClarification)) && (!plan.disambiguation || isDisambiguation(plan.disambiguation)) &&
+     !(plan.disambiguation?.requiresUserClarification && plan.steps.length > 0)
 }
 
 export function isExecutionResult(value: unknown): value is ExecutionResult {

@@ -5,8 +5,8 @@ const numberEnv = (value: string | undefined, fallback: number) => {
 
 export const APP_CONFIG = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? '',
-  apiTimeoutMs: numberEnv(import.meta.env.VITE_API_TIMEOUT_MS, 15000),
-  apiAccessToken: import.meta.env.VITE_API_ACCESS_TOKEN ?? 'ic_sec_key_9f8a3b2c1d0e',
+  apiTimeoutMs: numberEnv(import.meta.env.VITE_API_TIMEOUT_MS, 10000),
+  apiAccessToken: import.meta.env.VITE_API_ACCESS_TOKEN ?? '',
   canvasId: import.meta.env.VITE_CANVAS_ID ?? 'demo_canvas_1',
   spatialClusterId: import.meta.env.VITE_SPATIAL_CLUSTER_ID ?? 'primary',
   proximityDistancePixels: Math.max(1, numberEnv(import.meta.env.VITE_PROXIMITY_DISTANCE_PX, 240)),

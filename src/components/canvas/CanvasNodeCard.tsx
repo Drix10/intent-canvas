@@ -1,18 +1,20 @@
 import React from 'react';
 import { SpotlightCard } from '../ui/SpotlightCard';
 import { CanvasNode } from '../../types/canvas';
-import { FileText, Database, Layout, Sparkles, Box } from 'lucide-react';
+import { FileText, Database, Layout, Sparkles, Box, Trash2 } from 'lucide-react';
 
 interface CanvasNodeCardProps {
   node: CanvasNode;
   isSelected: boolean;
   onStartConnection: (nodeId: string) => void;
+  onRemove: (nodeId: string) => void;
 }
 
 export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
   node,
   isSelected,
   onStartConnection,
+  onRemove,
 }) => {
   const getIcon = () => {
     switch (node.type) {
@@ -59,12 +61,21 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
         <div className="mb-2.5 flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <div className="shrink-0 rounded-lg border border-white/10 bg-white/5 p-1.5">{getIcon()}</div>
-            <h3 className="truncate text-xs font-bold text-white/95">{node.title}</h3>
-          </div>
-          <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${getTypeBadge()}`}>
-            {node.type.replace('_', ' ')}
-          </span>
+             <h3 className="truncate text-xs font-bold text-white/95">{node.title}</h3>
+           </div>
+           <div className="flex shrink-0 items-center gap-1">
+             <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${getTypeBadge()}`}>
+               {node.type.replace('_', ' ')}
+             </span>
+             <button type="button" aria-label={`Remove ${node.title}`} onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onRemove(node.id); }} className="rounded-md p-1 text-neutral-500 hover:bg-red-500/10 hover:text-red-300">
+               <Trash2 className="h-3 w-3" />
+             </button>
+           </div>
         </div>
+
+        {node.type === 'example' && node.dataPayload.previewUrl && (
+          <img src={node.dataPayload.previewUrl} alt={`Preview of ${node.title}`} className="mb-2 h-16 w-full rounded-lg border border-white/10 object-cover" />
+        )}
 
         {/* Payload Summary */}
         <p className="line-clamp-3 text-[11px] leading-relaxed text-neutral-300">

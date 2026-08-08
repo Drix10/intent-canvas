@@ -10,8 +10,9 @@ import { ResultNodeCard } from './components/canvas/ResultNodeCard'
 import { DisambiguationModal } from './components/canvas/DisambiguationModal'
 import { AdaptationRequest, CanvasNode, ExecutionPlan } from './types/canvas'
 import { APP_CONFIG } from './config'
-import { getApiErrorMessage, intentApi, intentPath, isExecutionPlan, isExecutionResult, isRequestCancelled } from './api'
+import { getApiErrorMessage, intentApi, intentPath, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled } from './api'
 import { createId } from './utils/id'
+import { buildSpatialClusters, buildSpatialEdges } from './utils/spatialRelations'
 
 const nodeOverlaps = (first: CanvasNode['position'], second: CanvasNode['position']) =>
   first.x < second.x + second.width + 16 && first.x + first.width + 16 > second.x &&
@@ -34,6 +35,36 @@ function findVisibleNodePosition(width: number, height: number): CanvasNode['pos
     if (candidate.y + height <= startY + viewportHeight / state.zoom - 24 && !state.nodes.some((node) => nodeOverlaps(candidate, node.position))) return candidate
   }
   return { x: startX, y: startY + state.nodes.length * (height + 16), width, height }
+}
+
+async function readImagePreview(file: File): Promise<string | undefined> {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file)
+      const scale = Math.min(1, 480 / bitmap.width, 240 / bitmap.height)
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale))
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale))
+      const context = canvas.getContext('2d')
+      if (!context) {
+        bitmap.close()
+        return undefined
+      }
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+      bitmap.close()
+      const preview = canvas.toDataURL('image/jpeg', 0.72)
+      return preview.length <= 600_000 ? preview : undefined
+    } catch {
+      // Fall through to the small-file reader for browsers without bitmap decoding support.
+    }
+  }
+  if (file.size > 400_000) return undefined
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : undefined)
+    reader.onerror = () => resolve(undefined)
+    reader.readAsDataURL(file)
+  })
 }
 
 export default function App() {
@@ -64,6 +95,9 @@ export default function App() {
   const closeDisambiguation = useCallback(() => setDisambiguationData(null), [])
   const requestRef = useRef<{ id: number; controller: AbortController; canvasKey: string } | null>(null)
   const requestSequence = useRef(0)
+  const fileReadSequence = useRef(0)
+  const suppressNextInputReset = useRef(false)
+  const clearPromptAfterExecution = useRef(false)
   const inputGraphKey = JSON.stringify({ nodes: nodes.filter(node => node.type !== 'output'), edges, activeIntentPrompt })
 
   const getCanvasKey = () => {
@@ -99,6 +133,10 @@ export default function App() {
   }, [])
   useEffect(() => {
     // Abort work as soon as its input graph changes, not only after a stale response arrives.
+    if (suppressNextInputReset.current) {
+      suppressNextInputReset.current = false
+      return
+    }
     cancelRequest()
     setIsEvaluatingPlan(false)
     setIsExecutingPlan(false)
@@ -109,6 +147,7 @@ export default function App() {
     setErrorMessage(null)
   }, [inputGraphKey])
   useEffect(() => {
+    fileReadSequence.current += 1
     cancelRequest()
     setShowPlanModal(false)
     setDisambiguationData(null)
@@ -121,16 +160,16 @@ export default function App() {
   }, [resetVersion])
 
   // Compile Spatial Canvas AST Payload
-  const getASTPayload = () => ({
+  const getASTPayload = (promptOverride?: string) => ({
     canvasId: APP_CONFIG.canvasId,
-    nodes: nodes.map((n) => ({
+    nodes: nodes.filter((n) => n.type !== 'output').map((n) => ({
       id: n.id,
       title: n.title,
       type: n.type,
       position: n.position,
-      dataPayload: n.dataPayload,
+      dataPayload: (({ previewUrl: _previewUrl, ...payload }) => payload)(n.dataPayload),
     })),
-    edges: edges.map((e) => ({
+    edges: buildSpatialEdges(nodes.filter((node) => node.type !== 'output'), edges).map((e) => ({
       id: e.id,
       sourceNodeId: e.sourceNodeId,
       targetNodeId: e.targetNodeId,
@@ -138,7 +177,8 @@ export default function App() {
          distancePixels: (() => {
          const source = nodes.find((node) => node.id === e.sourceNodeId)
          const target = nodes.find((node) => node.id === e.targetNodeId)
-         if (!source || !target) return 0
+          if (typeof e.distancePixels === 'number') return e.distancePixels
+          if (!source || !target) return 0
          const sourceCenter = {
            x: source.position.x + source.position.width / 2,
            y: source.position.y + source.position.height / 2,
@@ -150,37 +190,41 @@ export default function App() {
           return Math.min(APP_CONFIG.proximityDistancePixels, Math.round(Math.hypot(targetCenter.x - sourceCenter.x, targetCenter.y - sourceCenter.y)))
        })(),
      })),
-    spatialClusters: nodes.length === 0 ? [] : (() => {
-      const bounds = nodes.reduce((result, node) => ({
-        minX: Math.min(result.minX, node.position.x),
-        minY: Math.min(result.minY, node.position.y),
-        maxX: Math.max(result.maxX, node.position.x + node.position.width),
-        maxY: Math.max(result.maxY, node.position.y + node.position.height),
-      }), { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity })
-      return [{ clusterId: APP_CONFIG.spatialClusterId, nodeIds: nodes.map((n) => n.id), boundingBox: bounds }]
-    })(),
+     spatialClusters: buildSpatialClusters(nodes.filter((node) => node.type !== 'output'), buildSpatialEdges(nodes.filter((node) => node.type !== 'output'), edges), APP_CONFIG.spatialClusterId),
     activeIntentInput: {
       modality: 'text' as const,
-      rawPrompt: activeIntentPrompt.trim() || APP_CONFIG.defaultIntentPrompt,
+        rawPrompt: (promptOverride ?? activeIntentPrompt).trim(),
       timestamp: Date.now(),
     },
   })
 
   // Evaluate Intent & Inspect Plan
-  const handleEvaluatePlan = async () => {
+  const handleEvaluatePlan = async (useGuidedIntent = false) => {
+    const prompt = activeIntentPrompt.trim() || (useGuidedIntent ? APP_CONFIG.defaultIntentPrompt : '')
+    if (!prompt) {
+      setErrorMessage('Describe the outcome you want before inspecting a plan.')
+      document.getElementById('intent-prompt')?.focus()
+      return
+    }
     const request = beginRequest()
     setErrorMessage(null)
     setStatusMessage(null)
     setIsExecutingPlan(false)
+    setStatusMessage('Preparing an inspectable plan...')
     setIsEvaluatingPlan(true)
     try {
-      const res = await intentApi.post(intentPath('/api/intent/plan'), getASTPayload(), { signal: request.controller.signal })
+       const res = await intentApi.post(intentPath('/api/intent/plan'), getASTPayload(prompt), { signal: request.controller.signal })
       if (!isCurrentRequest(request)) {
         if (isActiveRequest(request)) setErrorMessage('The canvas changed while the plan was being prepared. Please try again.')
         return
       }
       if (res.data?.success && isExecutionPlan(res.data.data)) {
-        setActivePlan(res.data.data)
+       setActivePlan(res.data.data)
+        if (!activeIntentPrompt.trim() && useGuidedIntent) {
+          suppressNextInputReset.current = true
+          useCanvasStore.getState().setActiveIntentPrompt(prompt)
+        }
+        setStatusMessage(res.data.data.planningMode === 'local_fallback' ? 'Provider unavailable. A bounded local plan is ready for review.' : 'Plan ready for review.')
         if (res.data.data.disambiguation?.requiresUserClarification) {
           setDisambiguationData(res.data.data.disambiguation)
         } else {
@@ -201,19 +245,24 @@ export default function App() {
 
   // Execute Intent & Render In-Canvas Result
   const handleExecuteComputation = async (adaptation?: AdaptationRequest) => {
+    if (!adaptation && !activePlan) {
+      await handleEvaluatePlan(!activeIntentPrompt.trim())
+      return
+    }
     const request = beginRequest()
     setErrorMessage(null)
     setStatusMessage(null)
     setIsEvaluatingPlan(false)
     setExecutionResult(null)
     setIsExecutingPlan(true)
+    setStatusMessage('Sending the confirmed intent plan...')
     setShowPlanModal(false)
     setDisambiguationData(null)
     try {
       const res = await intentApi.post(intentPath('/api/intent/execute'), {
         ...getASTPayload(),
         adaptation,
-        executionPlan: adaptation ? undefined : activePlan ?? undefined,
+         executionPlan: activePlan ?? undefined,
       }, { signal: request.controller.signal })
 
       if (!isCurrentRequest(request)) {
@@ -226,24 +275,35 @@ export default function App() {
           setDisambiguationData(data.disambiguation)
         } else if (data.executionStatus === 'disambiguation_required') {
           setErrorMessage('The service requested clarification but returned no options.')
-        } else {
-          setExecutionResult(data)
-          upsertOutputNode(data.goalSummary ?? 'Computed intent result', data.outputPayload ?? {})
-          setViewMode('interactive')
+         } else {
+           setExecutionResult(data)
+           upsertOutputNode(data.goalSummary ?? 'Computed intent result', data.outputPayload ?? {})
+           setViewMode('interactive')
+           clearPromptAfterExecution.current = true
+           setStatusMessage('Computation complete. The result was added to the workspace.')
         }
       } else setErrorMessage(res.data?.message ?? 'The service returned an invalid execution result.')
     } catch (err) {
       if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to execute the intent plan.'))
     } finally {
       if (isActiveRequest(request)) {
-        setIsExecutingPlan(false)
-        requestRef.current = null
-      }
+         setIsExecutingPlan(false)
+         requestRef.current = null
+         if (clearPromptAfterExecution.current) {
+           clearPromptAfterExecution.current = false
+           suppressNextInputReset.current = true
+           useCanvasStore.getState().setActiveIntentPrompt('')
+         }
+       }
     }
   }
 
   // Step 2 Adaptability Flow
   const handleFilterEnterprise = () => {
+    if (!activePlan) {
+      setErrorMessage('Inspect and confirm a plan before adapting the result.')
+      return
+    }
     handleExecuteComputation({ adaptationOptionId: 'opt_churn', filterModifier: 'enterprise' })
   }
 
@@ -254,37 +314,57 @@ export default function App() {
 
   // Add New Document Node
   const handleAddNewNode = () => {
+    if (useCanvasStore.getState().nodes.length >= 30) {
+      setErrorMessage('The canvas is full. Remove a node before adding another.')
+      return
+    }
     const newNode: CanvasNode = {
        id: createId('node_doc'),
-       title: 'Q3_Strategy_Brief.pdf',
+        title: 'Q3_Strategy_Brief.txt',
        type: 'document',
        position: findVisibleNodePosition(280, 160),
       dataPayload: {
-        mimeType: 'application/pdf',
+        mimeType: 'text/plain',
         contentSummary: 'Strategic growth roadmap & retention targets for enterprise and SMB self-service accounts.',
       },
     }
     addNode(newNode)
-    setStatusMessage('Added document card "Q3_Strategy_Brief.pdf" to canvas.')
+    setViewMode('interactive')
+    setStatusMessage('Added document card "Q3_Strategy_Brief.txt" to canvas.')
   }
 
   const handleAddFile = async (file: File) => {
+    const readId = ++fileReadSequence.current
+    const resetAtStart = useCanvasStore.getState().resetVersion
     try {
+      const safeFileName = file.name.slice(0, 200) || 'uploaded-file'
       if (file.size > 10_000_000) {
         setErrorMessage('Files must be 10 MB or smaller.')
         return
       }
       const isImage = file.type.startsWith('image/')
-      const isDataset = file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')
-      const contentSummary = isImage ? `Image reference: ${file.name}` : (await file.text()).slice(0, 10_000) || `Uploaded file: ${file.name}`
+      const isDataset = file.type === 'text/csv' || safeFileName.toLowerCase().endsWith('.csv')
+      const isText = file.type.startsWith('text/') || /\.(txt|md|json)$/i.test(safeFileName)
+      if (!isImage && !isText && !isDataset) {
+        setErrorMessage('Supported uploads are CSV, TXT, MD, JSON, and images. PDF parsing is not enabled.')
+        return
+      }
+      const previewUrl = isImage ? await readImagePreview(file) : undefined
+      const contentSummary = isImage ? `Image reference: ${safeFileName}` : (await file.text()).slice(0, 10_000) || `Uploaded file: ${safeFileName}`
+      if (readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
+      if (useCanvasStore.getState().nodes.length >= 30) {
+        setErrorMessage('The canvas is full. Remove a node before uploading another file.')
+        return
+      }
       addNode({
         id: createId('node_upload'),
-        title: file.name,
+         title: safeFileName,
         type: isImage ? 'example' : isDataset ? 'dataset' : 'document',
         position: findVisibleNodePosition(280, 160),
-        dataPayload: { mimeType: file.type || 'application/octet-stream', contentSummary, rawReference: file.name },
+         dataPayload: { mimeType: file.type.slice(0, 160) || 'application/octet-stream', contentSummary, rawReference: safeFileName, previewUrl },
       })
-      setStatusMessage(`Uploaded and added file "${file.name}" to canvas.`)
+      setViewMode('interactive')
+      setStatusMessage(`Added "${safeFileName}" to the Intent Canvas workspace. The workspace node is retained in this browser.`)
     } catch {
       setErrorMessage('The selected file could not be read.')
     }
@@ -293,6 +373,10 @@ export default function App() {
   // Save Executed Output as Higher-Order Custom Primitive
   const handleSaveAsPrimitive = async () => {
     if (isSavingPrimitive) return
+    if (useCanvasStore.getState().nodes.length >= 30) {
+      setErrorMessage('The canvas is full. Remove a node before saving a primitive.')
+      return
+    }
     const request = beginRequest()
     setErrorMessage(null)
     setStatusMessage(null)
@@ -301,7 +385,7 @@ export default function App() {
       const res = await intentApi.post(intentPath('/api/intent/create-primitive'), {
         title: APP_CONFIG.primitiveTitle,
         description: APP_CONFIG.primitiveDescription,
-        inputNodeTypes: [...new Set(nodes.map((node) => node.type))],
+         inputNodeTypes: [...new Set(nodes.filter((node) => node.type !== 'output').map((node) => node.type))],
         ast: getASTPayload(),
       }, { signal: request.controller.signal })
 
@@ -309,21 +393,28 @@ export default function App() {
         if (isActiveRequest(request)) setErrorMessage('The canvas changed while saving. Please try again.')
         return
       }
-      if (res.data?.success && typeof res.data.data?.primitiveId === 'string' && typeof res.data.data?.title === 'string') {
-        const primitive = res.data.data
-        addCustomPrimitive(primitive)
-        const primitiveNode: CanvasNode = {
+       if (res.data?.success && isCustomPrimitiveRecord(res.data.data)) {
+         const primitive = res.data.data
+         const primitiveRecord = {
+           primitiveId: primitive.primitiveId,
+           title: primitive.title,
+           description: primitive.description,
+           inputNodeTypes: primitive.inputNodeTypes,
+           createdAt: primitive.createdAt,
+         }
+         addCustomPrimitive(primitiveRecord)
+         const primitiveNode: CanvasNode = {
           id: primitive.primitiveId,
-          title: primitive.title,
+             title: primitiveRecord.title,
           type: 'custom_primitive',
           position: findVisibleNodePosition(300, 160),
           dataPayload: {
             mimeType: 'application/x-intent-primitive',
-            contentSummary: 'Composed Higher-Order Primitive: Automatically executes data anomaly detection & qualitative sentiment synthesis.',
+             contentSummary: 'Saved plan record for the current canvas. Re-execution with new inputs is not enabled in this MVP.',
           },
         }
         addNode(primitiveNode)
-        setStatusMessage(`Custom computational primitive "${primitive.title}" created.`)
+         setStatusMessage(`Custom computational primitive "${primitiveRecord.title}" created.`)
       } else setErrorMessage(res.data?.message ?? 'The service returned an invalid primitive.')
     } catch (err) {
       if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to create the custom primitive.'))
@@ -344,19 +435,13 @@ export default function App() {
   };
 
   return (
-    <SmoothScrollProvider enabled={viewMode === 'showcase'}>
+    <SmoothScrollProvider enabled={false}>
       <main className="relative h-screen w-screen overflow-hidden bg-[#040406]">
-        <div data-app-content>
+        <div data-app-content className="relative h-full w-full">
         {errorMessage && (
           <div role="alert" className="fixed top-5 left-1/2 z-[60] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-xl border border-red-400/30 bg-red-950/90 px-4 py-3 text-xs text-red-100 shadow-2xl backdrop-blur-xl">
             <span>{errorMessage}</span>
             <button type="button" aria-label="Dismiss error" onClick={() => setErrorMessage(null)} className="text-red-200 hover:text-white">&times;</button>
-          </div>
-        )}
-        {statusMessage && (
-          <div role="status" className="fixed top-5 left-1/2 z-[60] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-xl border border-emerald-400/30 bg-emerald-950/90 px-4 py-3 text-xs text-emerald-100 shadow-2xl backdrop-blur-xl">
-            <span>{statusMessage}</span>
-            <button type="button" aria-label="Dismiss message" onClick={() => setStatusMessage(null)} className="text-emerald-200 hover:text-white">&times;</button>
           </div>
         )}
         {/* Render Navbar & IntentBar ONLY in interactive canvas view mode */}
@@ -365,9 +450,9 @@ export default function App() {
 
         {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
         {viewMode === 'showcase' ? (
-          <SpatialScroll {...intentHandlers} />
+           <SpatialScroll />
         ) : (
-          <SpatialCanvas />
+          <SpatialCanvas onAddFile={handleAddFile} />
         )}
 
         {/* In-Canvas Result Overlay Container */}
@@ -383,7 +468,7 @@ export default function App() {
         </div>
 
         {statusMessage && (
-          <div role="status" aria-live="polite" className="fixed top-5 left-1/2 z-[60] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-[#00ff87]/30 bg-[#05291b]/95 px-4 py-3 text-xs text-[#b8ffd9] shadow-2xl backdrop-blur-xl">
+           <div role="status" aria-live="polite" className="fixed top-20 left-1/2 z-[60] max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-xl border border-[#00ff87]/30 bg-[#05291b]/95 px-4 py-3 text-xs text-[#b8ffd9] shadow-2xl backdrop-blur-xl">
             {statusMessage}
             <button type="button" aria-label="Dismiss status" onClick={() => setStatusMessage(null)} className="ml-3 text-[#b8ffd9] hover:text-white">&times;</button>
           </div>

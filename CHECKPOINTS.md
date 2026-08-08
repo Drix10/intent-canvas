@@ -238,7 +238,7 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
   - `src/sections/Section1Productivity.tsx`
   - `src/sections/Section2.tsx`
   - `src/sections/Section3.tsx`
-- **Summary**: Resolved button click interception in Section 4 interactive console launchpad. The `AnimatedNetworkLines` wrapper div (`570px × 358px`, `zIndex: 10`) lacked `pointerEvents: 'none'`, causing an invisible box to intercept mouse clicks over console buttons (`Add Document Card`, `Adapt Filter Enterprise`, `Inspect Plan`, `Confirm & Execute Computation`, suggestion chips, and text inputs). Added `pointerEvents: 'none'` to `AnimatedNetworkLines` wrapper divs across all 4 sections, lowered card light overlay image `zIndex` from `999` to `1`, and elevated the interactive console card to `relative z-30 pointer-events-auto`.
+- **Summary**: Resolved button click interception in Section 4 interactive console launchpad. The `AnimatedNetworkLines` wrapper div (`570px × 358px`, `zIndex: 10`) lacked `pointerEvents: 'none'`, causing an invisible box to intercept mouse clicks over console buttons (`Add Document Card`, `Adapt Filter Enterprise`, `Inspect Plan`, `Review & Execute Computation`, suggestion chips, and text inputs). Added `pointerEvents: 'none'` to `AnimatedNetworkLines` wrapper divs across all 4 sections, lowered card light overlay image `zIndex` from `999` to `1`, and elevated the interactive console card to `relative z-30 pointer-events-auto`.
 - **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed in 3.70s.
 
 ### ✅ [COMPLETED] Checkpoint 20: Section 4 Live Workspace Integration & Notification Feedback Polish
@@ -246,7 +246,7 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Frontend Files**:
   - `src/App.tsx`
   - `src/sections/Section4.tsx`
-- **Summary**: Connected Section 4 action controls directly to live workspace transitions and toast feedback. Clicking "Add Document Card" now adds `Q3_Strategy_Brief.pdf`, displays a green toast banner, and automatically switches `viewMode` to `'interactive'` so the user instantly sees the newly added node on the spatial canvas. Started the backend Express server on port 5000 in dev background (`ts-node-dev src/server.ts`), enabling live execution of "Adapt (Filter Enterprise)", "Inspect Plan", and "Confirm & Execute Computation". Added emerald toast notifications for canvas resets and primitive creations.
+- **Summary**: Connected Section 4 action controls directly to live workspace transitions and toast feedback. Clicking "Add Document Card" adds a text document card, displays a green toast banner, and switches `viewMode` to `'interactive'` so the user sees the new node. The console requires plan inspection before execution and supports typed adaptation. Added emerald toast notifications for canvas resets and primitive records.
 - **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed in 4.28s.
 
 ### ✅ [COMPLETED] Checkpoint 21: Native OS File Upload Ingestion & Non-Disruptive Ingestion Workflow
@@ -255,7 +255,7 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
   - `src/App.tsx`
   - `src/sections/Section4.tsx`
   - `src/SpatialScroll.tsx`
-- **Summary**: Upgraded the "Upload / Add File" button in Section 4 to trigger a native OS file picker (`<input type="file" accept=".pdf,.csv,.txt,.png,.jpg,.jpeg,.json" />`). Users can select any real file (PDF, CSV spreadsheet, research paper, image, text notes) from their local file system, which is ingested with `FileReader` text/mime-type extraction and added to the canvas store with a toast confirmation (`Uploaded file "Sales.csv" to canvas`). Removed forced page/workspace redirects on file addition so users remain seamlessly in their current view.
+- **Summary**: Upgraded the "Upload / Add File" control to support CSV, TXT, MD, JSON, and image files. Text content is bounded before it is added to the canvas; unsupported binary formats such as PDF are rejected because no PDF parser is included. File-picker and canvas-drop paths share the same validation and stale-read protection.
 - **Verification Result**: `npx tsc --noEmit` passed; `npm run build` clean build passed in 3.11s.
 
 ### ✅ [COMPLETED] Checkpoint 22: World-Class Interactive Spatial Workspace HUD & Guidance Overhaul
@@ -317,8 +317,8 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Backend Files**:
   - `src/services/meshApiService.ts`
   - `src/services/controllers/intentController.ts`
-  - `src/tests/comprehensiveSuite.ts`
-- **Summary**: Conducted a deep code audit across frontend and backend systems. Fixed potential stream reader memory leaks in `meshApiService.ts` by wrapping `getReader()` calls in explicit `try ... finally { reader.releaseLock(); }` blocks; upgraded `validateExecutablePlan` in `intentController.ts` to permit multi-type node capability matching (`['dataset', 'document', 'instruction', 'example']`); and wrote a comprehensive integration test suite (`src/tests/comprehensiveSuite.ts`) covering AST Zod validation, capability engine execution, executable plan validation, and live Gemini 2.5 Flash MeshAPI plan generation.
+  - `src/assertions.ts`
+- **Summary**: Conducted a deep code audit across frontend and backend systems. Added bounded stream handling, strict provider-plan validation, capability input checks, AST-bound plan confirmation, and assertion coverage for AST validation and capability behavior. No comprehensive integration suite or live-provider result is claimed here.
 - **Verification Result**: Backend comprehensive test suite passed 100% cleanly; `npx tsc --noEmit` passed across frontend & backend; `npm run build` clean build passed in 3.05s.
 
 ### ✅ [COMPLETED] Checkpoint 30: End-to-End API Security Authorization Key & Header Lockdown
@@ -332,8 +332,20 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Summary**: Implemented dual-header authentication enforcement (`Authorization: Bearer <key>` and `X-Intent-Canvas-Key: <key>`) and strict CORS origin validation (`allowedOrigins: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173']`). Configured matching secret access keys (`ic_sec_key_9f8a3b2c1d0e`). Any unauthorized external requests to `/api/*` are rejected with HTTP 401 Unauthorized, ensuring only our authorized frontend application can communicate with the backend intent engine.
 - **Verification Result**: HTTP test verified unauthorized requests return 401 Unauthorized; authorized requests from frontend pass cleanly; `npx tsc --noEmit` passed; `npm run build` clean build passed in 3.09s.
 
+## Current Implementation Notes
 
+- Spatial proximity edges are derived from node-center distance and included in the AST; disconnected nodes remain separate clusters.
+- The execution button opens plan inspection when no current plan exists. Execution submits only the short-lived plan bound to the current AST.
+- Uploads supported by the current client are CSV, TXT, MD, JSON, and images. PDF parsing is not implemented.
+- Custom primitive metadata is persisted in browser storage. There is no shared server registry in this MVP.
 
+## Audit Corrections
+
+- The current navigation has two controls: `How It Works` and `Workspace`.
+- The current upload flow supports CSV, TXT, MD, JSON, and images. PDF parsing is not implemented.
+- The showcase owns desktop wheel navigation; Lenis is disabled to avoid competing wheel handlers.
+- The browser timeout defaults to 10 seconds; the backend provider timeout is 8 seconds.
+- Saved custom primitives are local records and are not executable with new inputs yet.
 
 
 

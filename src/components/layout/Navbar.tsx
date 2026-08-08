@@ -21,7 +21,7 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             aria-label="Open how it works showcase"
-            aria-pressed={false}
+             aria-pressed={viewMode === 'showcase'}
             onClick={() => {
               setViewMode('showcase');
               window.dispatchEvent(new CustomEvent('showcase-navigate', { detail: 1 }));

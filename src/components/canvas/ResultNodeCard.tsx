@@ -14,10 +14,12 @@ interface ResultNodeCardProps {
 export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAsPrimitive, isSavingPrimitive = false }) => {
   const setExecutionResult = useCanvasStore((state) => state.setExecutionResult);
   const dataPattern = result.outputPayload?.dataPattern as {
+    summary?: string;
     anomalyDetected?: boolean;
     anomalyDetails?: { month?: string; deviationPercent?: string; probableCause?: string };
     chartSvg?: string;
     insights?: string[];
+    synthetic?: boolean;
   } | undefined;
   const docSynthesis = result.outputPayload?.documentSynthesis as {
     synthesisTitle?: string;
@@ -60,6 +62,11 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
         </p>
 
         {/* Data Pattern Anomaly Alert */}
+        {dataPattern?.summary && (
+          <p className="mb-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-2.5 text-[11px] leading-relaxed text-neutral-300">
+            {dataPattern.summary}
+          </p>
+        )}
         {dataPattern?.anomalyDetected && (
           <div className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5">
             <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
