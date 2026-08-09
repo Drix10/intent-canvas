@@ -36,6 +36,10 @@ export function SpatialScroll() {
   }, [])
 
   const animTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wheelAccum = useRef(0)
+  const wheelTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastWheelDir = useRef<number | null>(null)
+  const lastAdvanceAt = useRef(0)
 
   const goTo = useCallback((idx: number) => {
     if (isAnimating.current) return
@@ -56,6 +60,7 @@ export function SpatialScroll() {
   useEffect(() => {
     return () => {
       if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
+      if (wheelTimer.current) clearTimeout(wheelTimer.current)
       animationControls.current.forEach((control) => control.stop())
     }
   }, [])
@@ -66,9 +71,23 @@ export function SpatialScroll() {
       const target = e.target as HTMLElement
       if (target.closest('input, textarea, button, [contenteditable="true"], [data-scrollable="true"]')) return
       e.preventDefault()
+      // Swallow the inertial momentum tail that outlives the animation lock.
+      if (performance.now() - lastAdvanceAt.current < 400) {
+        wheelAccum.current = 0
+        return
+      }
+      let delta = e.deltaY
+      if (e.deltaMode === 1) delta *= 16
+      const dir = delta > 0 ? 1 : -1
+      if (lastWheelDir.current !== null && lastWheelDir.current !== dir) wheelAccum.current = 0
+      lastWheelDir.current = dir
+      wheelAccum.current += delta
+      if (wheelTimer.current) clearTimeout(wheelTimer.current)
+      wheelTimer.current = setTimeout(() => { wheelAccum.current = 0; lastWheelDir.current = null }, 160)
+      if (Math.abs(wheelAccum.current) < 60) return
+      wheelAccum.current = 0
       if (isAnimating.current) return
-      if (Math.abs(e.deltaY) < 5) return
-      const dir = e.deltaY > 0 ? 1 : -1
+      lastAdvanceAt.current = performance.now()
       if (!hasLooped.current && sectionRef.current === 0 && dir === -1) return
       goTo((sectionRef.current + dir + 4) % 4)
     }
