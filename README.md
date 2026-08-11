@@ -1,133 +1,153 @@
-# Intent Canvas: A New Computing Primitive
+<div align="center">
+  <br />
 
-> **NYC CodeQuest Round 3: CREATIVE Category**  
-> *"Stop commanding computers. Start shaping them."*
+  # 🎨 Intent Canvas
+
+  **Spatial intent, multimodal evidence, and AI-driven execution planning**
+
+  *Turn node graphs, prompts, and uploads into inspectable AI-backed outcomes.*
+
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue?logo=typescript)](https://www.typescriptlang.org/)
+  [![React](https://img.shields.io/badge/React-18+-blue?logo=react)](https://react.dev/)
+  [![Vite](https://img.shields.io/badge/Vite-6.x-purple?logo=vite)](https://vitejs.dev/)
+  [![MeshAPI](https://img.shields.io/badge/MeshAPI-google%2Fgemini--2.5--flash-6f42c1)](https://developers.meshapi.ai)
+
+  **🏆 NYC CodeQuest Round 3: CREATIVE Category**
+
+</div>
 
 ---
 
-## Overview
+## What is Intent Canvas?
 
-For over four decades, human-computer interaction has relied on rigid, command-based interfaces: buttons, forms, menus, feeds, and syntax. Humans have been forced to learn software syntax and manually translate their desires into step-by-step procedures.
+Intent Canvas is a browser-first spatial workspace that lets users express outcomes through nodes, edges, and uploads instead of step-by-step commands.
 
-**Intent Canvas** introduces a new computing primitive: **Intent-Driven Computation**.
+It compiles the canvas into a formal `SpatialGraphAST`, sends it to the backend engine, generates an inspectable execution plan, and renders the computed output directly in the canvas.
 
-Instead of telling the computer how to perform a task step-by-step, the user expresses **what outcome they desire** using whatever natural representation is easiest: language, spatial node connections, examples, visual layout references, and multimodal files.
+---
 
-The system compiles the spatial layout into a formal **Spatial Graph Abstract Syntax Tree (AST)**, interprets the user's intent using **MeshAPI**, generates an inspectable execution plan, runs registered capability engines, and surfaces the computed output directly inside the spatial environment.
+## Core Experience
+
+- **Spatial reasoning**: nodes and proximity define intent structure.
+- **Multimodal evidence**: PDF, CSV, TXT, MD, JSON, and image nodes are first-class inputs.
+- **Inspectable plans**: backend plan generation is visible before execution.
+- **Custom primitives**: compose reusable canvas primitives from active graphs.
+- **Auth-safe API**: requests use bearer tokens and optional `X-Intent-Canvas-Key` support.
+
+---
+
+## How the system works
 
 ```
-Human Intent & Spatial Layout
+User intent + canvas layout
            │
            ▼
-Spatial Graph AST Compiler
+Spatial Graph AST
            │
            ▼
-     MeshAPI Engine
-(https://developers.meshapi.ai)
+Frontend API client
            │
            ▼
- Inspectable Execution Plan
+Backend MeshAPI engine
            │
            ▼
-    Capability Engines
-┌──────────┬──────────┬──────────┐
-│ Data     │ Document │ Meeting  │
-│ Pattern  │ Synthes- │ Insight  │
-│ Finder   │ izer     │ Extractor│
-└──────────┴──────────┴──────────┘
+Execution plan + capability output
            │
            ▼
-  In-Canvas Output &
-  Adaptability Loop
+Canvas result node
 ```
 
 ---
 
-## Architecture & System Topology
+## Frontend Architecture
 
-The frontend is built with React 18, Vite, TypeScript, Tailwind CSS, and Framer Motion. The backend API is implemented separately in `../NYC-R3-BACKEND`:
-
-- **Frontend API Layer**: `src/api.ts` sends requests with authorization headers and applies runtime checks before rendering responses.
-- **Backend Route & Validation Layers**: `../NYC-R3-BACKEND/src/server.ts` and `../NYC-R3-BACKEND/src/validators/spatialAstValidator.ts` validate incoming payloads.
-- **Service Layer**:
-  - `MeshApiService`: Integrates with MeshAPI (`https://developers.meshapi.ai`) using `google/gemini-2.5-flash` for intent decomposition and plan generation.
-  - `DataPatternFinderService`: Parses CSV rows and generates SVG metric charts and anomaly alerts.
-  - `DocumentSynthesizerService`: Extracts semantic concepts, joint takeaways, and cross-document contradictions.
-  - `MeetingInsightExtractorService`: Parses transcripts into decisions, action items, owner tags, and risk factors.
-  - `UIConceptGeneratorService`: Generates pitch component hierarchies and design tokens.
+- **React + Vite**: fast interactive canvas and panel rendering.
+- **Axios API client**: `src/api.ts` builds requests, attaches auth headers, and validates backend plan/result payloads.
+- **Runtime safety**: the client checks structured plans, capability payloads, and cancellation behavior before rendering.
+- **Spatial canvas UI**: `src/components/canvas` contains node cards, edges, modals, and result visuals.
+- **State management**: `zustand` stores canvas state, primitives, and viewport details.
 
 ---
 
-## Design System & Aesthetics
+## Backend Integration
 
-- **Dark Theme Base**: Pitch Obsidian (`#040406`) canvas base with sub-pixel 32px grid.
-- **Glassmorphism**: Smoked Graphite (`#090a0f`/85) cards with backdrop blur (`backdrop-blur-2xl`) and hairline borders (`border-white/[0.08]`).
-- **Accent Palette**: Electric Mint (`#00ff87`) primary accents, Cyber Amber (`#ffb703`) anomaly alerts.
-- **Performance**: Pointer movement is throttled with `requestAnimationFrame`; Lenis smooth scrolling isolates wheel handling to prevent interaction lag.
+The frontend communicates with the backend API using:
+
+- `VITE_API_BASE_URL` for the backend origin
+- `VITE_API_ACCESS_TOKEN` for bearer authorization
+
+Supported backend flows:
+
+- `POST /api/intent/parse`
+- `POST /api/files/pdf-text`
+- `POST /api/intent/plan`
+- `POST /api/intent/execute`
+- `POST /api/intent/create-primitive`
 
 ---
 
-## Setup & Environment Configuration
+## Quick Start
 
-### Prerequisites
-- Node.js v18+
-- npm / yarn / pnpm
-
-### Backend Installation (`NYC-R3-BACKEND`)
 ```bash
-# 1. Install dependencies
+git clone <repository-url>
+cd NYC-R3-FRONTEND
 npm install
-
-# 2. Configure environment variables (.env)
-PORT=25655
-NODE_ENV=development
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://localhost:25655
-INTENT_API_ACCESS_TOKEN=ic_sec_key_9f8a3b2c1d0e
-REQUIRE_API_AUTH=true
-MESH_API_KEY=your_mesh_api_key_here
-MESH_API_BASE_URL=https://api.meshapi.ai/v1
-MESH_API_MODEL=google/gemini-2.5-flash
-
-# 3. Start backend development server
+cp .env.example .env
+# Edit .env to point at the backend and set access token
 npm run dev
 ```
 
-### Frontend Installation (`NYC-R3-FRONTEND`)
-```bash
-# 1. Install dependencies
-npm install
+---
 
-# 2. Configure environment variables (.env)
+## Required Environment Variables
+
+```env
 VITE_API_BASE_URL=http://localhost:25655
-VITE_API_ACCESS_TOKEN=ic_sec_key_9f8a3b2c1d0e
-
-# 3. Start Vite development server
-npm run dev
+VITE_API_ACCESS_TOKEN=your_api_access_token
+VITE_API_TIMEOUT_MS=10000
+VITE_CANVAS_ID=demo_canvas_1
+VITE_SPATIAL_CLUSTER_ID=primary
+VITE_PROXIMITY_DISTANCE_PX=240
 ```
 
 ---
 
-## Technical Verification & Q&A Defense
+## Runtime Guardrails
 
-### MVP API Contract
+- **Payload validation**: client-side validation mirrors backend plan and output contracts.
+- **Request safety**: abort-safe Axios calls and friendly timeout handling.
+- **SVG / content limits**: output payloads are size-bound and sanitized before display.
 
-```text
-Canvas nodes + edges + intent
-        -> SpatialGraphAST
-        -> inspect plan
-        -> confirm exact plan
-        -> execute/adapt
-        -> output node + result panel
+---
+
+## Project Structure
+
+```
+src/
++-- api.ts                # backend API client and runtime guards
++-- App.tsx               # application shell and routing
++-- config.ts             # environment config and URL helpers
++-- components/
+|   +-- canvas/           # canvas nodes, edges, modals, result cards
+|   +-- layout/           # Navbar and layout shell
+|   +-- providers/        # smooth scroll provider
+|   +-- ui/               # reusable UI components
++-- hooks/                # canvas dialog and mobile helpers
++-- sections/             # landing page and showcase sections
++-- store/                # Zustand canvas state store
++-- types/                # canvas and execution types
++-- utils/                # ID generation, SVG sanitization, spatial relations
 ```
 
-The current MVP supports typed intent, spatial arrangement, explicit connections, and uploaded PDF, CSV, TXT, MD, JSON, and image nodes. Voice, sketch, and gesture ingestion remain future extensions.
+---
 
-- **Q: How is this different from a standard AI chatbot?**  
-  *Answer*: Chatbots take text in a chat window without visual context. Intent Canvas compiles node spatial arrangements, proximity distance vectors, explicit connection edges, and multimodal content into a formal `SpatialGraphAST` before executing inspectable capability steps.
-- **Q: How are memory leaks and long-running requests handled?**  
-  *Answer*: Request abort controllers, stream reader locks (`try ... finally { reader.releaseLock(); }`), step limits (max 5 steps), provider timeouts (25 seconds), and output payload byte caps (50 KB) prevent memory leaks.
-- **Q: Can users save custom primitives?**  
-  *Answer*: The current MVP saves the active canvas graph as a locally persisted custom primitive record in browser storage, allowing users to reuse created primitive definitions.
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite development server |
+| `npm run build` | Build the frontend bundle |
+| `npm run preview` | Preview the production build |
 
 ---
 
