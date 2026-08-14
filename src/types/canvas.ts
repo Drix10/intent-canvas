@@ -40,6 +40,13 @@ export interface PlanContextItem {
   spatialBasis: 'explicit_connector' | 'spatial_proximity' | 'enclosure_group' | 'semantic_match' | 'standalone';
 }
 
+export interface WorkflowStage {
+  stageId: number;
+  title: string;
+  description: string;
+  output: string;
+}
+
 export interface ExecutionPlan {
   planId: string;
   goalSummary: string;
@@ -51,6 +58,7 @@ export interface ExecutionPlan {
   constraints: string[];
   expectedOutputs: string[];
   verification: string[];
+  workflowStages: WorkflowStage[];
   steps: PlanStep[];
   disambiguation?: {
     requiresUserClarification: boolean;
@@ -92,7 +100,7 @@ export interface RenewalRescueRecord {
   riskScoreSource: 'supplied' | 'derived';
   riskLevel: 'critical' | 'high' | 'medium' | 'low';
   driver: string;
-  evidence: string;
+  evidence: string[];
   recommendedAction: string;
   owner: string;
   deadline: string;

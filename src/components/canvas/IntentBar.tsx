@@ -1,12 +1,11 @@
 import React from 'react';
 import { useCanvasStore } from '../../store/useCanvasStore';
 import { MagneticButton } from '../ui/MagneticButton';
-import { Sparkles, Play, Plus, RefreshCw, Filter } from 'lucide-react';
+import { Sparkles, Play, Plus, RefreshCw } from 'lucide-react';
 
 interface IntentBarProps {
   onEvaluatePlan: (useGuidedIntent?: boolean) => void;
   onExecuteComputation: () => void;
-  onFilterEnterprise: () => void;
   onAddNewNode: () => void;
   onAddFile: (file: File) => void;
 }
@@ -14,7 +13,6 @@ interface IntentBarProps {
 export const IntentBar: React.FC<IntentBarProps> = ({
   onEvaluatePlan,
   onExecuteComputation,
-  onFilterEnterprise,
   onAddNewNode,
   onAddFile,
 }) => {
@@ -89,7 +87,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
              {isEvaluatingPlan ? 'Evaluating...' : hasIntent ? 'Inspect Plan' : 'Guide Me & Inspect'}
            </button>
 
-            <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
+             <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
            <button type="button" aria-label="Add file or image node" onClick={() => fileInputRef.current?.click()} title="Add file or image" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white">
              <Plus className="h-3.5 w-3.5" />
            </button>
@@ -110,17 +108,6 @@ export const IntentBar: React.FC<IntentBarProps> = ({
               </span>
             )}
           </MagneticButton>
-
-           <button
-            type="button"
-            aria-label="Adapt computation for enterprise customers"
-            onClick={onFilterEnterprise}
-             disabled={!hasIntent || !activePlan || isEvaluatingPlan || isExecutingPlan}
-            title="Step 2 Adaptability Demo: Filter Enterprise"
-            className="flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-400 hover:bg-amber-500/20 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Filter className="h-3 w-3" /> Adapt
-          </button>
 
            <button
             type="button"

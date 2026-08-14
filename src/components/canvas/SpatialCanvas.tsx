@@ -3,7 +3,7 @@ import { useCanvasStore } from '../../store/useCanvasStore';
 import { CanvasNodeCard } from './CanvasNodeCard';
 import { CanvasSVGEdges } from './CanvasSVGEdges';
 import { APP_CONFIG } from '../../config';
-import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, GitBranch, Ruler, HardDrive } from 'lucide-react';
+import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, GitBranch, Ruler, HardDrive, Trash2 } from 'lucide-react';
 import { buildSpatialEdges } from '../../utils/spatialRelations';
 
 export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ onAddFile }) => {
@@ -16,6 +16,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const setActiveIntentPrompt = useCanvasStore((state) => state.setActiveIntentPrompt);
   const resetVersion = useCanvasStore((state) => state.resetVersion);
   const resetDemoCanvas = useCanvasStore((state) => state.resetDemoCanvas);
+  const clearCanvas = useCanvasStore((state) => state.clearCanvas);
   const setPan = useCanvasStore((state) => state.setPan);
   const setZoom = useCanvasStore((state) => state.setZoom);
   const updateNodePosition = useCanvasStore((state) => state.updateNodePosition);
@@ -24,6 +25,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const addEdge = useCanvasStore((state) => state.addEdge);
   const removeEdge = useCanvasStore((state) => state.removeEdge);
   const removeNode = useCanvasStore((state) => state.removeNode);
+  const updateNode = useCanvasStore((state) => state.updateNode);
 
   const [isPanning, setIsPanning] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -34,6 +36,9 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const [movementMessage, setMovementMessage] = useState('');
   const [showGuide, setShowGuide] = useState(false);
   const [isFileOver, setIsFileOver] = useState(false);
+  const [editingNodeId, setEditingNodeId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftSummary, setDraftSummary] = useState('');
   const contextNodes = nodes.filter(node => node.type !== 'output');
   const contextEdges = edges.filter(edge => contextNodes.some(node => node.id === edge.sourceNodeId) && contextNodes.some(node => node.id === edge.targetNodeId));
   const contextSpatialEdges = buildSpatialEdges(contextNodes, contextEdges);
@@ -85,6 +90,16 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
     if (pointerId !== null) finishPointer(pointerId);
     setConnectingSourceId(null);
   }, [finishPointer, resetVersion]);
+
+  useEffect(() => {
+    const editingNode = nodes.find((node) => node.id === editingNodeId);
+    if (!editingNode) {
+      setEditingNodeId(null);
+      return;
+    }
+    setDraftTitle(editingNode.title);
+    setDraftSummary(editingNode.dataPayload.contentSummary);
+  }, [editingNodeId]);
 
   // Auto-center canvas nodes on mount
   useEffect(() => {
@@ -254,6 +269,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
                isSelected={selectedNodeIds.includes(node.id)}
                onStartConnection={handleStartConnection}
                onRemove={removeNode}
+               onEdit={node.type !== 'output' ? (nodeId) => setEditingNodeId(nodeId) : undefined}
                isConnectingSource={connectingSourceId === node.id}
                hasConnections={contextEdges.some(edge => edge.sourceNodeId === node.id || edge.targetNodeId === node.id)}
                onRemoveConnection={handleRemoveConnection}
@@ -342,6 +358,15 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
         >
           <RotateCcw className="h-3 w-3 text-sky-400" />
         </button>
+        <button
+          type="button"
+          onClick={() => { if (window.confirm('Clear every node and relationship from this canvas?')) clearCanvas(); }}
+          title="Clear canvas"
+          aria-label="Clear canvas"
+          className="flex items-center justify-center rounded-lg border border-red-400/20 bg-red-400/5 p-1.5 text-red-300 hover:bg-red-400/10 hover:text-red-200"
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
       </div>
 
       {/* Bottom-Right Zoom HUD Controls */}
@@ -394,6 +419,17 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
         </div>
       )}
 
+      {editingNodeId && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="edit-node-title">
+          <div className="w-full max-w-lg rounded-3xl border border-white/15 bg-[#090a0f] p-5 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between"><h2 id="edit-node-title" className="text-sm font-bold text-white">Edit context node</h2><button type="button" onClick={() => setEditingNodeId(null)} className="rounded-lg px-2 py-1 text-neutral-400 hover:bg-white/10 hover:text-white">&times;</button></div>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-400">Title<input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} maxLength={300} className="mt-1 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none focus:border-[#00ff87]/50" /></label>
+            <label className="mt-3 block text-[10px] font-bold uppercase tracking-widest text-neutral-400">Context summary<textarea value={draftSummary} onChange={(event) => setDraftSummary(event.target.value)} maxLength={10_000} rows={7} className="mt-1 w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-relaxed text-white outline-none focus:border-[#00ff87]/50" /></label>
+            <div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setEditingNodeId(null)} className="rounded-xl border border-white/10 px-3 py-2 text-xs text-neutral-300 hover:bg-white/5">Cancel</button><button type="button" disabled={!draftTitle.trim() || !draftSummary.trim()} onClick={() => { if (!editingNodeId || !draftTitle.trim() || !draftSummary.trim()) return; updateNode(editingNodeId, { title: draftTitle.trim(), contentSummary: draftSummary.trim() }); setEditingNodeId(null); }} className="rounded-xl bg-[#00ff87] px-4 py-2 text-xs font-bold text-black disabled:cursor-not-allowed disabled:opacity-40">Save changes</button></div>
+          </div>
+        </div>
+      )}
+
       {/* High-Tech Smoked Glass Empty State Hub when all nodes are cleared */}
       {nodes.length === 0 && (
         <div role="status" className="absolute inset-0 z-30 flex items-center justify-center p-6 text-center">
@@ -408,7 +444,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
              <div className="mt-6 flex flex-col gap-2">
               {onAddFile && (
                 <>
-                  <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/*" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
+                   <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded-xl border border-[#00ff87]/30 bg-[#00ff87]/10 px-4 py-2.5 text-xs font-bold text-[#b8ffd9] hover:bg-[#00ff87]/20">
                     Add a supported file
                   </button>

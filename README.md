@@ -46,8 +46,9 @@ The UI does not execute every available tool. It displays the tools selected by 
 - Approval-gated execution.
 - Plan context rationale showing why each source was selected and which spatial relationship supports it.
 - Expected outputs and verification checks shown before approval.
+- Full workflow stages shown separately from the underlying capability tool, so a single tool does not collapse a multi-step business process into one line.
 - Tool-specific result rendering for data, documents, meetings, UI/UX concepts, and renewal rescue.
-- Renewal Rescue results with risk score provenance, evidence, owner, deadline, and recovery action.
+- Renewal Rescue results with risk score provenance, multi-source evidence bullets, owner, deadline, and recovery action.
 - Local browser persistence for workspace state and saved primitive metadata.
 - Resettable starter context for the demo workflow.
 

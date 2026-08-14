@@ -62,6 +62,8 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
            {!!plan.expectedOutputs.length && <div className="mb-3 rounded-xl border border-sky-500/20 bg-sky-500/5 p-3"><p className="text-[10px] font-bold uppercase tracking-widest text-sky-300">Expected outputs</p><p className="mt-1 text-[10px] leading-relaxed text-neutral-300">{plan.expectedOutputs.join(' • ')}</p></div>}
            {!!plan.verification.length && <div className="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 p-3"><p className="text-[10px] font-bold uppercase tracking-widest text-amber-300">Verification</p><ul className="mt-1 space-y-1 text-[10px] text-neutral-300">{plan.verification.map((item) => <li key={item}>• {item}</li>)}</ul></div>}
 
+           {!!plan.workflowStages.length && <div className="mb-6"><p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#00ff87]">Workflow the computer will follow</p><div className="space-y-1.5">{plan.workflowStages.map((stage) => <div key={stage.stageId} className="flex gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-2.5"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#00ff87]/10 text-[10px] font-bold text-[#00ff87]">{stage.stageId}</span><div><p className="text-[11px] font-semibold text-white">{stage.title}</p><p className="mt-0.5 text-[10px] leading-relaxed text-neutral-400">{stage.description}</p><p className="mt-1 text-[9px] font-medium uppercase tracking-wide text-[#b8ffd9]">Output: {stage.output}</p></div></div>)}</div></div>}
+
            {/* Plan Steps (Scrollable Container) */}
            <div className="mb-6 max-h-[50vh] overflow-y-auto space-y-2.5 pr-1" data-scrollable="true">
              {plan.steps.length === 0 ? (
@@ -98,18 +100,18 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
           </div>
 
           {/* Modal Actions */}
-          <div className="flex items-center justify-end gap-3">
+            <div className="flex flex-wrap items-center justify-end gap-3">
              <button
                type="button"
                onClick={onClose}
-              className="rounded-full border border-white/10 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-white/5"
+                className="min-w-24 rounded-full border border-white/10 px-4 py-2 text-xs font-medium text-neutral-300 hover:bg-white/5"
             >
               Dismiss
             </button>
              <MagneticButton
                onClick={onExecute}
                disabled={isExecuting || plan.steps.length === 0}
-              className="bg-[#00ff87] px-6 py-2 text-xs font-bold text-black hover:bg-[#00ff87]/90"
+               className="min-w-48 max-w-full whitespace-normal bg-[#00ff87] px-6 py-2 text-xs font-bold text-black hover:bg-[#00ff87]/90"
             >
                {plan.steps.length === 0 ? 'Choose an intent direction' : isExecuting ? (
                 <span className="flex items-center gap-2">

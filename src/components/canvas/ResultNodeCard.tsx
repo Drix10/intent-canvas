@@ -164,8 +164,8 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
             </div>
             <p className="mb-2 rounded-lg border border-white/[0.08] bg-white/[0.03] p-2 text-[10px] leading-relaxed text-neutral-300">{renewalRescue.executiveSummary}</p>
             <div className="space-y-2">
-              {renewalRescue.riskRecords.map((record) => (
-                <div key={`${record.account}-${record.renewalDate}`} className="rounded-lg border border-white/10 bg-black/20 p-2">
+              {renewalRescue.riskRecords.map((record, index) => (
+                <div key={`${record.account}-${record.renewalDate}-${index}`} className="rounded-lg border border-white/10 bg-black/20 p-2">
                   <div className="flex items-start justify-between gap-2">
                     <div><p className="text-[11px] font-bold text-white">{record.account}</p><p className="mt-0.5 text-[10px] text-neutral-400">${record.ARR.toLocaleString('en-US')} ARR <span className="mx-1 text-neutral-600">•</span> <CalendarDays className="inline h-3 w-3" /> {record.renewalDate}</p></div>
                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${record.riskLevel === 'critical' ? 'bg-rose-500/20 text-rose-200' : record.riskLevel === 'high' ? 'bg-amber-500/20 text-amber-200' : 'bg-sky-500/20 text-sky-200'}`}>{record.riskLevel} risk</span>
@@ -173,7 +173,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
                   <dl className="mt-2 space-y-1 text-[10px] leading-snug text-neutral-300">
                      <div><dt className="inline font-semibold text-neutral-500">Driver:</dt> <dd className="inline">{record.driver}</dd></div>
                      <div><dt className="inline font-semibold text-neutral-500">Risk score:</dt> <dd className="inline">{record.riskScore} <span className="text-neutral-500">({record.riskScoreSource})</span></dd></div>
-                    <div><dt className="inline font-semibold text-neutral-500">Evidence:</dt> <dd className="inline">{record.evidence}</dd></div>
+                      <div><dt className="block font-semibold text-neutral-500">Evidence:</dt> <dd><ul className="mt-0.5 list-disc space-y-0.5 pl-4">{record.evidence.map((item, evidenceIndex) => <li key={`${evidenceIndex}-${item}`}>{item}</li>)}</ul></dd></div>
                     <div><dt className="inline font-semibold text-neutral-500">Recovery action:</dt> <dd className="inline text-[#b8ffd9]">{record.recommendedAction}</dd></div>
                   </dl>
                   <p className="mt-2 border-t border-white/5 pt-1.5 text-[10px] text-neutral-400"><strong className="text-neutral-200">Owner:</strong> {record.owner} <span className="mx-1 text-neutral-600">•</span> <strong className="text-neutral-200">Deadline:</strong> {record.deadline}</p>

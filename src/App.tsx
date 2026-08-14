@@ -65,7 +65,7 @@ async function readImagePreview(file: File, signal: AbortSignal): Promise<string
       bitmap?.close()
     }
   }
-  if (file.size > 400_000) return undefined
+  if (signal.aborted || file.size > 400_000) return undefined
   return new Promise((resolve) => {
     const reader = new FileReader()
     const abort = () => reader.abort()
@@ -86,6 +86,7 @@ function readTextFile(file: File, signal: AbortSignal): Promise<string> {
     reader.onload = () => { signal.removeEventListener('abort', abort); resolve(typeof reader.result === 'string' ? reader.result : '') }
     reader.onerror = () => { signal.removeEventListener('abort', abort); reject(reader.error || new Error('File read failed')) }
     reader.onabort = () => { signal.removeEventListener('abort', abort); reject(new DOMException('File read aborted', 'AbortError')) }
+    if (signal.aborted) { reader.abort(); return }
     reader.readAsText(file)
   })
 }
@@ -122,6 +123,7 @@ export default function App() {
   const fileReadSequence = useRef(0)
   const fileReadController = useRef<AbortController | null>(null)
   const relationRequestController = useRef<AbortController | null>(null)
+  const mountedRef = useRef(true)
   const suppressNextInputReset = useRef(false)
   const clearPromptAfterExecution = useRef(false)
   const inputGraphKey = JSON.stringify({ nodes: nodes.filter(node => node.type !== 'output'), edges, activeIntentPrompt })
@@ -149,14 +151,18 @@ export default function App() {
     return request
   }
   const isCurrentRequest = (request: typeof requestRef.current) => Boolean(
-    request && requestRef.current?.id === request.id && request.canvasKey === getCanvasKey(),
+    mountedRef.current && request && requestRef.current?.id === request.id && request.canvasKey === getCanvasKey(),
   )
-  const isActiveRequest = (request: typeof requestRef.current) => Boolean(request && requestRef.current?.id === request.id)
+  const isActiveRequest = (request: typeof requestRef.current) => Boolean(mountedRef.current && request && requestRef.current?.id === request.id)
 
-  useEffect(() => () => {
-    cancelRequest(false)
-    fileReadController.current?.abort()
-    relationRequestController.current?.abort()
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      cancelRequest(false)
+      fileReadController.current?.abort()
+      relationRequestController.current?.abort()
+    }
   }, [])
   useEffect(() => {
     const updateVisibility = () => document.body.dataset.pageHidden = String(document.hidden)
@@ -247,11 +253,12 @@ export default function App() {
     const controller = new AbortController()
     relationRequestController.current = controller
     const snapshotKey = JSON.stringify(useCanvasStore.getState().nodes.filter(node => node.type !== 'output'))
+    const resetAtStart = useCanvasStore.getState().resetVersion
     try {
       const contextNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
       const suggestions = await suggestContextRelations(contextNodes, controller.signal)
       const currentNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
-      if (snapshotKey !== JSON.stringify(currentNodes)) return
+      if (!mountedRef.current || controller.signal.aborted || resetAtStart !== useCanvasStore.getState().resetVersion || snapshotKey !== JSON.stringify(currentNodes)) return
       const currentEdges = useCanvasStore.getState().edges
       const existingPairs = new Set(currentEdges.map(edge => [edge.sourceNodeId, edge.targetNodeId].sort().join('|')))
       suggestions.forEach(({ sourceNodeId, targetNodeId, label }) => {
@@ -275,7 +282,9 @@ export default function App() {
       document.getElementById('intent-prompt')?.focus()
       return
     }
+    const resetAtStart = useCanvasStore.getState().resetVersion
     await refreshSemanticRelations()
+    if (!mountedRef.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
     const request = beginRequest()
     setErrorMessage(null)
     setStatusMessage(null)
@@ -372,15 +381,6 @@ export default function App() {
     }
   }
 
-  // Step 2 Adaptability Flow
-  const handleFilterEnterprise = () => {
-    if (!activePlan) {
-      setErrorMessage('Inspect and confirm a plan before adapting the result.')
-      return
-    }
-    handleExecuteComputation({ adaptationOptionId: 'opt_churn', filterModifier: 'enterprise' })
-  }
-
   const adaptationForOption = (optionId: 'opt_churn' | 'opt_trend'): AdaptationRequest => ({
     adaptationOptionId: optionId,
     filterModifier: optionId === 'opt_churn' ? 'enterprise' : 'trend',
@@ -439,7 +439,7 @@ export default function App() {
       } else if (!isImage) {
         contentSummary = (await readTextFile(file, readController.signal)).slice(0, 10_000) || `Uploaded file: ${safeFileName}`
       }
-       if (readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
+       if (!mountedRef.current || readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
       if (useCanvasStore.getState().nodes.length >= 30) {
         setErrorMessage('The canvas is full. Remove a node before uploading another file.')
         return
@@ -457,11 +457,11 @@ export default function App() {
        try {
         const contextNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
         const suggestions = await suggestContextRelations(contextNodes, readController.signal)
-          if (readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
+           if (!mountedRef.current || readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
           const currentEdges = useCanvasStore.getState().edges
           const existingPairs = new Set(currentEdges.map(edge => [edge.sourceNodeId, edge.targetNodeId].sort().join('|')))
           suggestions.forEach(({ sourceNodeId, targetNodeId, label }) => {
-            if (readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
+             if (!mountedRef.current || readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
             const pair = [sourceNodeId, targetNodeId].sort().join('|')
            if (existingPairs.has(pair)) return
            addEdge(sourceNodeId, targetNodeId, 'semantic_match', label || 'Semantic match')
@@ -472,7 +472,7 @@ export default function App() {
          if (!isRequestCancelled(error)) return
        }
     } catch (error) {
-      if (!isRequestCancelled(error)) setErrorMessage(getApiErrorMessage(error, 'The selected file could not be read or parsed.'))
+      if (mountedRef.current && !isRequestCancelled(error)) setErrorMessage(getApiErrorMessage(error, 'The selected file could not be read or parsed.'))
     } finally {
       if (fileReadController.current === readController) fileReadController.current = null
     }
@@ -537,7 +537,6 @@ export default function App() {
   const intentHandlers = {
     onEvaluatePlan: handleEvaluatePlan,
     onExecuteComputation: () => handleExecuteComputation(),
-    onFilterEnterprise: handleFilterEnterprise,
     onAddNewNode: handleAddNewNode,
     onAddFile: handleAddFile,
   };
