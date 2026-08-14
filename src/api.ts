@@ -44,7 +44,7 @@ function hasStringFields(value: unknown, fields: string[]): boolean {
 function isRenewalRescuePayload(value: unknown): value is RenewalRescuePayload {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const payload = value as Partial<RenewalRescuePayload>
-  if (!isBoundedString(payload.executiveSummary, MAX_LONG_STRING) || !Array.isArray(payload.riskRecords) || payload.riskRecords.length > 100) return false
+   if (!isBoundedString(payload.executiveSummary, MAX_LONG_STRING) || typeof payload.riskChartSvg !== 'string' || new TextEncoder().encode(payload.riskChartSvg).length > MAX_SVG_BYTES || !Array.isArray(payload.riskRecords) || payload.riskRecords.length > 100) return false
   return payload.riskRecords.every((record) => {
     if (!record || typeof record !== 'object' || Array.isArray(record)) return false
     const item = record as unknown as Record<string, unknown>

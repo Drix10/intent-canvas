@@ -109,6 +109,7 @@ export interface RenewalRescueRecord {
 export interface RenewalRescuePayload {
   riskRecords: RenewalRescueRecord[];
   executiveSummary: string;
+  riskChartSvg: string;
 }
 
 export interface CustomPrimitiveRecord {

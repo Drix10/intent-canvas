@@ -47,6 +47,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
   });
   const hasCapability = (capability: keyof typeof capabilityOutputKeys) => selectedCapabilities.has(capability);
   const safeChartSvg = sanitizeSvg(dataPattern?.chartSvg);
+  const safeRiskChartSvg = sanitizeSvg(renewalRescue?.riskChartSvg);
 
   return (
     <div className="w-[420px] max-w-[calc(100vw-2rem)]">
@@ -169,6 +170,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
               <h4 className="text-xs font-bold text-rose-200">Renewal risk and recovery plans</h4>
             </div>
              <p className="mb-2 rounded-lg border border-white/[0.08] bg-white/[0.03] p-2 text-[10px] leading-relaxed text-neutral-300">{renewalRescue.executiveSummary}</p>
+             {safeRiskChartSvg && <div className="mb-2 overflow-x-auto rounded-lg border border-white/[0.08] bg-[#040406] p-2"><p className="mb-1 text-[10px] font-semibold text-neutral-400">Risk portfolio</p><div aria-label="Renewal risk portfolio chart" dangerouslySetInnerHTML={{ __html: safeRiskChartSvg }} /></div>}
              {renewalRescue.riskRecords.length === 0 ? <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 text-[10px] text-amber-200">No renewal account records could be established from the selected context. Add an account, renewal date, or health source and compile again.</p> : <div className="space-y-2">
               {renewalRescue.riskRecords.map((record, index) => (
                 <div key={`${record.account}-${record.renewalDate}-${index}`} className="rounded-lg border border-white/10 bg-black/20 p-2">

@@ -10,7 +10,7 @@ import { ResultNodeCard } from './components/canvas/ResultNodeCard'
 import { DisambiguationModal } from './components/canvas/DisambiguationModal'
 import { AdaptationRequest, CanvasNode, ExecutionPlan } from './types/canvas'
 import { APP_CONFIG } from './config'
-import { getApiErrorMessage, intentApi, intentPath, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled, suggestContextRelations } from './api'
+import { getApiErrorMessage, intentApi, intentPath, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled } from './api'
 import { createId } from './utils/id'
 import { buildSpatialClusters, buildSpatialEdges } from './utils/spatialRelations'
 
@@ -107,7 +107,6 @@ export default function App() {
   const setExecutionResult = useCanvasStore((state) => state.setExecutionResult)
   const setViewMode = useCanvasStore((state) => state.setViewMode)
   const addNode = useCanvasStore((state) => state.addNode)
-  const addEdge = useCanvasStore((state) => state.addEdge)
   const addCustomPrimitive = useCanvasStore((state) => state.addCustomPrimitive)
   const upsertOutputNode = useCanvasStore((state) => state.upsertOutputNode)
 
@@ -122,7 +121,6 @@ export default function App() {
   const requestSequence = useRef(0)
   const fileReadSequence = useRef(0)
   const fileReadController = useRef<AbortController | null>(null)
-  const relationRequestController = useRef<AbortController | null>(null)
   const mountedRef = useRef(true)
   const suppressNextInputReset = useRef(false)
   const clearPromptAfterExecution = useRef(false)
@@ -161,7 +159,6 @@ export default function App() {
       mountedRef.current = false
       cancelRequest(false)
       fileReadController.current?.abort()
-      relationRequestController.current?.abort()
     }
   }, [])
   useEffect(() => {
@@ -189,8 +186,6 @@ export default function App() {
     fileReadSequence.current += 1
     fileReadController.current?.abort()
     fileReadController.current = null
-    relationRequestController.current?.abort()
-    relationRequestController.current = null
     cancelRequest()
     setShowPlanModal(false)
     setDisambiguationData(null)
@@ -248,32 +243,6 @@ export default function App() {
     }
   }
 
-  const refreshSemanticRelations = async () => {
-    relationRequestController.current?.abort()
-    const controller = new AbortController()
-    relationRequestController.current = controller
-    const snapshotKey = JSON.stringify(useCanvasStore.getState().nodes.filter(node => node.type !== 'output'))
-    const resetAtStart = useCanvasStore.getState().resetVersion
-    try {
-      const contextNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
-      const suggestions = await suggestContextRelations(contextNodes, controller.signal)
-      const currentNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
-      if (!mountedRef.current || controller.signal.aborted || resetAtStart !== useCanvasStore.getState().resetVersion || snapshotKey !== JSON.stringify(currentNodes)) return
-      const currentEdges = useCanvasStore.getState().edges
-      const existingPairs = new Set(currentEdges.map(edge => [edge.sourceNodeId, edge.targetNodeId].sort().join('|')))
-      suggestions.forEach(({ sourceNodeId, targetNodeId, label }) => {
-        const pair = [sourceNodeId, targetNodeId].sort().join('|')
-        if (existingPairs.has(pair)) return
-        useCanvasStore.getState().addEdge(sourceNodeId, targetNodeId, 'semantic_match', label)
-        existingPairs.add(pair)
-      })
-    } catch (error) {
-      if (!isRequestCancelled(error)) return
-    } finally {
-      if (relationRequestController.current === controller) relationRequestController.current = null
-    }
-  }
-
   // Evaluate Intent & Inspect Plan
   const handleEvaluatePlan = async (useGuidedIntent = false) => {
     const prompt = activeIntentPrompt.trim() || (useGuidedIntent ? APP_CONFIG.defaultIntentPrompt : '')
@@ -282,9 +251,6 @@ export default function App() {
       document.getElementById('intent-prompt')?.focus()
       return
     }
-    const resetAtStart = useCanvasStore.getState().resetVersion
-    await refreshSemanticRelations()
-    if (!mountedRef.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
     const request = beginRequest()
     setErrorMessage(null)
     setStatusMessage(null)
@@ -454,23 +420,6 @@ export default function App() {
        addNode(uploadedNode)
        setViewMode('interactive')
        setStatusMessage(`Added "${safeFileName}" to the Intent Canvas workspace. The workspace node is retained in this browser.`)
-       try {
-        const contextNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
-        const suggestions = await suggestContextRelations(contextNodes, readController.signal)
-           if (!mountedRef.current || readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
-          const currentEdges = useCanvasStore.getState().edges
-          const existingPairs = new Set(currentEdges.map(edge => [edge.sourceNodeId, edge.targetNodeId].sort().join('|')))
-          suggestions.forEach(({ sourceNodeId, targetNodeId, label }) => {
-             if (!mountedRef.current || readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
-            const pair = [sourceNodeId, targetNodeId].sort().join('|')
-           if (existingPairs.has(pair)) return
-           addEdge(sourceNodeId, targetNodeId, 'semantic_match', label || 'Semantic match')
-           existingPairs.add(pair)
-         })
-       } catch (error) {
-         // Relation suggestions are optional and must not turn a successful upload into a failure.
-         if (!isRequestCancelled(error)) return
-       }
     } catch (error) {
       if (mountedRef.current && !isRequestCancelled(error)) setErrorMessage(getApiErrorMessage(error, 'The selected file could not be read or parsed.'))
     } finally {
