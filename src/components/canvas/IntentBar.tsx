@@ -92,7 +92,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
            </button>
 
              <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
-            <button type="button" aria-label="Upload a file or image node" onClick={() => fileInputRef.current?.click()} title="Upload file or image" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-[#00ff87]">
+             <button type="button" aria-label="Upload a file or image node" disabled={isEvaluatingPlan || isExecutingPlan} onClick={() => fileInputRef.current?.click()} title="Upload file or image" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-[#00ff87] disabled:cursor-not-allowed disabled:opacity-40">
              <Plus className="h-3.5 w-3.5" />
            </button>
 
@@ -116,9 +116,10 @@ export const IntentBar: React.FC<IntentBarProps> = ({
            <button
             type="button"
              aria-label="Add blank document node"
-            onClick={onAddNewNode}
+             disabled={isEvaluatingPlan || isExecutingPlan}
+             onClick={onAddNewNode}
             title="Add Document Card"
-            className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white"
+             className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus className="h-3.5 w-3.5" />
           </button>

@@ -564,7 +564,7 @@ export default function App() {
 
         {/* In-Canvas Result Overlay Container */}
         {executionResult && viewMode === 'interactive' && (
-            <div data-scrollable="true" onWheel={(event) => event.stopPropagation()} className="absolute top-20 right-6 z-30 max-h-[calc(100dvh-7rem)] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div data-scrollable="true" onWheel={(event) => event.stopPropagation()} className="absolute top-20 right-6 z-[55] max-h-[calc(100dvh-7rem)] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-2xl pb-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <ResultNodeCard
               result={executionResult}
               onSaveAsPrimitive={handleSaveAsPrimitive}

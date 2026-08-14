@@ -80,8 +80,8 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
              <span className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${getTypeBadge()}`}>
                {node.type.replace('_', ' ')}
              </span>
-              {onEdit && <button type="button" aria-label={`Edit ${node.title}`} onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onEdit(node.id); }} className="rounded-md p-1 text-neutral-500 hover:bg-white/10 hover:text-white"><Pencil className="h-3 w-3" /></button>}
-               <button type="button" aria-label={`Delete ${node.title}`} title="Delete node" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); if (window.confirm(`Delete "${node.title}" from the canvas?`)) onRemove(node.id); }} className="rounded-md p-1 text-neutral-500 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-3 w-3" /></button>
+               {onEdit && <button type="button" aria-label={`Edit ${node.title}`} onPointerDown={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onEdit(node.id); }} className="rounded-md p-1 text-neutral-500 hover:bg-white/10 hover:text-white"><Pencil className="h-3 w-3" /></button>}
+                <button type="button" aria-label={`Delete ${node.title}`} title="Delete node" onPointerDown={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); if (window.confirm(`Delete "${node.title}" from the canvas?`)) onRemove(node.id); }} className="rounded-md p-1 text-neutral-500 hover:bg-red-500/10 hover:text-red-300"><Trash2 className="h-3 w-3" /></button>
            </div>
         </div>
 
@@ -116,7 +116,7 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
            {isConnectingSource ? <Minus className="h-3 w-3" /> : <Plus className="h-3 w-3" />} {isConnectingSource ? 'Cancel Connection' : isConnectionTarget ? 'Connect Here' : 'Connect Relation'}
          </button>
           {hasConnections && !isConnectingSource && (
-             <button type="button" aria-label={`Remove one relation from ${node.title}`} title="Remove one relation" onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); if (window.confirm(`Remove one relation connected to "${node.title}"?`)) onRemoveConnection(node.id); }} className="flex shrink-0 items-center justify-center rounded-xl border border-red-400/20 bg-red-400/5 px-2 text-red-300 hover:bg-red-400/10">
+              <button type="button" aria-label={`Remove one relation from ${node.title}`} title="Remove one relation" onPointerDown={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); if (window.confirm(`Remove one relation connected to "${node.title}"?`)) onRemoveConnection(node.id); }} className="flex shrink-0 items-center justify-center rounded-xl border border-red-400/20 bg-red-400/5 px-2 text-red-300 hover:bg-red-400/10">
               <Minus className="h-3 w-3" />
             </button>
           )}
