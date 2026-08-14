@@ -28,8 +28,8 @@ npm run dev
 VITE_API_BASE_URL=http://localhost:25655
 VITE_API_PROXY_TARGET=http://localhost:25655
 VITE_API_TIMEOUT_MS=25000
-VITE_API_ACCESS_TOKEN=ic_sec_key_9f8a3b2c1d0e
-VITE_CANVAS_ID=demo_canvas_1
+VITE_API_ACCESS_TOKEN=replace_with_the_backend_access_token
+VITE_CANVAS_ID=workspace_canvas
 VITE_SPATIAL_CLUSTER_ID=primary
 VITE_PROXIMITY_DISTANCE_PX=240
 ```
@@ -43,7 +43,7 @@ When deploying `NYC-R3-FRONTEND` to Vercel:
 1. Import the `NYC-R3-FRONTEND` project in Vercel.
 2. Set Environment Variables in Vercel project settings:
    - `VITE_API_BASE_URL`: Your deployed backend domain (e.g. `https://api.yourdomain.com`).
-   - `VITE_API_ACCESS_TOKEN`: The matching security access key (`ic_sec_key_9f8a3b2c1d0e`).
+    - `VITE_API_ACCESS_TOKEN`: The matching backend access token. Treat it as public because `VITE_*` values are bundled into the browser.
 3. Set Build Command to `npm run build` and Output Directory to `dist`.
 
 ---

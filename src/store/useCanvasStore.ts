@@ -39,58 +39,83 @@ interface CanvasState {
   resetDemoCanvas: () => void;
 }
 
-const initialDemoNodes: CanvasNode[] = [
+// The domain-specific starter fixture is used only for the optional demo/reset canvas.
+const demoStarterNodes: CanvasNode[] = [
   {
-    id: 'node-sales-csv',
-    title: 'Sales_Q3_Metrics.csv',
+    id: 'node-account-health',
+    title: 'Q3 Account Health',
     type: 'dataset',
     position: { x: 100, y: 140, width: 280, height: 160 },
     dataPayload: {
       mimeType: 'text/csv',
-      contentSummary: 'Intent Canvas demo sales ledger. Six monthly records with revenue, customer tier, transaction count, and enterprise revenue. The August revenue drop is intentional and traceable to the supplied rows.\nmonth,revenue,customer_tier,transactions,enterprise_revenue\nMay,82000,Enterprise,412,51000\nJun,84500,Enterprise,428,53200\nJul,86100,Enterprise,439,54800\nAug,55200,Enterprise,301,33100\nSep,90300,Enterprise,461,58700\nOct,94700,Enterprise,479,62300',
+      contentSummary: 'account,arr,health_signal,risk_score\nNorthstar Health,480000,Weekly active users down 38%,92\nAcme Logistics,275000,Champion departure,78\nBrightline Media,190000,Budget scrutiny,54',
     },
   },
   {
-    id: 'node-customer-txt',
-    title: 'Customer_Feedback.txt',
+    id: 'node-customer-usage',
+    title: 'Customer Usage',
     type: 'document',
     position: { x: 560, y: 140, width: 280, height: 160 },
     dataPayload: {
       mimeType: 'text/plain',
-      contentSummary: 'Intent Canvas demo customer feedback. Enterprise customers reported a gateway migration slowdown in August. Three accounts requested follow-up, two cited onboarding friction, and one reported improved retention after support intervention. Review these notes alongside the sales ledger; do not treat qualitative notes as numeric measurements.',
+      contentSummary: 'Northstar Health: weekly active users fell 38% quarter over quarter; reporting dashboard adoption is below target.\nAcme Logistics: core workflows remain active, but the new admin has not completed enablement.\nBrightline Media: seat utilization is stable while usage is concentrated in one team.',
     },
   },
   {
-    id: 'node-example-ui',
-    title: 'Executive_Dashboard_Style.png',
-    type: 'example',
+    id: 'node-renewal-calendar',
+    title: 'Renewal Calendar',
+    type: 'dataset',
     position: { x: 1020, y: 140, width: 280, height: 160 },
     dataPayload: {
-      mimeType: 'image/png',
-      contentSummary: 'Design System Reference: Pitch Obsidian palette, hairline mint borders, micro-sparkline charts, and high-contrast typography.',
+      mimeType: 'text/csv',
+      contentSummary: 'account,renewal_date,owner\nNorthstar Health,2026-09-15,Jordan Lee\nAcme Logistics,2026-10-01,Maya Patel\nBrightline Media,2027-01-20,Alex Chen',
+    },
+  },
+  {
+    id: 'node-customer-feedback',
+    title: 'Customer Feedback',
+    type: 'document',
+    position: { x: 260, y: 380, width: 280, height: 160 },
+    dataPayload: {
+      mimeType: 'text/plain',
+      contentSummary: 'Northstar Health asked for a recovery plan after a slow rollout and wants executive visibility.\nAcme Logistics confirmed the original champion left; the replacement has not joined a renewal conversation.\nBrightline Media requested a reduced-seat proposal before budget approval.',
+    },
+  },
+  {
+    id: 'node-csm-notes',
+    title: 'CSM Notes',
+    type: 'document',
+    position: { x: 820, y: 380, width: 280, height: 160 },
+    dataPayload: {
+      mimeType: 'text/plain',
+      contentSummary: 'Jordan Lee: book an executive adoption review for Northstar Health this week.\nMaya Patel: map Acme Logistics buying committee and identify a new sponsor.\nAlex Chen: prepare a value-backed seat scenario for Brightline Media.',
     },
   },
 ];
 
-const initialDemoEdges: CanvasEdge[] = [
+const demoStarterEdges: CanvasEdge[] = [
   {
-    id: 'edge-1',
-    sourceNodeId: 'node-sales-csv',
-    targetNodeId: 'node-customer-txt',
+    id: 'edge-account-usage',
+    sourceNodeId: 'node-account-health',
+    targetNodeId: 'node-customer-usage',
     relationType: 'explicit_connector',
-    label: 'Joint Data Analysis',
+    label: 'Health signals',
   },
   {
-    id: 'edge-2',
-    sourceNodeId: 'node-customer-txt',
-    targetNodeId: 'node-example-ui',
-    relationType: 'spatial_proximity',
-    label: 'Presentation Style',
+    id: 'edge-usage-calendar', sourceNodeId: 'node-customer-usage', targetNodeId: 'node-renewal-calendar', relationType: 'explicit_connector', label: 'Prioritize by timing',
+  },
+  {
+    id: 'edge-calendar-feedback', sourceNodeId: 'node-renewal-calendar', targetNodeId: 'node-customer-feedback', relationType: 'explicit_connector', label: 'Renewal evidence',
+  },
+  {
+    id: 'edge-feedback-csm', sourceNodeId: 'node-customer-feedback', targetNodeId: 'node-csm-notes', relationType: 'explicit_connector', label: 'Recovery ownership',
+  },
+  {
+    id: 'edge-health-csm', sourceNodeId: 'node-account-health', targetNodeId: 'node-csm-notes', relationType: 'explicit_connector', label: 'Account action',
   },
 ];
 
 const WORKSPACE_STORAGE_KEY = 'intent-canvas.workspace';
-const LEGACY_GUIDED_PROMPT_PATTERN = /revenue dropped in august|why revenue dropped in august/i;
 const memoryStorage = {
   getItem: () => null,
   setItem: () => undefined,
@@ -137,23 +162,26 @@ function isStoredNode(value: unknown): value is CanvasNode {
   const payload = node.dataPayload;
   const position = node.position;
   let parsedMetricsWithinLimit = true;
+  const parsedMetricsIsRecord = !payload?.parsedMetrics || (typeof payload.parsedMetrics === 'object' && !Array.isArray(payload.parsedMetrics));
   try {
     parsedMetricsWithinLimit = !payload?.parsedMetrics || JSON.stringify(payload.parsedMetrics).length <= 50_000;
   } catch {
     parsedMetricsWithinLimit = false;
   }
-  return typeof node.id === 'string' && node.id.length <= 120 && typeof node.title === 'string' && node.title.length <= 300 &&
+  return typeof node.id === 'string' && /^[A-Za-z0-9_.:-]{1,120}$/.test(node.id) && typeof node.title === 'string' && node.title.length <= 300 &&
     ['document', 'dataset', 'example', 'instruction', 'output', 'custom_primitive'].includes(node.type ?? '') &&
-    Boolean(position && [position.x, position.y, position.width, position.height].every(value => typeof value === 'number' && Number.isFinite(value))) &&
-    Boolean(payload && typeof payload.mimeType === 'string' && payload.mimeType.length <= 160 && typeof payload.contentSummary === 'string' && payload.contentSummary.length <= 10_000 && (!payload.previewUrl || (typeof payload.previewUrl === 'string' && payload.previewUrl.startsWith('data:image/') && payload.previewUrl.length <= 600_000)) && parsedMetricsWithinLimit);
+    Boolean(position && [position.x, position.y].every(value => typeof value === 'number' && Number.isFinite(value)) && typeof position.width === 'number' && Number.isFinite(position.width) && position.width > 0 && position.width <= 2000 && typeof position.height === 'number' && Number.isFinite(position.height) && position.height > 0 && position.height <= 2000) &&
+    Boolean(payload && typeof payload.mimeType === 'string' && payload.mimeType.length <= 160 && typeof payload.contentSummary === 'string' && payload.contentSummary.length <= 10_000 && (!payload.previewUrl || (typeof payload.previewUrl === 'string' && payload.previewUrl.startsWith('data:image/') && payload.previewUrl.length <= 600_000)) && parsedMetricsIsRecord && parsedMetricsWithinLimit);
 }
 
 function isStoredEdge(value: unknown, nodeIds: Set<string>): value is CanvasEdge {
   if (!value || typeof value !== 'object') return false;
   const edge = value as Partial<CanvasEdge>;
-  return typeof edge.id === 'string' && edge.id.length <= 120 && typeof edge.sourceNodeId === 'string' && nodeIds.has(edge.sourceNodeId) &&
+  return typeof edge.id === 'string' && /^[A-Za-z0-9_.:-]{1,120}$/.test(edge.id) && typeof edge.sourceNodeId === 'string' && nodeIds.has(edge.sourceNodeId) &&
     typeof edge.targetNodeId === 'string' && nodeIds.has(edge.targetNodeId) && edge.sourceNodeId !== edge.targetNodeId &&
-    ['explicit_connector', 'spatial_proximity', 'enclosure_group'].includes(edge.relationType ?? '');
+    ['explicit_connector', 'spatial_proximity', 'enclosure_group'].includes(edge.relationType ?? '') &&
+    (!edge.label || (typeof edge.label === 'string' && edge.label.length <= 300)) &&
+    (edge.distancePixels === undefined || (typeof edge.distancePixels === 'number' && Number.isFinite(edge.distancePixels) && edge.distancePixels >= 0 && edge.distancePixels <= 100_000));
 }
 
 function mergePersistedWorkspace(current: CanvasState, persisted: unknown): CanvasState {
@@ -169,12 +197,13 @@ function mergePersistedWorkspace(current: CanvasState, persisted: unknown): Canv
   };
   const normalizedNodes = storedNodes.map(node => legacyStarterPositions[node.id] && node.position.x === (node.id === 'node-customer-txt' ? 520 : 940) ? { ...node, position: legacyStarterPositions[node.id] } : node);
   const nodeIds = new Set(normalizedNodes.map(node => node.id));
-  const storedEdges = Array.isArray(stored.edges) ? stored.edges.filter(edge => isStoredEdge(edge, nodeIds)).slice(0, 60) : [];
+  const edgeIds = new Set<string>();
+  const storedEdges = Array.isArray(stored.edges) ? stored.edges.filter((edge): edge is CanvasEdge => isStoredEdge(edge, nodeIds) && !edgeIds.has(edge.id) && Boolean(edgeIds.add(edge.id))).slice(0, 60) : [];
   return {
     ...current,
     nodes: normalizedNodes,
     edges: storedEdges,
-    activeIntentPrompt: typeof stored.activeIntentPrompt === 'string' && !LEGACY_GUIDED_PROMPT_PATTERN.test(stored.activeIntentPrompt) ? stored.activeIntentPrompt.slice(0, 3000) : current.activeIntentPrompt,
+    activeIntentPrompt: typeof stored.activeIntentPrompt === 'string' ? stored.activeIntentPrompt.slice(0, 3000) : current.activeIntentPrompt,
     customPrimitives: Array.isArray(stored.customPrimitives) ? stored.customPrimitives.filter(isValidPrimitive).slice(0, 30) : current.customPrimitives,
     viewMode: stored.viewMode === 'interactive' || stored.viewMode === 'showcase' ? stored.viewMode : current.viewMode,
   };
@@ -215,8 +244,8 @@ function freePosition(nodes: CanvasNode[], node: CanvasNode): CanvasNode['positi
 }
 
 export const useCanvasStore = create<CanvasState>()(persist((set) => ({
-  nodes: [...initialDemoNodes, ...primitiveNodes(readCustomPrimitives())],
-  edges: initialDemoEdges,
+  nodes: [...demoStarterNodes, ...primitiveNodes(readCustomPrimitives())],
+  edges: demoStarterEdges,
   pan: { x: 0, y: 0 },
   zoom: 1,
   selectedNodeIds: [],
@@ -317,19 +346,20 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
     let inserted = true;
     set((state) => {
       const existing = state.nodes.find(node => node.type === 'output');
-      if (existing) return { nodes: state.nodes.map(node => node.id === existing.id ? { ...node, dataPayload: { ...node.dataPayload, contentSummary: summary, parsedMetrics: payload } } : node) };
+      const title = payload.renewalRescue ? 'Renewal Rescue Results' : 'Computed Intent Result';
+      if (existing) return { nodes: state.nodes.map(node => node.id === existing.id ? { ...node, title, dataPayload: { ...node.dataPayload, contentSummary: summary, parsedMetrics: payload } } : node) };
       if (state.nodes.length >= 30) {
         inserted = false;
         return state;
       }
       const position = freePosition(state.nodes, { id: 'result', title: 'Computed Intent Result', type: 'output', position: { x: 420, y: 360, width: 300, height: 180 }, dataPayload: { mimeType: 'application/json', contentSummary: summary } });
-      return { nodes: [...state.nodes, { id: createId('node_output'), title: 'Computed Intent Result', type: 'output', position, dataPayload: { mimeType: 'application/json', contentSummary: summary, parsedMetrics: payload } }] };
+       return { nodes: [...state.nodes, { id: createId('node_output'), title, type: 'output', position, dataPayload: { mimeType: 'application/json', contentSummary: summary, parsedMetrics: payload } }] };
     });
     return inserted;
   },
   resetDemoCanvas: () => set((state) => ({
-    nodes: [...initialDemoNodes, ...primitiveNodes(state.customPrimitives)],
-    edges: initialDemoEdges,
+    nodes: [...demoStarterNodes, ...primitiveNodes(state.customPrimitives)],
+    edges: demoStarterEdges,
     pan: { x: 0, y: 0 },
     zoom: 1,
     selectedNodeIds: [],

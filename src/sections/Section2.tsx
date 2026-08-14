@@ -161,9 +161,9 @@ export function Section2({ isInView: propIsInView }: { isInView?: boolean } = {}
           />
         </p>
         <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '17px', fontWeight: 300, color: 'rgba(255,255,255,0.65)', margin: 0, maxWidth: '400px' }}>
-          <BlurFadeWords text="Placing a sales spreadsheet next to customer feedback notes" baseDelay={1.1} isInView={isInView} />
-          <br />
-          <BlurFadeWords text="instructs the AI engine to correlate numbers with churn feedback." baseDelay={1.45} isInView={isInView} />
+           <BlurFadeWords text="Placing structured data next to reference notes" baseDelay={1.1} isInView={isInView} />
+           <br />
+           <BlurFadeWords text="gives the AI engine the context to connect related signals." baseDelay={1.45} isInView={isInView} />
         </p>
       </div>
 
@@ -219,8 +219,8 @@ export function Section2({ isInView: propIsInView }: { isInView?: boolean } = {}
                 <div className="text-sm font-bold text-white">180px Radius</div>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                <div className="text-[10px] text-neutral-400 font-mono">Active Nodes</div>
-                <div className="text-sm font-bold text-[#906AFF]">4 Linked Sources</div>
+                <div className="text-[10px] text-neutral-400 font-mono">Context Relationship</div>
+                <div className="text-sm font-bold text-[#906AFF]">Spatially linked</div>
               </div>
             </div>
 
@@ -249,13 +249,13 @@ export function Section2({ isInView: propIsInView }: { isInView?: boolean } = {}
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
                   <span className="flex items-center gap-2 text-neutral-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#906AFF]" /> Sales_Q3_Churn.csv
-                  </span>
-                  <span className="font-mono font-bold text-[#D4C4FF]">1,420 Records</span>
+                     <CheckCircle2 className="h-3.5 w-3.5 text-[#906AFF]" /> Structured data source
+                   </span>
+                   <span className="font-mono font-bold text-[#D4C4FF]">Context available</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
                   <span className="flex items-center gap-2 text-neutral-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#906AFF]" /> Customer_Interviews.md
+                     <CheckCircle2 className="h-3.5 w-3.5 text-[#906AFF]" /> Reference notes
                   </span>
                   <span className="font-mono text-purple-300">Sentiment Vector</span>
                 </div>
@@ -264,7 +264,7 @@ export function Section2({ isInView: propIsInView }: { isInView?: boolean } = {}
 
             <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
               <span className="text-[11px] text-neutral-400">Context Status:</span>
-              <span className="text-xs font-bold text-[#906AFF]">Correlation Active</span>
+               <span className="text-xs font-bold text-[#906AFF]">Ready to connect</span>
             </div>
 
             <MagicBorder color={MAGIC_BORDER_PURPLE} radius="24px" reverse isInView={isInView} />

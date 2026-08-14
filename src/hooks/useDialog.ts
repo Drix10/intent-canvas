@@ -1,8 +1,10 @@
-import { useEffect, RefObject } from 'react'
+import { useEffect, useRef, RefObject } from 'react'
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
 
 export function useDialog(ref: RefObject<HTMLElement>, onClose: () => void) {
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
@@ -19,7 +21,7 @@ export function useDialog(ref: RefObject<HTMLElement>, onClose: () => void) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (event.key !== 'Tab') return
@@ -44,5 +46,5 @@ export function useDialog(ref: RefObject<HTMLElement>, onClose: () => void) {
       if (previousActiveElement?.isConnected && !previousActiveElement.inert) previousActiveElement.focus()
       else document.querySelector<HTMLElement>('#canvas-background')?.focus()
     }
-  }, [onClose, ref])
+  }, [ref])
 }

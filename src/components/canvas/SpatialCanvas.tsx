@@ -81,7 +81,8 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   }, [finishPointer]);
 
   useEffect(() => {
-    finishPointer(activePointerId.current ?? -1);
+    const pointerId = activePointerId.current;
+    if (pointerId !== null) finishPointer(pointerId);
     setConnectingSourceId(null);
   }, [finishPointer, resetVersion]);
 
@@ -165,6 +166,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   };
 
   const handleNodeKeyDown = (event: React.KeyboardEvent, node: (typeof nodes)[0]) => {
+    if ((event.target as HTMLElement).closest('button, input, textarea, select, a')) return;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       selectNode(node.id, event.shiftKey);

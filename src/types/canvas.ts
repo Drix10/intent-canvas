@@ -29,9 +29,15 @@ export interface PlanStep {
   stepId: number;
   title: string;
   description: string;
-  requiredCapability: 'DataPatternFinder' | 'DocumentSynthesizer' | 'MeetingInsightExtractor' | 'UIConceptGenerator';
+  requiredCapability: 'DataPatternFinder' | 'DocumentSynthesizer' | 'MeetingInsightExtractor' | 'UIConceptGenerator' | 'RenewalRescue';
   inputNodeIds: string[];
   status: 'pending' | 'running' | 'completed' | 'failed';
+}
+
+export interface PlanContextItem {
+  nodeId: string;
+  purpose: string;
+  spatialBasis: 'explicit_connector' | 'spatial_proximity' | 'enclosure_group' | 'standalone';
 }
 
 export interface ExecutionPlan {
@@ -40,6 +46,11 @@ export interface ExecutionPlan {
   confidenceScore: number;
   planningMode?: 'provider' | 'local_fallback';
   planningNotice?: string;
+  context: PlanContextItem[];
+  assumptions: string[];
+  constraints: string[];
+  expectedOutputs: string[];
+  verification: string[];
   steps: PlanStep[];
   disambiguation?: {
     requiresUserClarification: boolean;
@@ -70,6 +81,26 @@ export interface CapabilityOutputPayload {
   documentSynthesis?: Record<string, unknown>;
   meetingInsights?: Record<string, unknown>;
   uiConcept?: Record<string, unknown>;
+  renewalRescue?: RenewalRescuePayload;
+}
+
+export interface RenewalRescueRecord {
+  account: string;
+  ARR: number;
+  renewalDate: string;
+  riskScore: number;
+  riskScoreSource: 'supplied' | 'derived';
+  riskLevel: 'critical' | 'high' | 'medium' | 'low';
+  driver: string;
+  evidence: string;
+  recommendedAction: string;
+  owner: string;
+  deadline: string;
+}
+
+export interface RenewalRescuePayload {
+  riskRecords: RenewalRescueRecord[];
+  executiveSummary: string;
 }
 
 export interface CustomPrimitiveRecord {

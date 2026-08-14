@@ -1,10 +1,11 @@
 import axios from 'axios'
 import { APP_CONFIG, apiUrl } from './config'
-import { CustomPrimitiveRecord, ExecutionPlan, ExecutionResult, NodeType } from './types/canvas'
+import { CustomPrimitiveRecord, ExecutionPlan, ExecutionResult, NodeType, RenewalRescuePayload } from './types/canvas'
 
 const MAX_SHORT_STRING = 500
 const MAX_LONG_STRING = 3000
 const MAX_OUTPUT_DEPTH = 5
+const MAX_OUTPUT_BYTES = 100_000
 const MAX_SVG_BYTES = 50_000
 const MAX_PRIMITIVE_BYTES = 10_000
 const isBoundedString = (value: unknown, max = MAX_SHORT_STRING): value is string => typeof value === 'string' && value.length <= max
@@ -39,28 +40,62 @@ function hasStringFields(value: unknown, fields: string[]): boolean {
   return fields.every(field => isBoundedString(record[field], MAX_LONG_STRING))
 }
 
+function isRenewalRescuePayload(value: unknown): value is RenewalRescuePayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const payload = value as Partial<RenewalRescuePayload>
+  if (!isBoundedString(payload.executiveSummary, MAX_LONG_STRING) || !Array.isArray(payload.riskRecords) || payload.riskRecords.length > 100) return false
+  return payload.riskRecords.every((record) => {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return false
+    const item = record as unknown as Record<string, unknown>
+    return isBoundedString(item.account, MAX_LONG_STRING) &&
+      typeof item.ARR === 'number' && Number.isFinite(item.ARR) && item.ARR >= 0 &&
+      isBoundedString(item.renewalDate, MAX_LONG_STRING) &&
+       typeof item.riskScore === 'number' && Number.isInteger(item.riskScore) && item.riskScore >= 0 && item.riskScore <= 100 &&
+       ['supplied', 'derived'].includes(item.riskScoreSource as string) &&
+      ['critical', 'high', 'medium', 'low'].includes(item.riskLevel as string) &&
+      ['driver', 'evidence', 'recommendedAction', 'owner', 'deadline'].every((field) => isBoundedString(item[field], MAX_LONG_STRING))
+  })
+}
+
 function isCapabilityPayload(key: string, value: unknown): boolean {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const payload = value as Record<string, unknown>
-  if (key === 'dataPattern') return typeof payload.anomalyDetected === 'boolean' && (!payload.anomalyDetails || hasStringFields(payload.anomalyDetails, ['month', 'metric', 'deviationPercent', 'probableCause'])) && (!payload.chartSvg || (typeof payload.chartSvg === 'string' && new TextEncoder().encode(payload.chartSvg).length <= MAX_SVG_BYTES)) && (!payload.insights || isStringArray(payload.insights))
-  if (key === 'documentSynthesis') return isBoundedString(payload.synthesisTitle, MAX_LONG_STRING) && isStringArray(payload.keyTakeaways) && (!payload.crossDocumentConnections || (Array.isArray(payload.crossDocumentConnections) && payload.crossDocumentConnections.every(item => hasStringFields(item, ['sourceDoc', 'targetDoc', 'connection']))))
-  if (key === 'meetingInsights') return isBoundedString(payload.summary, MAX_LONG_STRING) && isStringArray(payload.decisions) && isStringArray(payload.riskFactors) && (!payload.actionItems || (Array.isArray(payload.actionItems) && payload.actionItems.every(item => hasStringFields(item, ['task', 'owner', 'deadline']))))
-  if (key === 'uiConcept') return isBoundedString(payload.conceptTitle, MAX_LONG_STRING) && isStringArray(payload.componentHierarchy) && isStringArray(payload.stylingDirectives) && (!payload.themePalette || hasStringFields(payload.themePalette, ['background', 'surface', 'accent', 'border']))
+  if (key === 'dataPattern') return isBoundedString(payload.summary, MAX_LONG_STRING) && typeof payload.anomalyDetected === 'boolean' && typeof payload.chartSvg === 'string' && new TextEncoder().encode(payload.chartSvg).length <= MAX_SVG_BYTES && isStringArray(payload.insights, 100) && (!payload.anomalyDetected || hasStringFields(payload.anomalyDetails, ['month', 'metric', 'deviationPercent', 'probableCause']))
+  if (key === 'documentSynthesis') return isBoundedString(payload.synthesisTitle, MAX_LONG_STRING) && isStringArray(payload.keyTakeaways, 100) && Array.isArray(payload.crossDocumentConnections) && payload.crossDocumentConnections.length <= 100 && payload.crossDocumentConnections.every(item => hasStringFields(item, ['sourceDoc', 'targetDoc', 'connection'])) && isStringArray(payload.contradictions, 100)
+  if (key === 'meetingInsights') return isBoundedString(payload.summary, MAX_LONG_STRING) && isStringArray(payload.decisions, 100) && isStringArray(payload.riskFactors, 100) && Array.isArray(payload.actionItems) && payload.actionItems.length <= 100 && payload.actionItems.every(item => hasStringFields(item, ['task', 'owner', 'deadline']))
+  if (key === 'uiConcept') return isBoundedString(payload.conceptTitle, MAX_LONG_STRING) && isBoundedString(payload.referenceBasis, MAX_LONG_STRING) && isStringArray(payload.componentHierarchy, 100) && isStringArray(payload.stylingDirectives, 100) && hasStringFields(payload.themePalette, ['background', 'surface', 'accent', 'border'])
+  if (key === 'renewalRescue') return isRenewalRescuePayload(value)
   return false
 }
+
+export const capabilityOutputKeys = {
+  DataPatternFinder: 'dataPattern',
+  DocumentSynthesizer: 'documentSynthesis',
+  MeetingInsightExtractor: 'meetingInsights',
+  UIConceptGenerator: 'uiConcept',
+  RenewalRescue: 'renewalRescue',
+} as const
 
 function isPlanStep(value: unknown): value is ExecutionPlan['steps'][number] {
   if (!value || typeof value !== 'object') return false
   const step = value as Partial<ExecutionPlan['steps'][number]>
-  return Number.isInteger(step.stepId) && isBoundedString(step.title) && isBoundedString(step.description, MAX_LONG_STRING) &&
-    ['DataPatternFinder', 'DocumentSynthesizer', 'MeetingInsightExtractor', 'UIConceptGenerator'].includes(step.requiredCapability ?? '') &&
+  return typeof step.stepId === 'number' && Number.isInteger(step.stepId) && step.stepId > 0 && isBoundedString(step.title) && isBoundedString(step.description, MAX_LONG_STRING) &&
+     ['DataPatternFinder', 'DocumentSynthesizer', 'MeetingInsightExtractor', 'UIConceptGenerator', 'RenewalRescue'].includes(step.requiredCapability ?? '') &&
      Array.isArray(step.inputNodeIds) && step.inputNodeIds.length > 0 && step.inputNodeIds.length <= 30 && step.inputNodeIds.every((id) => isBoundedString(id)) &&
     ['pending', 'running', 'completed', 'failed'].includes(step.status ?? '')
+}
+
+function isPlanContextItem(value: unknown): value is ExecutionPlan['context'][number] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const item = value as Partial<ExecutionPlan['context'][number]>
+  return isBoundedString(item.nodeId) && isBoundedString(item.purpose, MAX_LONG_STRING) && ['explicit_connector', 'spatial_proximity', 'enclosure_group', 'standalone'].includes(item.spatialBasis ?? '')
 }
 
 export const intentApi = axios.create({
   baseURL: APP_CONFIG.apiBaseUrl,
   timeout: APP_CONFIG.apiTimeoutMs,
+  maxContentLength: 200_000,
+  maxBodyLength: 10_000_000,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -103,8 +138,10 @@ export function isExecutionPlan(value: unknown): value is ExecutionPlan {
   const steps = Array.isArray(plan.steps) ? plan.steps : []
   const stepIds = steps.map(step => typeof step === 'object' && step !== null ? (step as { stepId?: unknown }).stepId : undefined)
   return (!plan.planningMode || plan.planningMode === 'provider' || plan.planningMode === 'local_fallback') && (!plan.planningNotice || isBoundedString(plan.planningNotice, MAX_SHORT_STRING)) &&
-    isBoundedString(plan.planId) &&
-    isBoundedString(plan.goalSummary, MAX_LONG_STRING) &&
+     isBoundedString(plan.planId) &&
+     isBoundedString(plan.goalSummary, MAX_LONG_STRING) &&
+     Array.isArray(plan.context) && plan.context.length <= 30 && plan.context.every(isPlanContextItem) &&
+     isStringArray(plan.assumptions, 30) && isStringArray(plan.constraints, 30) && isStringArray(plan.expectedOutputs, 30) && isStringArray(plan.verification, 30) &&
     typeof confidenceScore === 'number' && Number.isFinite(confidenceScore) &&
     confidenceScore >= 0 && confidenceScore <= 1 &&
      Array.isArray(plan.steps) && plan.steps.length <= 5 && plan.steps.every(isPlanStep) && new Set(stepIds).size === stepIds.length &&
@@ -115,11 +152,30 @@ export function isExecutionPlan(value: unknown): value is ExecutionPlan {
 export function isExecutionResult(value: unknown): value is ExecutionResult {
   if (!value || typeof value !== 'object') return false
   const result = value as Partial<ExecutionResult>
+  let outputWithinLimit = true
+  if (result.executionStatus === 'completed' && result.outputPayload) {
+    try {
+      outputWithinLimit = new TextEncoder().encode(JSON.stringify(result.outputPayload)).length <= MAX_OUTPUT_BYTES
+    } catch {
+      outputWithinLimit = false
+    }
+  }
+  const executedCapabilities = new Set((result.executedSteps ?? []).map((step) => step.requiredCapability))
+  const executedStepIds = (result.executedSteps ?? []).map((step) => step.stepId)
+  const executedStepsAreSequential = (result.executedSteps ?? []).every((step, index) => step.stepId === index + 1)
+  const outputKeysMatchSteps = result.executionStatus !== 'completed' || (
+    executedCapabilities.size > 0 && executedCapabilities.size === (result.executedSteps ?? []).length && executedStepsAreSequential && new Set(executedStepIds).size === executedStepIds.length &&
+    Object.keys(result.outputPayload ?? {}).every((key) => Object.values(capabilityOutputKeys).includes(key as typeof capabilityOutputKeys[keyof typeof capabilityOutputKeys])) &&
+    Object.keys(result.outputPayload ?? {}).every((key) => executedCapabilities.has(
+      (Object.entries(capabilityOutputKeys).find(([, outputKey]) => outputKey === key)?.[0] ?? '') as ExecutionPlan['steps'][number]['requiredCapability'],
+    )) &&
+    [...executedCapabilities].every((capability) => Object.prototype.hasOwnProperty.call(result.outputPayload ?? {}, capabilityOutputKeys[capability as keyof typeof capabilityOutputKeys]))
+  )
   return (result.executionStatus === 'completed' || result.executionStatus === 'disambiguation_required') &&
     (result.executionStatus === 'completed' ?
       isBoundedString(result.planId) && isBoundedString(result.goalSummary, MAX_LONG_STRING) &&
       typeof result.confidenceScore === 'number' && Number.isFinite(result.confidenceScore) && result.confidenceScore >= 0 && result.confidenceScore <= 1 &&
       Array.isArray(result.executedSteps) && result.executedSteps.length <= 5 && result.executedSteps.every(isPlanStep) &&
-       typeof result.outputPayload === 'object' && result.outputPayload !== null && !Array.isArray(result.outputPayload) && isSafePayload(result.outputPayload) && Object.entries(result.outputPayload).every(([key, payload]) => isCapabilityPayload(key, payload)) : isDisambiguation(result.disambiguation)) &&
+       typeof result.outputPayload === 'object' && result.outputPayload !== null && !Array.isArray(result.outputPayload) && outputWithinLimit && outputKeysMatchSteps && isSafePayload(result.outputPayload) && Object.entries(result.outputPayload).every(([key, payload]) => isCapabilityPayload(key, payload)) : isDisambiguation(result.disambiguation)) &&
     (!result.disambiguation || isDisambiguation(result.disambiguation))
 }

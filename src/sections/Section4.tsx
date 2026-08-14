@@ -157,7 +157,7 @@ export function Section4({
               <Database className="h-3.5 w-3.5" /> 1. Context Nodes Linked
             </div>
             <p className="mt-1 text-[11px] text-neutral-400">
-              `Sales_Q3_Metrics.csv` + `Customer_Feedback.txt` connected on spatial canvas.
+               Your data and reference notes connected on the spatial canvas.
             </p>
           </div>
 

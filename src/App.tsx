@@ -37,11 +37,19 @@ function findVisibleNodePosition(width: number, height: number): CanvasNode['pos
   return { x: startX, y: startY + state.nodes.length * (height + 16), width, height }
 }
 
-async function readImagePreview(file: File): Promise<string | undefined> {
+function responseMessage(data: unknown, fallback: string): string {
+  if (data && typeof data === 'object' && typeof (data as { message?: unknown }).message === 'string') {
+    return (data as { message: string }).message.slice(0, 500)
+  }
+  return fallback
+}
+
+async function readImagePreview(file: File, signal: AbortSignal): Promise<string | undefined> {
   if (typeof createImageBitmap === 'function') {
     let bitmap: ImageBitmap | undefined
     try {
       bitmap = await createImageBitmap(file)
+      if (signal.aborted || bitmap.width > 8_000 || bitmap.height > 8_000) return undefined
       const scale = Math.min(1, 480 / bitmap.width, 240 / bitmap.height)
       const canvas = document.createElement('canvas')
       canvas.width = Math.max(1, Math.round(bitmap.width * scale))
@@ -60,8 +68,12 @@ async function readImagePreview(file: File): Promise<string | undefined> {
   if (file.size > 400_000) return undefined
   return new Promise((resolve) => {
     const reader = new FileReader()
-    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : undefined)
-    reader.onerror = () => resolve(undefined)
+    const abort = () => reader.abort()
+    signal.addEventListener('abort', abort, { once: true })
+    reader.onload = () => { signal.removeEventListener('abort', abort); resolve(typeof reader.result === 'string' ? reader.result : undefined) }
+    reader.onerror = () => { signal.removeEventListener('abort', abort); resolve(undefined) }
+    reader.onabort = () => { signal.removeEventListener('abort', abort); resolve(undefined) }
+    if (signal.aborted) { reader.abort(); return }
     reader.readAsDataURL(file)
   })
 }
@@ -248,7 +260,7 @@ export default function App() {
           setShowPlanModal(true)
         }
       } else {
-        setErrorMessage(res.data?.message ?? 'The service returned an invalid execution plan.')
+         setErrorMessage(responseMessage(res.data, 'The service returned an invalid execution plan.'))
       }
     } catch (err) {
       if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to evaluate the intent plan.'))
@@ -292,14 +304,18 @@ export default function App() {
           setDisambiguationData(data.disambiguation)
         } else if (data.executionStatus === 'disambiguation_required') {
           setErrorMessage('The service requested clarification but returned no options.')
-         } else {
-           setExecutionResult(data)
-           const outputInserted = upsertOutputNode(data.goalSummary ?? 'Computed intent result', data.outputPayload ?? {})
+          } else {
+            setExecutionResult(data)
+            const renewal = data.outputPayload?.renewalRescue as { executiveSummary?: string; riskRecords?: { account?: string; riskLevel?: string }[] } | undefined
+            const resultSummary = renewal?.executiveSummary
+              ? `${renewal.executiveSummary}${renewal.riskRecords?.length ? `\n${renewal.riskRecords.slice(0, 3).map((record) => `${record.account ?? 'Account'}: ${(record.riskLevel ?? 'unknown').toUpperCase()}`).join(' • ')}` : ''}`
+              : data.goalSummary ?? 'Computed intent result'
+            const outputInserted = upsertOutputNode(resultSummary, data.outputPayload ?? {})
            setViewMode('interactive')
            clearPromptAfterExecution.current = true
            setStatusMessage(outputInserted ? 'Computation complete. The result was added to the workspace.' : 'Computation complete. The result is available in the result panel; remove a node to place it on the canvas.')
         }
-      } else setErrorMessage(res.data?.message ?? 'The service returned an invalid execution result.')
+       } else setErrorMessage(responseMessage(res.data, 'The service returned an invalid execution result.'))
     } catch (err) {
       if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to execute the intent plan.'))
     } finally {
@@ -337,17 +353,17 @@ export default function App() {
     }
     const newNode: CanvasNode = {
        id: createId('node_doc'),
-        title: 'Q3_Strategy_Brief.txt',
+        title: 'Untitled document',
        type: 'document',
        position: findVisibleNodePosition(280, 160),
       dataPayload: {
         mimeType: 'text/plain',
-        contentSummary: 'Strategic growth roadmap & retention targets for enterprise and SMB self-service accounts.',
+         contentSummary: 'Start with your own notes here, or upload a file to add context.',
       },
     }
     addNode(newNode)
     setViewMode('interactive')
-    setStatusMessage('Added document card "Q3_Strategy_Brief.txt" to canvas.')
+     setStatusMessage('Added an untitled document to the canvas. Add your own notes or upload a file.')
   }
 
   const handleAddFile = async (file: File) => {
@@ -362,21 +378,23 @@ export default function App() {
         setErrorMessage('Files must be 10 MB or smaller.')
         return
       }
-      const isImage = file.type.startsWith('image/')
-      const isPdf = file.type === 'application/pdf' || safeFileName.toLowerCase().endsWith('.pdf')
-      const isDataset = file.type === 'text/csv' || safeFileName.toLowerCase().endsWith('.csv')
+       const lowerFileName = safeFileName.toLowerCase()
+       const isSvg = file.type === 'image/svg+xml' || lowerFileName.endsWith('.svg')
+       const isImage = !isSvg && (file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|avif|bmp)$/i.test(safeFileName))
+       const isPdf = file.type === 'application/pdf' || lowerFileName.endsWith('.pdf')
+       const isDataset = file.type === 'text/csv' || lowerFileName.endsWith('.csv')
       const isText = file.type.startsWith('text/') || /\.(txt|md|json)$/i.test(safeFileName)
       if (!isImage && !isText && !isDataset && !isPdf) {
-        setErrorMessage('Supported uploads are PDF, CSV, TXT, MD, JSON, and images.')
+         setErrorMessage('Supported uploads are PDF, CSV, TXT, MD, JSON, and raster images.')
         return
       }
       setStatusMessage(isPdf ? `Extracting text from "${safeFileName}"...` : `Reading "${safeFileName}"...`)
-      const previewUrl = isImage ? await readImagePreview(file) : undefined
+       const previewUrl = isImage ? await readImagePreview(file, readController.signal) : undefined
       let contentSummary = isImage ? `Image reference: ${safeFileName}` : ''
       if (isPdf) {
         const response = await intentApi.post(intentPath('/api/files/pdf-text'), file, { signal: readController.signal, headers: { 'Content-Type': 'application/pdf' } })
-        if (!response.data?.success || typeof response.data.data?.text !== 'string') throw new Error('The PDF text service returned an invalid response.')
-        contentSummary = response.data.data.text
+         if (!response.data?.success || typeof response.data.data?.text !== 'string' || response.data.data.text.length > 10_000) throw new Error('The PDF text service returned an invalid or oversized response.')
+         contentSummary = response.data.data.text.slice(0, 10_000)
       } else if (!isImage) {
         contentSummary = (await readTextFile(file, readController.signal)).slice(0, 10_000) || `Uploaded file: ${safeFileName}`
       }
@@ -446,7 +464,7 @@ export default function App() {
         }
         addNode(primitiveNode)
          setStatusMessage(`Custom computational primitive "${primitiveRecord.title}" created.`)
-      } else setErrorMessage(res.data?.message ?? 'The service returned an invalid primitive.')
+       } else setErrorMessage(responseMessage(res.data, 'The service returned an invalid primitive.'))
     } catch (err) {
       if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to create the custom primitive.'))
     } finally {
@@ -507,9 +525,11 @@ export default function App() {
 
         {/* Inspectable Execution Plan Modal */}
         {showPlanModal && activePlan && (
-          <PlanPreviewModal
-            plan={activePlan}
-            isExecuting={isExecutingPlan}
+           <PlanPreviewModal
+              plan={activePlan}
+              contextNodeTitles={[...new Set(activePlan.steps.flatMap((step) => step.inputNodeIds).map((id) => nodes.find((node) => node.id === id)?.title).filter((title): title is string => Boolean(title)))]}
+              contextDetails={activePlan.context.map((item) => ({ title: nodes.find((node) => node.id === item.nodeId)?.title ?? item.nodeId, purpose: item.purpose, spatialBasis: item.spatialBasis }))}
+             isExecuting={isExecutingPlan}
             onExecute={() => handleExecuteComputation()}
             onClose={closePlanModal}
           />

@@ -271,8 +271,8 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
 
             <div className="grid grid-cols-2 gap-2 mt-4">
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                <div className="text-[10px] text-neutral-400 font-mono">AST Node Count</div>
-                <div className="text-sm font-bold text-white">3 Active Contexts</div>
+                <div className="text-[10px] text-neutral-400 font-mono">AST Representation</div>
+                <div className="text-sm font-bold text-white">Structured context</div>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
                 <div className="text-[10px] text-neutral-400 font-mono">Distance Metric</div>
@@ -305,15 +305,15 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
                   <span className="flex items-center gap-2 text-neutral-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> August Revenue Churn Highlight
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> Quantitative Signal Highlight
                   </span>
-                  <span className="font-mono font-bold text-amber-400">-38.0%</span>
+                  <span className="font-mono font-bold text-amber-400">Ready to inspect</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
                   <span className="flex items-center gap-2 text-neutral-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> Qualitative Feedback Synthesis
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> Qualitative Context Synthesis
                   </span>
-                  <span className="font-mono text-sky-400">Gateway v2 Migration</span>
+                  <span className="font-mono text-sky-400">Context linked</span>
                 </div>
               </div>
             </div>

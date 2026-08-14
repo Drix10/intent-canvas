@@ -215,12 +215,12 @@ export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}
 
             <div className="grid grid-cols-2 gap-2 mt-4">
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                <div className="text-[10px] text-neutral-400 font-mono">DAG Execution Steps</div>
-                <div className="text-sm font-bold text-white">4 Atomic Tools</div>
+                <div className="text-[10px] text-neutral-400 font-mono">Plan Structure</div>
+                <div className="text-sm font-bold text-white">Explicit steps</div>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                <div className="text-[10px] text-neutral-400 font-mono">Safety Grade</div>
-                <div className="text-sm font-bold text-[#4C6DFF]">100% Deterministic</div>
+                <div className="text-[10px] text-neutral-400 font-mono">Execution Boundary</div>
+                <div className="text-sm font-bold text-[#4C6DFF]">User reviewed</div>
               </div>
             </div>
 

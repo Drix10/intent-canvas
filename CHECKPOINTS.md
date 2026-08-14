@@ -317,9 +317,8 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Backend Files**:
   - `src/services/meshApiService.ts`
   - `src/services/controllers/intentController.ts`
-  - `src/assertions.ts`
-- **Summary**: Conducted a deep code audit across frontend and backend systems. Added bounded stream handling, strict provider-plan validation, capability input checks, AST-bound plan confirmation, and assertion coverage for AST validation and capability behavior. No comprehensive integration suite or live-provider result is claimed here.
-- **Verification Result**: Backend comprehensive test suite passed 100% cleanly; `npx tsc --noEmit` passed across frontend & backend; `npm run build` clean build passed in 3.05s.
+- **Summary**: Conducted a deep code audit across frontend and backend systems. Added bounded stream handling, strict provider-plan validation, capability input checks, and AST-bound plan confirmation. No comprehensive integration suite or live-provider result is claimed here.
+- **Verification Result**: `npx tsc --noEmit` passed across frontend and backend; `npm run build` clean build passed in 3.05s.
 
 ### ✅ [COMPLETED] Checkpoint 30: End-to-End API Security Authorization Key & Header Lockdown
 - **Timestamp / Time Elapsed**: 2026-08-08
@@ -329,7 +328,7 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Backend Files**:
   - `NYC-R3-BACKEND/.env`
   - `NYC-R3-BACKEND/src/server.ts`
-- **Summary**: Implemented dual-header authentication enforcement (`Authorization: Bearer <key>` and `X-Intent-Canvas-Key: <key>`) and strict CORS origin validation (`allowedOrigins: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173']`). Configured matching secret access keys (`ic_sec_key_9f8a3b2c1d0e`). Any unauthorized external requests to `/api/*` are rejected with HTTP 401 Unauthorized, ensuring only our authorized frontend application can communicate with the backend intent engine.
+- **Summary**: Implemented dual-header authentication enforcement (`Authorization: Bearer <key>` and `X-Intent-Canvas-Key: <key>`) and strict CORS origin validation. The access token is configured through ignored environment files and is never documented in the repository. Unauthorized external requests to `/api/*` are rejected with HTTP 401 Unauthorized.
 - **Verification Result**: HTTP test verified unauthorized requests return 401 Unauthorized; authorized requests from frontend pass cleanly; `npx tsc --noEmit` passed; `npm run build` clean build passed in 3.09s.
 
 ## Current Implementation Notes
@@ -346,8 +345,6 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - The showcase owns desktop wheel navigation; Lenis is disabled to avoid competing wheel handlers.
 - The browser timeout defaults to 10 seconds; the backend provider timeout is 8 seconds.
 - Saved custom primitives are local records and are not executable with new inputs yet.
-
-
 
 
 

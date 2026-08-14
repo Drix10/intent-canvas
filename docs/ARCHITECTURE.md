@@ -81,7 +81,7 @@ When a node position updates, the store automatically recalculates spatial proxi
 API requests to `NYC-R3-BACKEND` are managed by a centralized Axios client instance (`intentApi`):
 - **Base URL**: Configured via `VITE_API_BASE_URL` (defaults to `/api` or `http://localhost:25655`).
 - **Security Headers**: Automatically attaches `Authorization: Bearer <token>` and `X-Intent-Canvas-Key: <token>` configured via `VITE_API_ACCESS_TOKEN`.
-- **Timeout**: Enforces 25-second HTTP request timeout matching backend reasoning provider limits.
+- **Timeout**: Uses a 60-second default to cover provider-backed planning and execution; override with `VITE_API_TIMEOUT_MS`.
 - **Response Validation**: Validates incoming payloads with type guard helpers (`isExecutionPlan`, `isExecutionResult`) before updating UI state.
 
 ---
