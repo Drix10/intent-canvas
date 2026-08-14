@@ -296,19 +296,22 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
       ? { ...node, title: updates.title.slice(0, 300), dataPayload: { ...node.dataPayload, contentSummary: updates.contentSummary.slice(0, 10_000) } }
       : node),
   })),
-  removeNode: (id) => set((state) => ({
-    nodes: state.nodes.filter(node => node.id !== id),
-    edges: state.edges.filter(edge => edge.sourceNodeId !== id && edge.targetNodeId !== id),
-    selectedNodeIds: state.selectedNodeIds.filter(selectedId => selectedId !== id),
-    customPrimitives: (() => {
-      const removedNode = state.nodes.find(node => node.id === id);
-      const remainingPrimitives = removedNode?.type === 'custom_primitive'
-        ? state.customPrimitives.filter(primitive => primitive.primitiveId !== id)
-        : state.customPrimitives;
-      if (removedNode?.type === 'custom_primitive') persistCustomPrimitives(remainingPrimitives);
-      return remainingPrimitives;
-    })(),
-  })),
+  removeNode: (id) => set((state) => {
+    const removedNode = state.nodes.find(node => node.id === id);
+    const remainingPrimitives = removedNode?.type === 'custom_primitive'
+      ? state.customPrimitives.filter(primitive => primitive.primitiveId !== id)
+      : state.customPrimitives;
+    if (removedNode?.type === 'custom_primitive') persistCustomPrimitives(remainingPrimitives);
+    return {
+      nodes: state.nodes.filter(node => node.id !== id),
+      edges: state.edges.filter(edge => edge.sourceNodeId !== id && edge.targetNodeId !== id),
+      selectedNodeIds: state.selectedNodeIds.filter(selectedId => selectedId !== id),
+      customPrimitives: remainingPrimitives,
+      // Output nodes are not part of inputGraphKey, so explicitly discard the
+      // overlay result when its persisted canvas representation is removed.
+      executionResult: removedNode?.type === 'output' ? null : state.executionResult,
+    };
+  }),
   updateNodePosition: (id, x, y) => {
     let result: 'updated' | 'collision' | 'invalid' | 'missing' = 'missing';
     set((state) => {

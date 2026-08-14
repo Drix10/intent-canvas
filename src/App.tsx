@@ -139,6 +139,17 @@ export default function App() {
     requestRef.current = null
     if (clearSaving) setIsSavingPrimitive(false)
   }
+  const invalidateIntentState = () => {
+    cancelRequest()
+    setIsEvaluatingPlan(false)
+    setIsExecutingPlan(false)
+    setShowPlanModal(false)
+    setDisambiguationData(null)
+    setActivePlan(null)
+    setExecutionResult(null)
+    setErrorMessage(null)
+    setStatusMessage(null)
+  }
   const beginRequest = () => {
     cancelRequest()
     fileReadSequence.current += 1
@@ -378,6 +389,9 @@ export default function App() {
   }
 
   const handleAddFile = async (file: File) => {
+    // A pending upload changes the eventual context, so do not leave an old
+    // plan or result actionable while the new node is being read.
+    invalidateIntentState()
     const readId = ++fileReadSequence.current
     const resetAtStart = useCanvasStore.getState().resetVersion
     fileReadController.current?.abort()
