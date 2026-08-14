@@ -10,7 +10,7 @@ import { ResultNodeCard } from './components/canvas/ResultNodeCard'
 import { DisambiguationModal } from './components/canvas/DisambiguationModal'
 import { AdaptationRequest, CanvasNode, ExecutionPlan } from './types/canvas'
 import { APP_CONFIG } from './config'
-import { getApiErrorMessage, intentApi, intentPath, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled } from './api'
+import { getApiErrorMessage, intentApi, intentPath, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled, suggestContextRelations } from './api'
 import { createId } from './utils/id'
 import { buildSpatialClusters, buildSpatialEdges } from './utils/spatialRelations'
 
@@ -106,6 +106,7 @@ export default function App() {
   const setExecutionResult = useCanvasStore((state) => state.setExecutionResult)
   const setViewMode = useCanvasStore((state) => state.setViewMode)
   const addNode = useCanvasStore((state) => state.addNode)
+  const addEdge = useCanvasStore((state) => state.addEdge)
   const addCustomPrimitive = useCanvasStore((state) => state.addCustomPrimitive)
   const upsertOutputNode = useCanvasStore((state) => state.upsertOutputNode)
 
@@ -120,6 +121,7 @@ export default function App() {
   const requestSequence = useRef(0)
   const fileReadSequence = useRef(0)
   const fileReadController = useRef<AbortController | null>(null)
+  const relationRequestController = useRef<AbortController | null>(null)
   const suppressNextInputReset = useRef(false)
   const clearPromptAfterExecution = useRef(false)
   const inputGraphKey = JSON.stringify({ nodes: nodes.filter(node => node.type !== 'output'), edges, activeIntentPrompt })
@@ -135,6 +137,9 @@ export default function App() {
   }
   const beginRequest = () => {
     cancelRequest()
+    fileReadSequence.current += 1
+    fileReadController.current?.abort()
+    fileReadController.current = null
     const request = {
       id: ++requestSequence.current,
       controller: new AbortController(),
@@ -151,6 +156,7 @@ export default function App() {
   useEffect(() => () => {
     cancelRequest(false)
     fileReadController.current?.abort()
+    relationRequestController.current?.abort()
   }, [])
   useEffect(() => {
     const updateVisibility = () => document.body.dataset.pageHidden = String(document.hidden)
@@ -177,6 +183,8 @@ export default function App() {
     fileReadSequence.current += 1
     fileReadController.current?.abort()
     fileReadController.current = null
+    relationRequestController.current?.abort()
+    relationRequestController.current = null
     cancelRequest()
     setShowPlanModal(false)
     setDisambiguationData(null)
@@ -189,23 +197,29 @@ export default function App() {
   }, [resetVersion])
 
   // Compile Spatial Canvas AST Payload
-  const getASTPayload = (promptOverride?: string) => ({
+  const getASTPayload = (promptOverride?: string) => {
+    const currentState = useCanvasStore.getState()
+    const currentNodes = currentState.nodes
+    const currentEdges = currentState.edges
+    const contextNodes = currentNodes.filter((node) => node.type !== 'output')
+    const spatialEdges = buildSpatialEdges(contextNodes, currentEdges)
+    return {
     canvasId: APP_CONFIG.canvasId,
-    nodes: nodes.filter((n) => n.type !== 'output').map((n) => ({
+    nodes: contextNodes.map((n) => ({
       id: n.id,
       title: n.title,
       type: n.type,
       position: n.position,
       dataPayload: (({ previewUrl: _previewUrl, ...payload }) => payload)(n.dataPayload),
     })),
-    edges: buildSpatialEdges(nodes.filter((node) => node.type !== 'output'), edges).map((e) => ({
+    edges: spatialEdges.map((e) => ({
       id: e.id,
       sourceNodeId: e.sourceNodeId,
       targetNodeId: e.targetNodeId,
       relationType: e.relationType,
          distancePixels: (() => {
-         const source = nodes.find((node) => node.id === e.sourceNodeId)
-         const target = nodes.find((node) => node.id === e.targetNodeId)
+          const source = currentNodes.find((node) => node.id === e.sourceNodeId)
+          const target = currentNodes.find((node) => node.id === e.targetNodeId)
           if (typeof e.distancePixels === 'number') return e.distancePixels
           if (!source || !target) return 0
          const sourceCenter = {
@@ -219,13 +233,39 @@ export default function App() {
           return Math.min(APP_CONFIG.proximityDistancePixels, Math.round(Math.hypot(targetCenter.x - sourceCenter.x, targetCenter.y - sourceCenter.y)))
        })(),
      })),
-     spatialClusters: buildSpatialClusters(nodes.filter((node) => node.type !== 'output'), buildSpatialEdges(nodes.filter((node) => node.type !== 'output'), edges), APP_CONFIG.spatialClusterId),
+      spatialClusters: buildSpatialClusters(contextNodes, spatialEdges, APP_CONFIG.spatialClusterId),
     activeIntentInput: {
       modality: 'text' as const,
         rawPrompt: (promptOverride ?? activeIntentPrompt).trim(),
       timestamp: Date.now(),
     },
-  })
+    }
+  }
+
+  const refreshSemanticRelations = async () => {
+    relationRequestController.current?.abort()
+    const controller = new AbortController()
+    relationRequestController.current = controller
+    const snapshotKey = JSON.stringify(useCanvasStore.getState().nodes.filter(node => node.type !== 'output'))
+    try {
+      const contextNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
+      const suggestions = await suggestContextRelations(contextNodes, controller.signal)
+      const currentNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
+      if (snapshotKey !== JSON.stringify(currentNodes)) return
+      const currentEdges = useCanvasStore.getState().edges
+      const existingPairs = new Set(currentEdges.map(edge => [edge.sourceNodeId, edge.targetNodeId].sort().join('|')))
+      suggestions.forEach(({ sourceNodeId, targetNodeId, label }) => {
+        const pair = [sourceNodeId, targetNodeId].sort().join('|')
+        if (existingPairs.has(pair)) return
+        useCanvasStore.getState().addEdge(sourceNodeId, targetNodeId, 'semantic_match', label)
+        existingPairs.add(pair)
+      })
+    } catch (error) {
+      if (!isRequestCancelled(error)) return
+    } finally {
+      if (relationRequestController.current === controller) relationRequestController.current = null
+    }
+  }
 
   // Evaluate Intent & Inspect Plan
   const handleEvaluatePlan = async (useGuidedIntent = false) => {
@@ -235,6 +275,7 @@ export default function App() {
       document.getElementById('intent-prompt')?.focus()
       return
     }
+    await refreshSemanticRelations()
     const request = beginRequest()
     setErrorMessage(null)
     setStatusMessage(null)
@@ -398,20 +439,38 @@ export default function App() {
       } else if (!isImage) {
         contentSummary = (await readTextFile(file, readController.signal)).slice(0, 10_000) || `Uploaded file: ${safeFileName}`
       }
-      if (readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
+       if (readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
       if (useCanvasStore.getState().nodes.length >= 30) {
         setErrorMessage('The canvas is full. Remove a node before uploading another file.')
         return
       }
-      addNode({
+       const uploadedNode: CanvasNode = {
         id: createId('node_upload'),
          title: safeFileName,
          type: isImage ? 'example' : isDataset ? 'dataset' : 'document',
         position: findVisibleNodePosition(280, 160),
          dataPayload: { mimeType: isPdf ? 'application/pdf' : file.type.slice(0, 160) || 'application/octet-stream', contentSummary, rawReference: safeFileName, previewUrl },
-      })
-      setViewMode('interactive')
-      setStatusMessage(`Added "${safeFileName}" to the Intent Canvas workspace. The workspace node is retained in this browser.`)
+       }
+       addNode(uploadedNode)
+       setViewMode('interactive')
+       setStatusMessage(`Added "${safeFileName}" to the Intent Canvas workspace. The workspace node is retained in this browser.`)
+       try {
+        const contextNodes = useCanvasStore.getState().nodes.filter(node => node.type !== 'output')
+        const suggestions = await suggestContextRelations(contextNodes, readController.signal)
+          if (readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
+          const currentEdges = useCanvasStore.getState().edges
+          const existingPairs = new Set(currentEdges.map(edge => [edge.sourceNodeId, edge.targetNodeId].sort().join('|')))
+          suggestions.forEach(({ sourceNodeId, targetNodeId, label }) => {
+            if (readController.signal.aborted || readId !== fileReadSequence.current || resetAtStart !== useCanvasStore.getState().resetVersion) return
+            const pair = [sourceNodeId, targetNodeId].sort().join('|')
+           if (existingPairs.has(pair)) return
+           addEdge(sourceNodeId, targetNodeId, 'semantic_match', label || 'Semantic match')
+           existingPairs.add(pair)
+         })
+       } catch (error) {
+         // Relation suggestions are optional and must not turn a successful upload into a failure.
+         if (!isRequestCancelled(error)) return
+       }
     } catch (error) {
       if (!isRequestCancelled(error)) setErrorMessage(getApiErrorMessage(error, 'The selected file could not be read or parsed.'))
     } finally {

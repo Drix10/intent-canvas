@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { APP_CONFIG, apiUrl } from './config'
-import { CustomPrimitiveRecord, ExecutionPlan, ExecutionResult, NodeType, RenewalRescuePayload } from './types/canvas'
+import { CanvasNode, CustomPrimitiveRecord, ExecutionPlan, ExecutionResult, NodeType, RenewalRescuePayload, RelationType } from './types/canvas'
 
 const MAX_SHORT_STRING = 500
 const MAX_LONG_STRING = 3000
@@ -88,7 +88,7 @@ function isPlanStep(value: unknown): value is ExecutionPlan['steps'][number] {
 function isPlanContextItem(value: unknown): value is ExecutionPlan['context'][number] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false
   const item = value as Partial<ExecutionPlan['context'][number]>
-  return isBoundedString(item.nodeId) && isBoundedString(item.purpose, MAX_LONG_STRING) && ['explicit_connector', 'spatial_proximity', 'enclosure_group', 'standalone'].includes(item.spatialBasis ?? '')
+  return isBoundedString(item.nodeId) && isBoundedString(item.purpose, MAX_LONG_STRING) && ['explicit_connector', 'spatial_proximity', 'enclosure_group', 'semantic_match', 'standalone'].includes(item.spatialBasis ?? '')
 }
 
 export const intentApi = axios.create({
@@ -129,6 +129,41 @@ export function isCustomPrimitiveRecord(value: unknown): value is CustomPrimitiv
 
 export function isRequestCancelled(error: unknown): boolean {
   return axios.isCancel(error) || (typeof DOMException !== 'undefined' && error instanceof DOMException && error.name === 'AbortError')
+}
+
+export interface ContextRelationSuggestion {
+  sourceNodeId: string
+  targetNodeId: string
+  relationType: 'semantic_match'
+  label: string
+  score: number
+  evidence: string[]
+}
+
+function isContextRelationSuggestion(value: unknown, nodeIds: Set<string>): value is ContextRelationSuggestion {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const relation = value as Partial<ContextRelationSuggestion> & { relationType?: RelationType }
+  return typeof relation.sourceNodeId === 'string' && nodeIds.has(relation.sourceNodeId) &&
+    typeof relation.targetNodeId === 'string' && nodeIds.has(relation.targetNodeId) && relation.sourceNodeId !== relation.targetNodeId &&
+    relation.relationType === 'semantic_match' &&
+    isBoundedString(relation.label, 300) &&
+    typeof relation.score === 'number' && Number.isFinite(relation.score) && relation.score >= 0 && relation.score <= 1 &&
+    Array.isArray(relation.evidence) && relation.evidence.length <= 10 && relation.evidence.every(item => isBoundedString(item, MAX_LONG_STRING))
+}
+
+export async function suggestContextRelations(nodes: CanvasNode[], signal: AbortSignal): Promise<ContextRelationSuggestion[]> {
+  const nodeIds = new Set(nodes.map(node => node.id))
+  const requestBody = {
+    nodes: nodes.map(({ id, title, type, position, dataPayload }) => ({
+      id, title, type, position,
+      dataPayload: { mimeType: dataPayload.mimeType, contentSummary: dataPayload.contentSummary, rawReference: dataPayload.rawReference },
+    })),
+  }
+  if (new TextEncoder().encode(JSON.stringify(requestBody)).length > 400_000) throw new Error('The relation context is too large to analyze.')
+  const response = await intentApi.post(intentPath('/api/context/relations'), requestBody, { signal })
+  const data = response.data?.data
+  const suggestions = Array.isArray(data) ? data : data && Array.isArray(data.relations) ? data.relations : []
+  return suggestions.filter((suggestion: unknown): suggestion is ContextRelationSuggestion => isContextRelationSuggestion(suggestion, nodeIds)).slice(0, 60)
 }
 
 export function isExecutionPlan(value: unknown): value is ExecutionPlan {

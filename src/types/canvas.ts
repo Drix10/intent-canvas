@@ -1,6 +1,6 @@
 export type NodeType = 'document' | 'dataset' | 'example' | 'instruction' | 'output' | 'custom_primitive';
 
-export type RelationType = 'explicit_connector' | 'spatial_proximity' | 'enclosure_group';
+export type RelationType = 'explicit_connector' | 'spatial_proximity' | 'enclosure_group' | 'semantic_match';
 
 export interface CanvasNode {
   id: string;
@@ -37,7 +37,7 @@ export interface PlanStep {
 export interface PlanContextItem {
   nodeId: string;
   purpose: string;
-  spatialBasis: 'explicit_connector' | 'spatial_proximity' | 'enclosure_group' | 'standalone';
+  spatialBasis: 'explicit_connector' | 'spatial_proximity' | 'enclosure_group' | 'semantic_match' | 'standalone';
 }
 
 export interface ExecutionPlan {

@@ -44,7 +44,9 @@ export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) 
         const cx2 = start.x + dx * 0.5;
         const cy2 = end.y;
 
-        const pathD = `M ${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`;
+         const pathD = `M ${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`;
+         const isSemantic = edge.relationType === 'semantic_match';
+         const isExplicit = edge.relationType === 'explicit_connector';
 
         // Exact Cubic Bezier Midpoint Calculation at t = 0.5
          const midX = 0.125 * start.x + 0.375 * cx1 + 0.375 * cx2 + 0.125 * end.x;
@@ -56,7 +58,7 @@ export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) 
             <path
               d={pathD}
               fill="none"
-              stroke="#00ff87"
+               stroke={isSemantic ? '#c084fc' : '#00ff87'}
               strokeWidth="5"
               strokeOpacity="0.2"
             />
@@ -64,10 +66,11 @@ export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) 
             <path
               d={pathD}
               fill="none"
-              stroke="url(#edgeGradient)"
-              strokeWidth="2.5"
-              strokeDasharray="6 4"
-              className="animate-pulse"
+               stroke={isSemantic ? '#c084fc' : 'url(#edgeGradient)'}
+               strokeWidth="2.5"
+               strokeDasharray={isExplicit ? undefined : '6 4'}
+               strokeOpacity={isSemantic ? 0.8 : 1}
+               className={isExplicit ? undefined : 'animate-pulse'}
             />
             {/* Midpoint Spatial Relationship Label Pill */}
             {edge.label && (
@@ -79,7 +82,7 @@ export const CanvasSVGEdges: React.FC<CanvasSVGEdgesProps> = ({ nodes, edges }) 
                 className="overflow-visible pointer-events-none"
               >
                 <div className="flex h-full w-full items-center justify-center">
-                    <span className="whitespace-nowrap rounded-full border border-[#00ff87]/40 bg-[#040406]/95 px-3 py-1 text-[10px] font-bold text-[#00ff87] shadow-xl backdrop-blur-xl">
+                     <span className={`whitespace-nowrap rounded-full border bg-[#040406]/95 px-3 py-1 text-[10px] font-bold shadow-xl backdrop-blur-xl ${isSemantic ? 'border-purple-400/50 text-purple-300' : 'border-[#00ff87]/40 text-[#00ff87]'}`}>
                     {edge.label}
                   </span>
                 </div>

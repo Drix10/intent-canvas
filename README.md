@@ -38,6 +38,7 @@ The UI does not execute every available tool. It displays the tools selected by 
 
 - Spatial node positioning with pointer and keyboard movement.
 - Explicit relationship edges and automatically derived proximity relationships.
+- Source-derived semantic connectors after uploads, labeled from shared filenames, fields, terms, and content roles.
 - Dataset, document, instruction, example, output, and custom primitive nodes.
 - PDF, CSV, TXT, MD, JSON, and raster image uploads.
 - SVG uploads are rejected; raster previews are resized before storage.
@@ -73,6 +74,7 @@ The displayed tools-used line is derived from `executedSteps`, not from the avai
 - `src/store/useCanvasStore.ts`: Zustand workspace state, persistence, node/edge operations, and starter reset.
 - `src/api.ts`: Axios client, auth headers, response size limits, runtime validators, and capability-output contracts.
 - `src/utils/spatialRelations.ts`: proximity edges and connected spatial clusters.
+- `src/api.ts`: semantic relation suggestions are requested after uploads and safely merged without replacing explicit user edges.
 - `src/utils/sanitizeSvg.ts`: allowlisted SVG sanitization before DOM insertion.
 - `src/hooks/useDialog.ts`: focus trapping, inert background handling, Escape behavior, and focus restoration.
 

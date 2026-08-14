@@ -25,7 +25,7 @@ interface CanvasState {
   addNode: (node: CanvasNode) => void;
   removeNode: (id: string) => void;
   updateNodePosition: (id: string, x: number, y: number) => 'updated' | 'collision' | 'invalid' | 'missing';
-  addEdge: (sourceId: string, targetId: string) => void;
+  addEdge: (sourceId: string, targetId: string, relationType?: CanvasEdge['relationType'], label?: string) => void;
   removeEdge: (edgeId: string) => void;
   selectNode: (id: string, multi?: boolean) => void;
   clearSelection: () => void;
@@ -171,7 +171,7 @@ function isStoredNode(value: unknown): value is CanvasNode {
   return typeof node.id === 'string' && /^[A-Za-z0-9_.:-]{1,120}$/.test(node.id) && typeof node.title === 'string' && node.title.length <= 300 &&
     ['document', 'dataset', 'example', 'instruction', 'output', 'custom_primitive'].includes(node.type ?? '') &&
     Boolean(position && [position.x, position.y].every(value => typeof value === 'number' && Number.isFinite(value)) && typeof position.width === 'number' && Number.isFinite(position.width) && position.width > 0 && position.width <= 2000 && typeof position.height === 'number' && Number.isFinite(position.height) && position.height > 0 && position.height <= 2000) &&
-    Boolean(payload && typeof payload.mimeType === 'string' && payload.mimeType.length <= 160 && typeof payload.contentSummary === 'string' && payload.contentSummary.length <= 10_000 && (!payload.previewUrl || (typeof payload.previewUrl === 'string' && payload.previewUrl.startsWith('data:image/') && payload.previewUrl.length <= 600_000)) && parsedMetricsIsRecord && parsedMetricsWithinLimit);
+    Boolean(payload && typeof payload.mimeType === 'string' && payload.mimeType.length <= 160 && typeof payload.contentSummary === 'string' && payload.contentSummary.length <= 10_000 && (!payload.rawReference || (typeof payload.rawReference === 'string' && payload.rawReference.length <= 500)) && (!payload.previewUrl || (typeof payload.previewUrl === 'string' && payload.previewUrl.startsWith('data:image/') && payload.previewUrl.length <= 600_000)) && parsedMetricsIsRecord && parsedMetricsWithinLimit);
 }
 
 function isStoredEdge(value: unknown, nodeIds: Set<string>): value is CanvasEdge {
@@ -179,7 +179,7 @@ function isStoredEdge(value: unknown, nodeIds: Set<string>): value is CanvasEdge
   const edge = value as Partial<CanvasEdge>;
   return typeof edge.id === 'string' && /^[A-Za-z0-9_.:-]{1,120}$/.test(edge.id) && typeof edge.sourceNodeId === 'string' && nodeIds.has(edge.sourceNodeId) &&
     typeof edge.targetNodeId === 'string' && nodeIds.has(edge.targetNodeId) && edge.sourceNodeId !== edge.targetNodeId &&
-    ['explicit_connector', 'spatial_proximity', 'enclosure_group'].includes(edge.relationType ?? '') &&
+    ['explicit_connector', 'spatial_proximity', 'enclosure_group', 'semantic_match'].includes(edge.relationType ?? '') &&
     (!edge.label || (typeof edge.label === 'string' && edge.label.length <= 300)) &&
     (edge.distancePixels === undefined || (typeof edge.distancePixels === 'number' && Number.isFinite(edge.distancePixels) && edge.distancePixels >= 0 && edge.distancePixels <= 100_000));
 }
@@ -198,7 +198,15 @@ function mergePersistedWorkspace(current: CanvasState, persisted: unknown): Canv
   const normalizedNodes = storedNodes.map(node => legacyStarterPositions[node.id] && node.position.x === (node.id === 'node-customer-txt' ? 520 : 940) ? { ...node, position: legacyStarterPositions[node.id] } : node);
   const nodeIds = new Set(normalizedNodes.map(node => node.id));
   const edgeIds = new Set<string>();
-  const storedEdges = Array.isArray(stored.edges) ? stored.edges.filter((edge): edge is CanvasEdge => isStoredEdge(edge, nodeIds) && !edgeIds.has(edge.id) && Boolean(edgeIds.add(edge.id))).slice(0, 60) : [];
+  const edgePairs = new Set<string>();
+  const storedEdges = Array.isArray(stored.edges) ? stored.edges.filter((edge): edge is CanvasEdge => {
+    if (!isStoredEdge(edge, nodeIds) || edgeIds.has(edge.id)) return false;
+    const pair = [edge.sourceNodeId, edge.targetNodeId].sort().join('|');
+    if (edgePairs.has(pair)) return false;
+    edgeIds.add(edge.id);
+    edgePairs.add(pair);
+    return true;
+  }).slice(0, 60) : [];
   return {
     ...current,
     nodes: normalizedNodes,
@@ -300,8 +308,8 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
     });
     return result;
   },
-  addEdge: (sourceNodeId, targetNodeId) => set((state) => {
-    if (state.edges.length >= 60 || sourceNodeId === targetNodeId || !state.nodes.some((node) => node.id === sourceNodeId) || !state.nodes.some((node) => node.id === targetNodeId)) return state;
+  addEdge: (sourceNodeId, targetNodeId, relationType = 'explicit_connector', label = 'Spatial Relation') => set((state) => {
+    if (state.edges.length >= 60 || sourceNodeId === targetNodeId || !state.nodes.some((node) => node.id === sourceNodeId) || !state.nodes.some((node) => node.id === targetNodeId) || !['explicit_connector', 'spatial_proximity', 'enclosure_group', 'semantic_match'].includes(relationType) || typeof label !== 'string' || label.length > 300) return state;
     const exists = state.edges.some(
       (e) => (e.sourceNodeId === sourceNodeId && e.targetNodeId === targetNodeId) ||
              (e.sourceNodeId === targetNodeId && e.targetNodeId === sourceNodeId)
@@ -314,8 +322,8 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
           id: createId('edge'),
           sourceNodeId,
           targetNodeId,
-          relationType: 'explicit_connector',
-          label: 'Spatial Relation',
+           relationType,
+           label: label.slice(0, 300),
         },
       ],
     };
