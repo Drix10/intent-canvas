@@ -57,6 +57,7 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
         return 'bg-white/10 text-white border-white/20';
     }
   };
+  const renewalOutput = node.dataPayload.parsedMetrics?.renewalRescue as { riskRecords?: { account?: string; riskLevel?: string; riskScore?: number }[]; executiveSummary?: string } | undefined;
 
   return (
     <div
@@ -95,10 +96,8 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
           />
         )}
 
-        {/* Payload Summary */}
-        <p className="line-clamp-2 min-h-0 text-[11px] leading-relaxed text-neutral-300">
-          {node.dataPayload.contentSummary}
-        </p>
+         {/* Payload Summary */}
+         {node.type === 'output' && renewalOutput?.riskRecords ? <div className="min-h-0 text-[10px] text-neutral-300"><p className="line-clamp-2 leading-relaxed">{renewalOutput.executiveSummary || node.dataPayload.contentSummary}</p><div className="mt-2 space-y-1">{renewalOutput.riskRecords.slice(0, 2).map((record, index) => <div key={`${record.account || 'account'}-${index}`} className="flex items-center justify-between rounded-lg border border-rose-400/15 bg-rose-400/5 px-2 py-1"><span className="truncate text-[10px] text-white">{record.account || 'Account'}</span><span className="ml-2 shrink-0 text-[9px] font-bold uppercase text-rose-200">{record.riskLevel || 'risk'} {typeof record.riskScore === 'number' ? `${record.riskScore}/100` : ''}</span></div>)}</div><p className="mt-2 text-[9px] font-semibold uppercase tracking-wider text-[#b8ffd9]">Select to open full business result</p></div> : <p className="line-clamp-2 min-h-0 text-[11px] leading-relaxed text-neutral-300">{node.dataPayload.contentSummary}</p>}
 
          {/* Connection Controls */}
          {isConnectable && <div className="mt-auto flex shrink-0 gap-1.5 pt-2">

@@ -42,6 +42,9 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
   const renewalRescue = result.outputPayload?.renewalRescue as RenewalRescuePayload | undefined;
   const isRenewalResult = Boolean(renewalRescue);
   const selectedCapabilities = new Set((result.executedSteps ?? []).map((step) => step.requiredCapability));
+  Object.entries(capabilityOutputKeys).forEach(([capability, outputKey]) => {
+    if (result.outputPayload && Object.prototype.hasOwnProperty.call(result.outputPayload, outputKey)) selectedCapabilities.add(capability as keyof typeof capabilityOutputKeys);
+  });
   const hasCapability = (capability: keyof typeof capabilityOutputKeys) => selectedCapabilities.has(capability);
   const safeChartSvg = sanitizeSvg(dataPattern?.chartSvg);
 
