@@ -38,7 +38,7 @@ The UI does not execute every available tool. It displays the tools selected by 
 
 - Spatial node positioning with pointer and keyboard movement.
 - Explicit relationship edges and automatically derived proximity relationships.
-- Source-derived semantic connectors after uploads, labeled from shared filenames, fields, terms, and content roles.
+- Manual named relationship edges and automatic proximity relationships; backend semantic retrieval informs planning without adding noisy automatic canvas edges.
 - Dataset, document, instruction, example, output, and custom primitive nodes.
 - PDF, CSV, TXT, MD, JSON, and raster image uploads.
 - SVG uploads are rejected; raster previews are resized before storage.
@@ -75,7 +75,7 @@ The displayed tools-used line is derived from `executedSteps`, not from the avai
 - `src/store/useCanvasStore.ts`: Zustand workspace state, persistence, node/edge operations, and starter reset.
 - `src/api.ts`: Axios client, auth headers, response size limits, runtime validators, and capability-output contracts.
 - `src/utils/spatialRelations.ts`: proximity edges and connected spatial clusters.
-- `src/api.ts`: semantic relation suggestions are requested after uploads and safely merged without replacing explicit user edges.
+- `src/api.ts`: bounded API client and runtime validators; semantic retrieval remains a backend planning concern rather than an automatic visual edge generator.
 - `src/utils/sanitizeSvg.ts`: allowlisted SVG sanitization before DOM insertion.
 - `src/hooks/useDialog.ts`: focus trapping, inert background handling, Escape behavior, and focus restoration.
 
@@ -103,7 +103,7 @@ VITE_API_ACCESS_TOKEN=
 VITE_CANVAS_ID=workspace_canvas
 VITE_SPATIAL_CLUSTER_ID=primary
 VITE_PROXIMITY_DISTANCE_PX=240
-VITE_DEFAULT_INTENT_PROMPT=Describe the outcome you want from the supplied context.
+VITE_DEFAULT_INTENT_PROMPT=Analyze the supplied context, identify the most useful supported outcome, and propose grounded next steps.
 VITE_PRIMITIVE_TITLE=Evidence-Based Risk and Opportunity Primitive
 VITE_PRIMITIVE_DESCRIPTION=User-composed dynamic computational primitive
 ```
@@ -117,7 +117,7 @@ Configuration details:
 - `VITE_CANVAS_ID`: stable identifier for the workspace AST.
 - `VITE_SPATIAL_CLUSTER_ID`: cluster ID prefix sent to the backend.
 - `VITE_PROXIMITY_DISTANCE_PX`: centroid distance used to infer proximity relationships.
-- `VITE_DEFAULT_INTENT_PROMPT`: optional generic prompt used by the guide action.
+- `VITE_DEFAULT_INTENT_PROMPT`: neutral fallback used when the user presses Generate Intent without typing a prompt.
 - `VITE_PRIMITIVE_TITLE` and `VITE_PRIMITIVE_DESCRIPTION`: metadata used when saving a custom primitive.
 
 Important: every `VITE_*` value is public because Vite embeds it in the browser bundle. Never put a MeshAPI credential in frontend configuration. Treat `VITE_API_ACCESS_TOKEN` as a client access credential, not a secret, and protect the backend with origin restrictions, token rotation, and deployment controls.
