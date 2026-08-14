@@ -40,6 +40,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
     themePalette?: { background?: string; surface?: string; accent?: string; border?: string };
   } | undefined;
   const renewalRescue = result.outputPayload?.renewalRescue as RenewalRescuePayload | undefined;
+  const isRenewalResult = Boolean(renewalRescue);
   const selectedCapabilities = new Set((result.executedSteps ?? []).map((step) => step.requiredCapability));
   const hasCapability = (capability: keyof typeof capabilityOutputKeys) => selectedCapabilities.has(capability);
   const safeChartSvg = sanitizeSvg(dataPattern?.chartSvg);
@@ -64,8 +65,8 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
-              <h3 className="text-xs font-bold text-white">Computed Output Result</h3>
-              <p className="text-[10px] text-neutral-400">Primitive Execution Completed</p>
+               <h3 className="text-xs font-bold text-white">{isRenewalResult ? 'Renewal Rescue Results' : 'Business Result'}</h3>
+               <p className="text-[10px] text-neutral-400">Grounded execution completed</p>
             </div>
           </div>
              <span className="rounded-full border border-[#00ff87]/30 bg-[#00ff87]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#00ff87]">
@@ -164,14 +165,14 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
               <ShieldAlert className="h-3.5 w-3.5 text-rose-300" />
               <h4 className="text-xs font-bold text-rose-200">Renewal risk and recovery plans</h4>
             </div>
-            <p className="mb-2 rounded-lg border border-white/[0.08] bg-white/[0.03] p-2 text-[10px] leading-relaxed text-neutral-300">{renewalRescue.executiveSummary}</p>
-            <div className="space-y-2">
+             <p className="mb-2 rounded-lg border border-white/[0.08] bg-white/[0.03] p-2 text-[10px] leading-relaxed text-neutral-300">{renewalRescue.executiveSummary}</p>
+             {renewalRescue.riskRecords.length === 0 ? <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2 text-[10px] text-amber-200">No renewal account records could be established from the selected context. Add an account, renewal date, or health source and compile again.</p> : <div className="space-y-2">
               {renewalRescue.riskRecords.map((record, index) => (
                 <div key={`${record.account}-${record.renewalDate}-${index}`} className="rounded-lg border border-white/10 bg-black/20 p-2">
                   <div className="flex items-start justify-between gap-2">
                     <div><p className="text-[11px] font-bold text-white">{record.account}</p><p className="mt-0.5 text-[10px] text-neutral-400">${record.ARR.toLocaleString('en-US')} ARR <span className="mx-1 text-neutral-600">•</span> <CalendarDays className="inline h-3 w-3" /> {record.renewalDate}</p></div>
                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${record.riskLevel === 'critical' ? 'bg-rose-500/20 text-rose-200' : record.riskLevel === 'high' ? 'bg-amber-500/20 text-amber-200' : 'bg-sky-500/20 text-sky-200'}`}>{record.riskLevel} risk</span>
-                  </div>
+              </div>
                   <dl className="mt-2 space-y-1 text-[10px] leading-snug text-neutral-300">
                      <div><dt className="inline font-semibold text-neutral-500">Driver:</dt> <dd className="inline">{record.driver}</dd></div>
                      <div><dt className="inline font-semibold text-neutral-500">Risk score:</dt> <dd className="inline">{record.riskScore} <span className="text-neutral-500">({record.riskScoreSource})</span></dd></div>
@@ -179,9 +180,9 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
                     <div><dt className="inline font-semibold text-neutral-500">Recovery action:</dt> <dd className="inline text-[#b8ffd9]">{record.recommendedAction}</dd></div>
                   </dl>
                   <p className="mt-2 border-t border-white/5 pt-1.5 text-[10px] text-neutral-400"><strong className="text-neutral-200">Owner:</strong> {record.owner} <span className="mx-1 text-neutral-600">•</span> <strong className="text-neutral-200">Deadline:</strong> {record.deadline}</p>
-                </div>
-              ))}
-            </div>
+              </div>
+               ))}
+             </div>}
           </div>
         )}
 

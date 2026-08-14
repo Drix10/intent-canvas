@@ -587,6 +587,7 @@ export default function App() {
               plan={activePlan}
               contextNodeTitles={[...new Set(activePlan.steps.flatMap((step) => step.inputNodeIds).map((id) => nodes.find((node) => node.id === id)?.title).filter((title): title is string => Boolean(title)))]}
               contextDetails={activePlan.context.map((item) => ({ title: nodes.find((node) => node.id === item.nodeId)?.title ?? item.nodeId, purpose: item.purpose, spatialBasis: item.spatialBasis }))}
+              availableContextCount={nodes.filter((node) => node.type !== 'output').length}
              isExecuting={isExecutingPlan}
             onExecute={() => handleExecuteComputation()}
             onClose={closePlanModal}

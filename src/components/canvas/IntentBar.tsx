@@ -88,7 +88,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
               disabled={isEvaluatingPlan || isExecutingPlan}
              className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
-             {isEvaluatingPlan ? 'Evaluating...' : hasIntent ? 'Inspect Plan' : 'Guide Me & Inspect'}
+              {isEvaluatingPlan ? 'Compiling...' : hasIntent ? 'Compile Intent' : 'Guide Me & Compile'}
            </button>
 
              <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />

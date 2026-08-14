@@ -9,6 +9,7 @@ interface PlanPreviewModalProps {
   plan: ExecutionPlan;
   contextNodeTitles?: string[];
   contextDetails?: { title: string; purpose: string; spatialBasis: string }[];
+  availableContextCount?: number;
   isExecuting: boolean;
   onExecute: () => void;
   onClose: () => void;
@@ -18,6 +19,7 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
   plan,
   contextNodeTitles = [],
   contextDetails = [],
+  availableContextCount = contextDetails.length,
   isExecuting,
   onExecute,
   onClose,
@@ -50,8 +52,9 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
           </div>
 
           <div className="mb-4 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
-             <p className="text-[10px] font-bold uppercase tracking-widest text-[#00ff87]">Business intent</p>
-             <p className="mt-1 text-xs font-semibold leading-relaxed text-neutral-200">{plan.goalSummary}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#00ff87]">I understood your goal as</p>
+              <p className="mt-1 text-xs font-semibold leading-relaxed text-neutral-200">{plan.goalSummary}</p>
+              {!!contextDetails.length && <p className="mt-2 text-[10px] text-neutral-400">Using <span className="font-semibold text-neutral-200">{contextDetails.length} of {availableContextCount} available source{availableContextCount === 1 ? '' : 's'}</span> from the canvas.</p>}
               {!!contextDetails.length ? <div className="mt-3 border-t border-white/5 pt-2"><p className="text-[10px] font-semibold text-neutral-400">Why this context</p><div className="mt-1.5 space-y-1.5">{contextDetails.map((item) => <div key={item.title} className="rounded-lg border border-white/10 bg-white/[0.03] p-2"><div className="flex items-center justify-between gap-2"><span className="text-[10px] font-semibold text-neutral-200">{item.title}</span><span className="rounded-full border border-[#00ff87]/20 px-1.5 py-0.5 text-[9px] text-[#b8ffd9]">{item.spatialBasis.replace('_', ' ')}</span></div><p className="mt-0.5 text-[10px] text-neutral-400">{item.purpose}</p></div>)}</div></div> : !!contextNodeTitles.length && <div className="mt-3 border-t border-white/5 pt-2"><p className="text-[10px] font-semibold text-neutral-400">Context used</p><div className="mt-1.5 flex flex-wrap gap-1.5">{contextNodeTitles.map((title) => <span key={title} className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-neutral-300">{title}</span>)}</div></div>}
              <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-400 border-t border-white/5 pt-2">
                <span>Plan confidence</span>
@@ -64,7 +67,8 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
 
            {!!plan.workflowStages.length && <div className="mb-6"><p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-[#00ff87]">Workflow the computer will follow</p><div className="space-y-1.5">{plan.workflowStages.map((stage) => <div key={stage.stageId} className="flex gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] p-2.5"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#00ff87]/10 text-[10px] font-bold text-[#00ff87]">{stage.stageId}</span><div><p className="text-[11px] font-semibold text-white">{stage.title}</p><p className="mt-0.5 text-[10px] leading-relaxed text-neutral-400">{stage.description}</p><p className="mt-1 text-[9px] font-medium uppercase tracking-wide text-[#b8ffd9]">Output: {stage.output}</p></div></div>)}</div></div>}
 
-           {/* Plan Steps (Scrollable Container) */}
+           {/* Selected tools and execution steps */}
+           <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-sky-300">Selected tools</p>
            <div className="mb-6 max-h-[50vh] overflow-y-auto space-y-2.5 pr-1" data-scrollable="true">
              {plan.steps.length === 0 ? (
                <p className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 text-xs leading-relaxed text-amber-200">
@@ -120,7 +124,7 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5">
-                   <Play className="h-3.5 w-3.5 fill-black" /> {isRenewalPlan ? 'Confirm & build recovery plans' : 'Confirm & run plan'}
+                    <Play className="h-3.5 w-3.5 fill-black" /> {isRenewalPlan ? 'Approve & build recovery plans' : 'Approve & run selected tools'}
                 </span>
               )}
             </MagneticButton>
