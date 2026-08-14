@@ -85,20 +85,20 @@ export const IntentBar: React.FC<IntentBarProps> = ({
            <button
             type="button"
              onClick={() => onEvaluatePlan(!hasIntent)}
-             disabled={isEvaluatingPlan}
-            className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10"
+              disabled={isEvaluatingPlan || isExecutingPlan}
+             className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
              {isEvaluatingPlan ? 'Evaluating...' : hasIntent ? 'Inspect Plan' : 'Guide Me & Inspect'}
            </button>
 
              <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
-            <button type="button" aria-label="Upload a file or image node" onClick={() => fileInputRef.current?.click()} title="Upload file or image" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white">
+            <button type="button" aria-label="Upload a file or image node" onClick={() => fileInputRef.current?.click()} title="Upload file or image" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-[#00ff87]">
              <Plus className="h-3.5 w-3.5" />
            </button>
 
           <MagneticButton
             onClick={onExecuteComputation}
-            disabled={isExecutingPlan}
+             disabled={isEvaluatingPlan || isExecutingPlan}
             className="bg-[#00ff87] px-5 py-2 text-xs font-bold text-black hover:bg-[#00ff87]/90 shadow-[0_0_20px_rgba(0,255,135,0.3)]"
           >
              {isExecutingPlan ? (

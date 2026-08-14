@@ -45,7 +45,7 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
   const safeChartSvg = sanitizeSvg(dataPattern?.chartSvg);
 
   return (
-    <div className="w-[420px] max-w-[calc(100vw-2rem)] select-none">
+    <div className="w-[420px] max-w-[calc(100vw-2rem)]">
       <SpotlightCard spotlightColor="rgba(0, 255, 135, 0.18)" className="relative border-[#00ff87]/40 bg-[#090a0f]/95 shadow-2xl backdrop-blur-2xl">
         {/* Close / Dismiss Button */}
         <button

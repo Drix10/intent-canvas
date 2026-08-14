@@ -159,7 +159,22 @@ export function SpatialScroll() {
       paddingBottom: isTablet ? '36px' : 0,
     }
     return (
-        <div ref={scrollContainerRef} tabIndex={0} role="region" aria-label="Intent Canvas product showcase" style={{ width: '100vw', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: '#0a0d15', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <div
+          ref={scrollContainerRef}
+          tabIndex={0}
+          role="region"
+          aria-label="Intent Canvas product showcase. Use the arrow keys to change sections."
+          onKeyDown={(event) => {
+            if (event.key !== 'ArrowDown' && event.key !== 'ArrowRight' && event.key !== 'PageDown' && event.key !== 'ArrowUp' && event.key !== 'ArrowLeft' && event.key !== 'PageUp') return
+            event.preventDefault()
+            const direction = event.key === 'ArrowDown' || event.key === 'ArrowRight' || event.key === 'PageDown' ? 1 : -1
+            const nextIndex = Math.min(3, Math.max(0, sectionRef.current + direction))
+            sectionRef.current = nextIndex
+            setActiveSection(nextIndex)
+            scrollContainerRef.current?.children[nextIndex]?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' })
+          }}
+          style={{ width: '100vw', height: '100dvh', overflowY: 'scroll', overscrollBehaviorY: 'contain', scrollSnapType: 'y mandatory', backgroundColor: '#0a0d15', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+        >
         <div style={snapSlot}><Section1Productivity /></div>
         <div style={snapSlot}><Section2 /></div>
         <div style={snapSlot}><Section3 /></div>

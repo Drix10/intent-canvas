@@ -1,7 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useCanvasStore } from '../../store/useCanvasStore';
 import { CanvasNodeCard } from './CanvasNodeCard';
 import { CanvasSVGEdges } from './CanvasSVGEdges';
+import { ResultNodeCard } from './ResultNodeCard';
+import { ExecutionResult } from '../../types/canvas';
 import { APP_CONFIG } from '../../config';
 import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, GitBranch, Ruler, HardDrive, Trash2, X, Pencil } from 'lucide-react';
 import { buildSpatialEdges } from '../../utils/spatialRelations';
@@ -15,6 +18,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const selectedNodeIds = useCanvasStore((state) => state.selectedNodeIds);
   const selectedNode = nodes.find((node) => node.id === selectedNodeIds[selectedNodeIds.length - 1]);
   const hasResult = useCanvasStore((state) => Boolean(state.executionResult));
+  const executionResult = useCanvasStore((state) => state.executionResult);
   const setActiveIntentPrompt = useCanvasStore((state) => state.setActiveIntentPrompt);
   const resetVersion = useCanvasStore((state) => state.resetVersion);
   const resetDemoCanvas = useCanvasStore((state) => state.resetDemoCanvas);
@@ -144,6 +148,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const handlePointerUp = (event: React.PointerEvent) => finishPointer(event.pointerId);
 
   const handleWheel = (event: React.WheelEvent) => {
+    if ((event.target as HTMLElement).closest('[data-scrollable="true"], input, textarea, select')) return;
     event.preventDefault();
     const zoomFactor = event.deltaY > 0 ? 0.96 : 1.04;
     const nextZoom = Math.min(Math.max(zoom * zoomFactor, APP_CONFIG.minZoom), APP_CONFIG.maxZoom);
@@ -430,27 +435,37 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
       )}
 
       {selectedNode && (
-           <aside className="absolute top-20 left-3 z-40 max-h-[calc(100dvh-8rem)] w-[calc(100vw-1.5rem)] max-w-[24rem] overflow-y-auto rounded-2xl border border-white/15 bg-[#090a0f]/95 p-4 text-left shadow-2xl backdrop-blur-2xl sm:left-20" aria-label={`Details for ${selectedNode.title}`}>
+        <aside data-scrollable="true" aria-hidden={selectedNode.type === 'output'} className={`absolute top-20 left-3 z-40 max-h-[calc(100dvh-8rem)] w-[calc(100vw-1.5rem)] max-w-[24rem] overflow-y-auto rounded-2xl border border-white/15 bg-[#090a0f]/95 p-4 text-left shadow-2xl backdrop-blur-2xl sm:left-20 ${selectedNode.type === 'output' ? 'hidden' : ''}`} aria-label={`Details for ${selectedNode.title}`}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-widest text-[#00ff87]">Selected context</p><h3 className="mt-1 truncate text-sm font-bold text-white">{selectedNode.title}</h3><p className="mt-0.5 text-[10px] uppercase tracking-wide text-neutral-500">{selectedNode.type.replace('_', ' ')}</p></div>
             <button type="button" aria-label="Close node details" onClick={clearSelection} className="rounded-lg p-1 text-neutral-400 hover:bg-white/10 hover:text-white"><X className="h-4 w-4" /></button>
           </div>
           {selectedNode.dataPayload.previewUrl && <img src={selectedNode.dataPayload.previewUrl} alt={`Preview of ${selectedNode.title}`} className="mt-3 max-h-40 w-full rounded-xl border border-white/10 object-contain" />}
           <p className="mt-3 whitespace-pre-wrap break-words text-[11px] leading-relaxed text-neutral-300">{selectedNode.dataPayload.contentSummary}</p>
-          {selectedNode.type === 'output' && selectedNode.dataPayload.parsedMetrics && <pre className="mt-3 max-h-64 overflow-auto rounded-xl border border-[#00ff87]/15 bg-black/30 p-2 text-[9px] leading-relaxed text-[#b8ffd9]">{JSON.stringify(selectedNode.dataPayload.parsedMetrics, null, 2)}</pre>}
           {selectedNode.type !== 'output' && <button type="button" onClick={() => { setEditingNodeId(selectedNode.id); }} className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#00ff87]/25 bg-[#00ff87]/10 py-2 text-[10px] font-bold text-[#b8ffd9] hover:bg-[#00ff87]/20"><Pencil className="h-3 w-3" /> Edit context</button>}
       </aside>
       )}
 
-      {editingNodeId && (
+      {selectedNode?.type === 'output' && selectedNode.dataPayload.parsedMetrics && !executionResult && (
+        <div data-scrollable="true" className="absolute top-20 right-6 z-50 max-h-[calc(100dvh-7rem)] overflow-y-auto rounded-2xl" onWheel={(event) => event.stopPropagation()}>
+          <ResultNodeCard
+            result={{ executionStatus: 'completed', goalSummary: selectedNode.dataPayload.contentSummary, confidenceScore: 1, executedSteps: [], outputPayload: selectedNode.dataPayload.parsedMetrics } as ExecutionResult}
+          />
+        </div>
+      )}
+
+      {editingNodeId && createPortal(
+        (
          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md" role="presentation">
            <div ref={editDialogRef} className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/15 bg-[#090a0f] p-5 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="edit-node-title">
              <div className="mb-4 flex items-center justify-between"><h2 id="edit-node-title" className="text-sm font-bold text-white">Edit context node</h2><button type="button" aria-label="Close node editor" onClick={() => setEditingNodeId(null)} className="rounded-lg px-2 py-1 text-neutral-400 hover:bg-white/10 hover:text-white">&times;</button></div>
              <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-400">Title<input autoFocus value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} maxLength={300} className="mt-1 w-full rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white outline-none focus:border-[#00ff87]/50" /></label>
             <label className="mt-3 block text-[10px] font-bold uppercase tracking-widest text-neutral-400">Context summary<textarea value={draftSummary} onChange={(event) => setDraftSummary(event.target.value)} maxLength={10_000} rows={7} className="mt-1 w-full resize-y rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-relaxed text-white outline-none focus:border-[#00ff87]/50" /></label>
             <div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setEditingNodeId(null)} className="rounded-xl border border-white/10 px-3 py-2 text-xs text-neutral-300 hover:bg-white/5">Cancel</button><button type="button" disabled={!draftTitle.trim() || !draftSummary.trim()} onClick={() => { if (!editingNodeId || !draftTitle.trim() || !draftSummary.trim()) return; updateNode(editingNodeId, { title: draftTitle.trim(), contentSummary: draftSummary.trim() }); setEditingNodeId(null); }} className="rounded-xl bg-[#00ff87] px-4 py-2 text-xs font-bold text-black disabled:cursor-not-allowed disabled:opacity-40">Save changes</button></div>
-          </div>
-        </div>
+           </div>
+         </div>
+        ),
+        document.body,
       )}
 
       {/* High-Tech Smoked Glass Empty State Hub when all nodes are cleared */}

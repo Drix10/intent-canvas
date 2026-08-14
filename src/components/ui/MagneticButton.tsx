@@ -42,7 +42,7 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
       onClick={onClick}
       type={type}
       disabled={disabled}
-      className={`relative inline-flex cursor-pointer items-center justify-center overflow-hidden rounded-full font-semibold transition-all duration-300 ${className}`}
+       className={`relative inline-flex cursor-pointer items-center justify-center overflow-hidden rounded-full font-semibold transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00ff87] focus-visible:ring-offset-2 focus-visible:ring-offset-[#040406] ${className}`}
     >
       {children}
     </motion.button>

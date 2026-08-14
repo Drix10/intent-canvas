@@ -22,10 +22,10 @@ export const Navbar: React.FC = () => {
             type="button"
             aria-label="Open how it works showcase"
              aria-pressed={viewMode === 'showcase'}
-            onClick={() => {
-              setViewMode('showcase');
-              window.setTimeout(() => window.dispatchEvent(new CustomEvent('showcase-navigate', { detail: 1 })), 0);
-            }}
+             onClick={() => {
+               setViewMode('showcase');
+               window.setTimeout(() => window.dispatchEvent(new CustomEvent('showcase-navigate', { detail: 0 })), 0);
+             }}
             className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[11px] font-semibold transition-all ${
               viewMode === 'showcase'
                 ? 'bg-[#00ff87]/20 text-[#00ff87] border border-[#00ff87]/30 shadow-sm'
