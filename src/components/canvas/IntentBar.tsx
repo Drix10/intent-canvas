@@ -19,7 +19,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
 
   return (
     <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2">
-      <div className="smoked-glass hairline-border flex w-[calc(100vw-1rem)] max-w-5xl flex-wrap items-center justify-center gap-3 rounded-2xl px-3 py-3 shadow-2xl backdrop-blur-2xl sm:rounded-full sm:px-5">
+      <div className="smoked-glass hairline-border flex w-[min(48rem,calc(100vw-1rem))] flex-wrap items-center justify-center gap-3 rounded-2xl px-3 py-3 shadow-2xl backdrop-blur-2xl sm:rounded-full sm:px-5">
         {/* Intent Input Prompt Bar */}
         <div className="relative flex w-full items-center sm:w-auto">
           <label htmlFor="intent-prompt" className="sr-only">Describe the outcome you want</label>
@@ -36,7 +36,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
               }
             }}
             placeholder="Type your natural computing intent..."
-            className="w-[300px] sm:w-[420px] rounded-full border border-white/10 bg-white/[0.04] pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-400 outline-none transition-colors focus:border-[#00ff87]/50 focus:bg-white/[0.08]"
+            className="w-[min(20rem,calc(100vw-4rem))] rounded-full border border-white/10 bg-white/[0.04] pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-400 outline-none transition-colors focus:border-[#00ff87]/50 focus:bg-white/[0.08] sm:w-[360px]"
           />
         </div>
 
@@ -45,10 +45,10 @@ export const IntentBar: React.FC<IntentBarProps> = ({
            <button
             type="button"
               onClick={onEvaluatePlan}
-              disabled={!hasIntent || isEvaluatingPlan || isExecutingPlan}
+              disabled={isEvaluatingPlan || isExecutingPlan}
              className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
-              {isEvaluatingPlan ? 'Compiling...' : 'Compile Intent'}
+              {isEvaluatingPlan ? 'Compiling...' : hasIntent ? 'Compile Intent' : 'Generate Intent'}
            </button>
 
              <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />

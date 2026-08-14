@@ -44,6 +44,15 @@ function responseMessage(data: unknown, fallback: string): string {
   return fallback
 }
 
+function inferIntentFromContext(nodes: CanvasNode[]): string {
+  const context = nodes.filter(node => node.type !== 'output')
+  const text = context.map(node => `${node.title} ${node.dataPayload.contentSummary}`).join(' ').toLowerCase()
+  if (/renewal|renewals|retention|churn|account health|csm|customer usage/.test(text)) return 'Find our highest-risk upcoming renewals and create recovery plans.'
+  if (context.some(node => node.type === 'dataset')) return 'Analyze the supplied data, identify the most important supported pattern, and recommend grounded next steps.'
+  if (context.some(node => node.type === 'example')) return 'Use the supplied context and visual reference to produce the most useful grounded outcome.'
+  return APP_CONFIG.defaultIntentPrompt
+}
+
 async function readImagePreview(file: File, signal: AbortSignal): Promise<string | undefined> {
   if (typeof createImageBitmap === 'function') {
     let bitmap: ImageBitmap | undefined
@@ -244,8 +253,8 @@ export default function App() {
   }
 
   // Evaluate Intent & Inspect Plan
-  const handleEvaluatePlan = async (useGuidedIntent = false) => {
-    const prompt = activeIntentPrompt.trim() || (useGuidedIntent ? APP_CONFIG.defaultIntentPrompt : '')
+  const handleEvaluatePlan = async () => {
+    const prompt = activeIntentPrompt.trim() || inferIntentFromContext(useCanvasStore.getState().nodes)
     if (!prompt) {
       setErrorMessage('Describe the outcome you want before inspecting a plan.')
       document.getElementById('intent-prompt')?.focus()
@@ -265,7 +274,7 @@ export default function App() {
       }
       if (res.data?.success && isExecutionPlan(res.data.data)) {
        setActivePlan(res.data.data)
-        if (!activeIntentPrompt.trim() && useGuidedIntent) {
+         if (!activeIntentPrompt.trim()) {
           suppressNextInputReset.current = true
           useCanvasStore.getState().setActiveIntentPrompt(prompt)
         }
@@ -291,7 +300,7 @@ export default function App() {
   // Execute Intent & Render In-Canvas Result
   const handleExecuteComputation = async (adaptation?: AdaptationRequest) => {
     if (!adaptation && !activePlan) {
-      await handleEvaluatePlan(!activeIntentPrompt.trim())
+      await handleEvaluatePlan()
       return
     }
     const request = beginRequest()
