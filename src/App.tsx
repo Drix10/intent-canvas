@@ -38,8 +38,10 @@ function findVisibleNodePosition(width: number, height: number): CanvasNode['pos
 }
 
 function responseMessage(data: unknown, fallback: string): string {
-  if (data && typeof data === 'object' && typeof (data as { message?: unknown }).message === 'string') {
-    return (data as { message: string }).message.slice(0, 500)
+  if (data && typeof data === 'object') {
+    const payload = data as { message?: unknown; error?: { message?: unknown } }
+    const message = typeof payload.message === 'string' ? payload.message : payload.error?.message
+    if (typeof message === 'string') return message.slice(0, 500)
   }
   return fallback
 }
