@@ -45,11 +45,6 @@ function responseMessage(data: unknown, fallback: string): string {
 }
 
 function inferIntentFromContext(nodes: CanvasNode[]): string {
-  const context = nodes.filter(node => node.type !== 'output')
-  const text = context.map(node => `${node.title} ${node.dataPayload.contentSummary}`).join(' ').toLowerCase()
-  if (/renewal|renewals|retention|churn|account health|csm|customer usage/.test(text)) return 'Find our highest-risk upcoming renewals and create recovery plans.'
-  if (context.some(node => node.type === 'dataset')) return 'Analyze the supplied data, identify the most important supported pattern, and recommend grounded next steps.'
-  if (context.some(node => node.type === 'example')) return 'Use the supplied context and visual reference to produce the most useful grounded outcome.'
   return APP_CONFIG.defaultIntentPrompt
 }
 

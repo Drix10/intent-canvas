@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCanvasStore } from '../../store/useCanvasStore';
-import { Sparkles, Plus, RefreshCw } from 'lucide-react';
+import { Sparkles, Upload, FilePlus2, RefreshCw } from 'lucide-react';
 
 interface IntentBarProps {
   onEvaluatePlan: () => void;
@@ -19,7 +19,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
 
   return (
     <div className="fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 flex-col items-center gap-2">
-      <div className="smoked-glass hairline-border flex w-[min(48rem,calc(100vw-1rem))] flex-wrap items-center justify-center gap-3 rounded-2xl px-3 py-3 shadow-2xl backdrop-blur-2xl sm:rounded-full sm:px-5">
+      <div className="smoked-glass hairline-border flex w-[min(39rem,calc(100vw-1rem))] flex-wrap items-center justify-center gap-2 rounded-2xl px-2.5 py-2.5 shadow-2xl backdrop-blur-2xl sm:rounded-full sm:px-3.5">
         {/* Intent Input Prompt Bar */}
         <div className="relative flex w-full items-center sm:w-auto">
           <label htmlFor="intent-prompt" className="sr-only">Describe the outcome you want</label>
@@ -36,7 +36,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
               }
             }}
             placeholder="Type your natural computing intent..."
-            className="w-[min(20rem,calc(100vw-4rem))] rounded-full border border-white/10 bg-white/[0.04] pl-9 pr-4 py-2 text-xs text-white placeholder-neutral-400 outline-none transition-colors focus:border-[#00ff87]/50 focus:bg-white/[0.08] sm:w-[360px]"
+             className="w-[min(17rem,calc(100vw-4rem))] rounded-full border border-white/10 bg-white/[0.04] pl-9 pr-3 py-2 text-xs text-white placeholder-neutral-400 outline-none transition-colors focus:border-[#00ff87]/50 focus:bg-white/[0.08] sm:w-[300px]"
           />
         </div>
 
@@ -52,8 +52,8 @@ export const IntentBar: React.FC<IntentBarProps> = ({
            </button>
 
              <input ref={fileInputRef} type="file" accept=".pdf,.csv,.txt,.md,.json,image/png,image/jpeg,image/gif,image/webp,image/avif,image/bmp" className="hidden" onChange={(event) => { const file = event.target.files?.[0]; if (file) onAddFile(file); event.target.value = ''; }} />
-             <button type="button" aria-label="Upload a file or image node" disabled={isEvaluatingPlan || isExecutingPlan} onClick={() => fileInputRef.current?.click()} title="Upload file or image" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-[#00ff87] disabled:cursor-not-allowed disabled:opacity-40">
-             <Plus className="h-3.5 w-3.5" />
+              <button type="button" aria-label="Upload a file or image node" disabled={isEvaluatingPlan || isExecutingPlan} onClick={() => fileInputRef.current?.click()} title="Upload source file" className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-[#00ff87] disabled:cursor-not-allowed disabled:opacity-40">
+              <Upload className="h-3.5 w-3.5" />
            </button>
 
            <button
@@ -61,10 +61,10 @@ export const IntentBar: React.FC<IntentBarProps> = ({
              aria-label="Add blank document node"
              disabled={isEvaluatingPlan || isExecutingPlan}
              onClick={onAddNewNode}
-            title="Add Document Card"
+             title="Add blank document"
              className="rounded-full border border-white/10 bg-white/5 p-2 text-neutral-300 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <Plus className="h-3.5 w-3.5" />
+             <FilePlus2 className="h-3.5 w-3.5" />
           </button>
 
            <button
