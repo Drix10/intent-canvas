@@ -46,7 +46,7 @@ export const IntentBar: React.FC<IntentBarProps> = ({
             type="button"
               onClick={onEvaluatePlan}
               disabled={isEvaluatingPlan || isExecutingPlan}
-             className="rounded-full border border-white/15 bg-white/5 px-3.5 py-2 text-xs font-medium text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+             className="flex shrink-0 items-center justify-center rounded-xl bg-[#00ff87] px-4 py-2.5 text-xs font-bold text-black shadow-[0_0_20px_rgba(0,255,135,0.25)] transition-colors hover:bg-[#00ff87]/90 disabled:cursor-not-allowed disabled:opacity-45"
           >
               {isEvaluatingPlan ? 'Compiling...' : hasIntent ? 'Compile Intent' : 'Generate Intent'}
            </button>
