@@ -105,7 +105,9 @@ export const ResultNodeCard: React.FC<ResultNodeCardProps> = ({ result, onSaveAs
               </span>
               <span className="text-[9px] font-mono text-neutral-500">SVG Payload</span>
             </div>
-            <div
+             <div
+               role="img"
+               aria-label="Rendered metric chart"
               className="flex justify-center min-w-[280px]"
               dangerouslySetInnerHTML={{ __html: safeChartSvg }}
             />

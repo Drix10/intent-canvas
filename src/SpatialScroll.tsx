@@ -159,7 +159,7 @@ export function SpatialScroll() {
       paddingBottom: isTablet ? '36px' : 0,
     }
     return (
-       <div ref={scrollContainerRef} style={{ width: '100vw', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: '#0a0d15', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+        <div ref={scrollContainerRef} tabIndex={0} role="region" aria-label="Intent Canvas product showcase" style={{ width: '100vw', height: '100vh', overflowY: 'scroll', scrollSnapType: 'y mandatory', backgroundColor: '#0a0d15', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
         <div style={snapSlot}><Section1Productivity /></div>
         <div style={snapSlot}><Section2 /></div>
         <div style={snapSlot}><Section3 /></div>
@@ -169,7 +169,22 @@ export function SpatialScroll() {
   }
 
   return (
-    <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#040406' }}>
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="Intent Canvas product showcase. Use the arrow keys to change sections."
+      onKeyDown={(event) => {
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown' || event.key === 'PageDown') {
+          event.preventDefault()
+          goTo((sectionRef.current + 1) % 4)
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp' || event.key === 'PageUp') {
+          event.preventDefault()
+          if (!hasLooped.current && sectionRef.current === 0) return
+          goTo((sectionRef.current + 3) % 4)
+        }
+      }}
+      style={{ width: '100vw', height: '100vh', overflow: 'hidden', backgroundColor: '#040406' }}
+    >
       <motion.div style={{ x, y, position: 'relative', width: '200vw', height: '200vh', willChange: 'transform', transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}>
         <div style={{ position: 'absolute', top: '0', left: '0', width: '100vw', height: '100vh' }}><Section1Productivity isInView={activeSection === 0} /></div>
         <div style={{ position: 'absolute', top: '0', left: '74vw', width: '100vw', height: '100vh' }}><Section2 isInView={activeSection === 1} /></div>
