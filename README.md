@@ -12,6 +12,16 @@
 
 > The MP4 is versioned through Git LFS so it can be shared alongside the source without bloating a normal clone.
 
+## Product gallery
+
+Screenshots captured from the live experience at [intent-canvas.vercel.app](https://intent-canvas.vercel.app).
+
+| Verified Dodo signal | Evidence graph |
+| --- | --- |
+| ![Verified Dodo signal and recovery case compiler](docs/screenshots/revenue-rescue-1.png) | ![Evidence graph connecting Dodo and customer context](docs/screenshots/revenue-rescue-2.png) |
+| Human approval boundary | Webhook-confirmed recovery loop |
+| ![Human-approved outreach controls](docs/screenshots/revenue-rescue-3.png) | ![Webhook-confirmed recovery outcome](docs/screenshots/revenue-rescue-4.png) |
+
 ## Why judges should care
 
 Most payment-alert products stop at notification. Intent Canvas closes the **decision-quality** gap between a billing signal and a safe customer response:
