@@ -8,9 +8,11 @@
 
 ## Project demo
 
-[▶ Watch the Revenue Rescue demo](demo.mp4)
+[![Watch the Intent Canvas: Revenue Rescue demo on YouTube](https://img.youtube.com/vi/zJCwYMVI2zg/maxresdefault.jpg)](https://youtu.be/zJCwYMVI2zg)
 
-> The MP4 is versioned through Git LFS so it can be shared alongside the source without bloating a normal clone.
+> ▶ **[Watch the live Revenue Rescue demo on YouTube](https://youtu.be/zJCwYMVI2zg)**
+
+The full-quality source recording remains available as [`demo.mp4`](demo.mp4) through Git LFS.
 
 ## Product gallery
 
