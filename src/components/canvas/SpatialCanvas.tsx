@@ -101,6 +101,24 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   }, [finishPointer, resetVersion]);
 
   useEffect(() => {
+    const preventBrowserZoom = (event: WheelEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || !containerRef.current || !event.target || !containerRef.current.contains(event.target as Node)) return;
+      if (event.cancelable) event.preventDefault();
+    };
+    const preventGestureZoom = (event: Event) => {
+      if (containerRef.current && event.cancelable) event.preventDefault();
+    };
+    window.addEventListener('wheel', preventBrowserZoom, { capture: true, passive: false });
+    document.addEventListener('gesturestart', preventGestureZoom, { passive: false });
+    document.addEventListener('gesturechange', preventGestureZoom, { passive: false });
+    return () => {
+      window.removeEventListener('wheel', preventBrowserZoom, true);
+      document.removeEventListener('gesturestart', preventGestureZoom);
+      document.removeEventListener('gesturechange', preventGestureZoom);
+    };
+  }, []);
+
+  useEffect(() => {
     const editingNode = nodes.find((node) => node.id === editingNodeId);
     if (!editingNode) {
       setEditingNodeId(null);
