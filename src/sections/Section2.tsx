@@ -242,7 +242,7 @@ export function Section2({ isInView: propIsInView }: { isInView?: boolean } = {}
                 <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#906AFF] uppercase tracking-wider">
                   <Sparkles className="h-3.5 w-3.5" /> Multi-Modal Stream
                 </span>
-                <span className="font-mono text-[10px] text-neutral-400">Gemini 2.5 Flash</span>
+                 <span className="font-mono text-[10px] text-neutral-400">Structured reasoning model</span>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Cross-Modal Synthesis</h3>
               

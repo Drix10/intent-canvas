@@ -298,7 +298,7 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
                 <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#00ff87] uppercase tracking-wider">
                   <Sparkles className="h-3.5 w-3.5" /> MeshAPI Reasoning Engine
                 </span>
-                <span className="font-mono text-[10px] text-neutral-400">Gemini 2.5 Flash</span>
+                 <span className="font-mono text-[10px] text-neutral-400">Structured reasoning model</span>
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Inspectable Execution Output</h3>
               

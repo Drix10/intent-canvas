@@ -5,7 +5,7 @@
 > **Repositories**:
 > - Backend: `https://github.com/Drix10/intent-canvas-backend.git`
 > - Frontend: `https://github.com/Drix10/intent-canvas-frontend.git`
-> **Stack**: Express + Node.js + TypeScript + MeshAPI (Gemini 2.5 Flash) + React + Vite + Tailwind CSS v4 + Framer Motion + Lenis + Zustand  
+> **Stack**: Express + Node.js + TypeScript + structured reasoning provider + React + Vite + Tailwind CSS v4 + Framer Motion + Lenis + Zustand  
 > **Primary Paradigm**: **Intent as an Input Primitive** (*Spatial Graph AST ➔ Reasoning ➔ Inspectable Plan ➔ Capability Execution ➔ Living Output Result*)
 
 ---
@@ -16,7 +16,7 @@
 Traditional software forces humans to click buttons, fill out forms, or write procedural code. **Intent Canvas** flips this paradigm:
 - **Spatial Position as Context**: Dropping files onto the spatial canvas automatically calculates spatial proximity vectors ($240\text{px}$).
 - **Spatial Graph AST**: Converts spatial clusters, node payloads, and natural prompts into a formal `SpatialGraphAST`.
-- **MeshAPI Reasoning Engine**: Decomposes the AST using **Gemini 2.5 Flash** (`gemini-2.5-flash`) into inspectable execution plans.
+- **Structured Reasoning Engine**: Decomposes the AST into inspectable execution plans using strict structured output.
 - **In-Canvas Living Output**: Renders dynamic SVG metric charts, anomaly highlights, and key synthesis points directly on canvas.
 - **In-Place Adaptability & Custom Primitives**: Users adapt outcomes live (*"Filter Enterprise"*) and click **"Save as Custom Higher-Order Primitive"** to compile execution subgraphs into reusable nodes.
 
@@ -29,9 +29,9 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - **Frontend Files**: `src/types/canvas.ts`, `src/store/useCanvasStore.ts`
 - **Summary**: Defined `SpatialGraphAST`, `ASTNode`, `ASTEdge`, `SpatialCluster`, `ExecutionPlan`, `PlanStep`, and `ExecutionResult` interfaces. Built 60fps uncontrolled Zustand state store.
 
-### ✅ [COMPLETED] Checkpoint 2: MeshAPI Integration Service & Gemini 2.5 Flash Setup
+### ✅ [COMPLETED] Checkpoint 2: Structured Reasoning Provider Setup
 - **Backend Files**: `src/services/meshApiService.ts`, `.env`
-- **Summary**: Implemented `MeshApiService` connecting to MeshAPI endpoint (`https://api.meshapi.ai/v1`) using model `gemini-2.5-flash`. Features fallback to local deterministic heuristic pipeline if offline.
+- **Summary**: Implemented the structured reasoning service with strict plan and capability output contracts and a bounded local fallback for the supported deterministic workflow.
 
 ### ✅ [COMPLETED] Checkpoint 3: Capability Engines & Express AST Controller
 - **Backend Files**:
@@ -345,7 +345,6 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - The showcase owns desktop wheel navigation; Lenis is disabled to avoid competing wheel handlers.
 - The browser timeout defaults to 10 seconds; the backend provider timeout is 8 seconds.
 - Saved custom primitives are local records and are not executable with new inputs yet.
-
 
 
 

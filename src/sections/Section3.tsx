@@ -150,7 +150,7 @@ export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}
         </h1>
         <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '28px', fontWeight: 300, margin: 0, marginBottom: '16px' }}>
           <BlurFadeWords
-            text="Zero black boxes. Gemini 2.5 Flash breaks intent into clear steps."
+             text="Zero black boxes. A structured reasoning model breaks intent into clear steps."
             baseDelay={0.8}
             isInView={isInView}
             wordStyle={{
