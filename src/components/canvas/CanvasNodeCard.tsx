@@ -1,7 +1,7 @@
 import React from 'react';
 import { SpotlightCard } from '../ui/SpotlightCard';
 import { CanvasNode } from '../../types/canvas';
-import { FileText, Database, Layout, Sparkles, Box, Trash2, Plus, Minus, Pencil } from 'lucide-react';
+import { FileText, Database, Sparkles, Trash2, Plus, Minus, Pencil } from 'lucide-react';
 
 interface CanvasNodeCardProps {
   node: CanvasNode;
@@ -34,10 +34,6 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
         return <Database className="h-3.5 w-3.5 text-[#00ff87]" />;
       case 'document':
         return <FileText className="h-3.5 w-3.5 text-sky-400" />;
-      case 'example':
-        return <Layout className="h-3.5 w-3.5 text-purple-400" />;
-      case 'custom_primitive':
-        return <Box className="h-3.5 w-3.5 text-amber-400" />;
       default:
         return <Sparkles className="h-3.5 w-3.5 text-[#00ff87]" />;
     }
@@ -49,10 +45,6 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
         return 'bg-[#00ff87]/10 text-[#00ff87] border-[#00ff87]/20';
       case 'document':
         return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-      case 'example':
-        return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-      case 'custom_primitive':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
       default:
         return 'bg-white/10 text-white border-white/20';
     }
@@ -86,7 +78,7 @@ export const CanvasNodeCard: React.FC<CanvasNodeCardProps> = React.memo(({
            </div>
         </div>
 
-        {node.type === 'example' && node.dataPayload.previewUrl && (
+        {node.type === 'document' && node.dataPayload.previewUrl && (
           <img
             src={node.dataPayload.previewUrl}
             alt={`Preview of ${node.title}`}

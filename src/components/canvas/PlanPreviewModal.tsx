@@ -94,7 +94,7 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="truncate text-xs font-bold text-white">{step.title}</h4>
                     <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-mono text-neutral-300">
-                       {step.requiredCapability === 'RenewalRescue' ? 'Renewal risk assessment' : step.requiredCapability === 'DataPatternFinder' ? 'Business trend analysis' : step.requiredCapability === 'DocumentSynthesizer' ? 'Evidence synthesis' : step.requiredCapability === 'MeetingInsightExtractor' ? 'Meeting insight review' : 'Experience concept'}
+                       Revenue risk assessment
                     </span>
                   </div>
                   <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{step.description}</p>

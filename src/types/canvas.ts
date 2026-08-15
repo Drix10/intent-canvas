@@ -1,4 +1,4 @@
-export type NodeType = 'document' | 'dataset' | 'example' | 'instruction' | 'output' | 'custom_primitive';
+export type NodeType = 'document' | 'dataset' | 'instruction' | 'output';
 
 export type RelationType = 'explicit_connector' | 'spatial_proximity' | 'enclosure_group' | 'semantic_match';
 
@@ -29,7 +29,7 @@ export interface PlanStep {
   stepId: number;
   title: string;
   description: string;
-  requiredCapability: 'DataPatternFinder' | 'DocumentSynthesizer' | 'MeetingInsightExtractor' | 'UIConceptGenerator' | 'RenewalRescue';
+  requiredCapability: 'RenewalRescue';
   inputNodeIds: string[];
   status: 'pending' | 'running' | 'completed' | 'failed';
 }
@@ -60,35 +60,18 @@ export interface ExecutionPlan {
   verification: string[];
   workflowStages: WorkflowStage[];
   steps: PlanStep[];
-  disambiguation?: {
-    requiresUserClarification: boolean;
-    reason: string;
-    options: { optionId: string; label: string; actionHint: string }[];
-  };
 }
 
 export interface ExecutionResult {
-  executionStatus: 'completed' | 'disambiguation_required';
+  executionStatus: 'completed';
   planId?: string;
   goalSummary?: string;
   confidenceScore?: number;
   executedSteps?: PlanStep[];
   outputPayload?: Record<string, unknown>;
-  disambiguation?: ExecutionPlan['disambiguation'];
-}
-
-export type AdaptationOptionId = 'opt_churn' | 'opt_trend';
-
-export interface AdaptationRequest {
-  adaptationOptionId: AdaptationOptionId;
-  filterModifier: 'enterprise' | 'trend';
 }
 
 export interface CapabilityOutputPayload {
-  dataPattern?: Record<string, unknown>;
-  documentSynthesis?: Record<string, unknown>;
-  meetingInsights?: Record<string, unknown>;
-  uiConcept?: Record<string, unknown>;
   renewalRescue?: RenewalRescuePayload;
 }
 
@@ -150,10 +133,27 @@ export interface DodoSignal {
   occurredAt: string;
 }
 
-export interface CustomPrimitiveRecord {
-  primitiveId: string;
-  title: string;
-  description?: string;
-  inputNodeTypes?: NodeType[];
-  createdAt?: number;
+export interface RevenueOperationsOverview {
+  generatedAt: string;
+  retainedSignalCount: number;
+  signalCounts: Record<DodoSignalClass, number>;
+  caseCounts: Record<RecoveryCaseStatus, number>;
+  eventFamilies: Array<{ family: string; count: number; recoveryCases: number }>;
+  attentionCases: Array<Pick<RecoveryCase, 'caseId' | 'account' | 'eventType' | 'riskReason' | 'status' | 'updatedAt'>>;
+}
+
+export interface DodoConnectionStatus {
+  environment: 'test_mode' | 'live_mode';
+  webhookUrl: string;
+  webhookSigningKeyConfigured: boolean;
+  apiKeyConfigured: boolean;
+  historyImportAvailable: boolean;
+}
+
+export interface HistoricalImportResult {
+  paymentsScanned: number;
+  eventsImported: number;
+  casesCreated: number;
+  hasMore: boolean;
+  nextPage?: number;
 }
