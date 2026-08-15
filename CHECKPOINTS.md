@@ -5,7 +5,7 @@
 > **Repositories**:
 > - Backend: `https://github.com/Drix10/intent-canvas-backend.git`
 > - Frontend: `https://github.com/Drix10/intent-canvas-frontend.git`
-> **Stack**: Express + Node.js + TypeScript + structured reasoning provider + React + Vite + Tailwind CSS v4 + Framer Motion + Lenis + Zustand  
+> **Stack**: Express + Node.js + TypeScript + structured reasoning provider + React + Vite + Tailwind CSS v4 + Framer Motion + Lenis + Zustand
 > **Primary Paradigm**: **Intent as an Input Primitive** (*Spatial Graph AST ➔ Reasoning ➔ Inspectable Plan ➔ Capability Execution ➔ Living Output Result*)
 
 ---
@@ -345,7 +345,6 @@ Traditional software forces humans to click buttons, fill out forms, or write pr
 - The showcase owns desktop wheel navigation; Lenis is disabled to avoid competing wheel handlers.
 - The browser timeout defaults to 10 seconds; the backend provider timeout is 8 seconds.
 - Saved custom primitives are local records and are not executable with new inputs yet.
-
 
 
 
