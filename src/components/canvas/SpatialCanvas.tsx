@@ -148,7 +148,8 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const handlePointerUp = (event: React.PointerEvent) => finishPointer(event.pointerId);
 
   const handleWheel = (event: React.WheelEvent) => {
-    if ((event.target as HTMLElement).closest('[data-scrollable="true"], input, textarea, select')) return;
+    const isBrowserZoomGesture = event.ctrlKey || event.metaKey;
+    if (!isBrowserZoomGesture && (event.target as HTMLElement).closest('[data-scrollable="true"], input, textarea, select')) return;
     event.preventDefault();
     const zoomFactor = event.deltaY > 0 ? 0.96 : 1.04;
     const nextZoom = Math.min(Math.max(zoom * zoomFactor, APP_CONFIG.minZoom), APP_CONFIG.maxZoom);
