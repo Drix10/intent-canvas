@@ -4,30 +4,7 @@ import { AnimatedNetworkLines } from './AnimatedNetworkLines'
 import { useIsMobile } from '../hooks/useIsMobile'
 import { MobileShowcasePanel } from '../components/showcase/MobileShowcasePanel'
 import { BlurFadeWords } from '../BlurFadeWords'
-import { Workflow, ShieldCheck, Sparkles, CheckCircle2, GitFork, Eye } from 'lucide-react'
-
-function AnimatedWords({ text, baseDelay = 0, isInView }: {
-  text: string
-  baseDelay?: number
-  isInView: boolean
-}) {
-  const words = text.split(' ')
-  return (
-    <>
-      {words.map((word, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isInView ? 1 : 0 }}
-          transition={{ delay: baseDelay + i * 0.1, duration: 0.4, ease: 'easeOut' }}
-          style={{ display: 'inline' }}
-        >
-          {word}{i < words.length - 1 ? ' ' : ''}
-        </motion.span>
-      ))}
-    </>
-  )
-}
+import { Workflow, ShieldCheck, CheckCircle2 } from 'lucide-react'
 
 const MAGIC_BORDER_BLUE = 'conic-gradient(from 0deg, transparent 0%, transparent 35%, rgba(76,109,255,0.12) 42%, #4C6DFF 50%, rgba(76,109,255,0.12) 58%, transparent 65%, transparent 100%)'
 
@@ -92,7 +69,7 @@ export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}
   }, [isMobile])
 
   if (isMobile) {
-    return <MobileShowcasePanel eyebrow="03 / Inspectable Plans" title="Review the plan before execution." description="Every intent becomes clear steps with named capabilities. If the request is ambiguous, the system asks a focused question before it runs." accentClass="text-[#4c6dff]" />
+    return <MobileShowcasePanel eyebrow="03 / Human control" title="Approve outreach, never an autonomous charge." description="The agent turns verified Dodo context into a reviewable plan; a human approves outreach before anything customer-facing happens." accentClass="text-[#4c6dff]" />
   }
 
   const card = (
@@ -141,16 +118,16 @@ export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}
             </span>
             <span className="font-mono text-xs font-bold tracking-widest text-[#A8C4FF]">03 / 04</span>
             <span className="text-neutral-500">•</span>
-            <span className="text-[11px] font-semibold text-neutral-300">Inspectable DAG Plan</span>
+            <span className="text-[11px] font-semibold text-neutral-300">Approval boundary</span>
           </div>
         </motion.div>
 
         <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '52px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '8px' }}>
-          <BlurFadeWords text="Inspect Plans Before Execution." baseDelay={0.5} isInView={isInView} />
+          <BlurFadeWords text="Approve outreach, never an autonomous charge." baseDelay={0.5} isInView={isInView} />
         </h1>
         <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '28px', fontWeight: 300, margin: 0, marginBottom: '16px' }}>
           <BlurFadeWords
-             text="Zero black boxes. A structured reasoning model breaks intent into clear steps."
+             text="The operator sees evidence, uncertainty, owner, and next action."
             baseDelay={0.8}
             isInView={isInView}
             wordStyle={{
@@ -161,9 +138,9 @@ export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}
           />
         </p>
         <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '17px', fontWeight: 300, color: 'rgba(255,255,255,0.65)', margin: 0, maxWidth: '400px' }}>
-          <BlurFadeWords text="Review every tool and step before confirming." baseDelay={1.1} isInView={isInView} />
+          <BlurFadeWords text="Review the evidence, owner, and recovery action." baseDelay={1.1} isInView={isInView} />
           <br />
-          <BlurFadeWords text="If your prompt is ambiguous, interactive gates let you clarify instantly." baseDelay={1.45} isInView={isInView} />
+          <BlurFadeWords text="Revenue Rescue records approval; it does not send an email or charge." baseDelay={1.45} isInView={isInView} />
         </p>
       </div>
 
@@ -207,20 +184,20 @@ export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}
                   Verified Plan v2.0
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">Transparent Plan Decomposition</h3>
+              <h3 className="text-xl font-bold text-white mb-1">Human-approved next step</h3>
               <p className="text-xs text-neutral-300 leading-relaxed">
-                Intent prompts break into explicit step graphs before execution to guarantee zero unintended side effects.
+                The agent proposes evidence-backed outreach; the operator records approval before anything customer-facing can happen.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 mt-4">
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                <div className="text-[10px] text-neutral-400 font-mono">Plan Structure</div>
-                <div className="text-sm font-bold text-white">Explicit steps</div>
+                <div className="text-[10px] text-neutral-400 font-mono">Action scope</div>
+                <div className="text-sm font-bold text-white">Outreach only</div>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                <div className="text-[10px] text-neutral-400 font-mono">Execution Boundary</div>
-                <div className="text-sm font-bold text-[#4C6DFF]">User reviewed</div>
+                <div className="text-[10px] text-neutral-400 font-mono">Financial boundary</div>
+                <div className="text-sm font-bold text-[#4C6DFF]">No charge endpoint</div>
               </div>
             </div>
 
@@ -244,27 +221,27 @@ export function Section3({ isInView: propIsInView }: { isInView?: boolean } = {}
                 </span>
                 <span className="font-mono text-[10px] text-neutral-400">Human-In-The-Loop</span>
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Interactive Clarification Gates</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Safe recovery controls</h3>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
                   <span className="flex items-center gap-2 text-neutral-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#4C6DFF]" /> Step 1: Query Aggregation
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#4C6DFF]" /> Step 1: Review signed Dodo + CRM evidence
                   </span>
-                  <span className="font-mono font-bold text-emerald-400">Pre-Approved</span>
+                  <span className="font-mono font-bold text-emerald-400">Human visible</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
                   <span className="flex items-center gap-2 text-neutral-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#4C6DFF]" /> Step 2: Entity Disambiguation
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#4C6DFF]" /> Step 2: Record outreach approval
                   </span>
-                  <span className="font-mono text-sky-300">Resolved (0ms)</span>
+                  <span className="font-mono text-sky-300">No charge sent</span>
                 </div>
               </div>
             </div>
 
             <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
               <span className="text-[11px] text-neutral-400">Safeguard Level:</span>
-              <span className="text-xs font-bold text-[#4C6DFF]">Zero Black-Box Actions</span>
+              <span className="text-xs font-bold text-[#4C6DFF]">No autonomous billing</span>
             </div>
 
             <MagicBorder color={MAGIC_BORDER_BLUE} radius="24px" reverse isInView={isInView} />

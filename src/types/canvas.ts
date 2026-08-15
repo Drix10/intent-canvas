@@ -112,6 +112,44 @@ export interface RenewalRescuePayload {
   riskChartSvg: string;
 }
 
+export type RecoveryCaseStatus = 'detected' | 'approved' | 'recovered' | 'escalated' | 'ignored';
+
+export interface RecoveryCase {
+  caseId: string;
+  eventId: string;
+  eventType: string;
+  account: string;
+  customerId?: string;
+  subscriptionId?: string;
+  currency?: string;
+  amount?: number;
+  nextBillingDate?: string;
+  paymentStatus?: string;
+  riskReason: string;
+  status: RecoveryCaseStatus;
+  createdAt: string;
+  updatedAt: string;
+  analysisMeteredAt?: string;
+  action?: { actionId: string; type: 'customer_follow_up' | 'payment_method_update'; approvedAt: string; operator: string };
+  timeline: Array<{ at: string; label: string; detail: string }>;
+}
+
+export type DodoSignalClass = 'recovery_case' | 'recovery' | 'operational' | 'context';
+
+export interface DodoSignal {
+  signalId: string;
+  eventId: string;
+  eventType: string;
+  eventFamily: string;
+  classification: DodoSignalClass;
+  title: string;
+  summary: string;
+  account: string;
+  customerId?: string;
+  subscriptionId?: string;
+  occurredAt: string;
+}
+
 export interface CustomPrimitiveRecord {
   primitiveId: string;
   title: string;

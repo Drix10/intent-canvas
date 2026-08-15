@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { APP_CONFIG, apiUrl } from './config'
-import { CanvasNode, CustomPrimitiveRecord, ExecutionPlan, ExecutionResult, NodeType, RenewalRescuePayload, RelationType } from './types/canvas'
+import { CanvasNode, CustomPrimitiveRecord, DodoSignal, ExecutionPlan, ExecutionResult, NodeType, RecoveryCase, RenewalRescuePayload, RelationType } from './types/canvas'
 
 const MAX_SHORT_STRING = 500
 const MAX_LONG_STRING = 3000
@@ -136,6 +136,29 @@ export function isCustomPrimitiveRecord(value: unknown): value is CustomPrimitiv
 
 export function isRequestCancelled(error: unknown): boolean {
   return axios.isCancel(error) || (typeof DOMException !== 'undefined' && error instanceof DOMException && error.name === 'AbortError')
+}
+
+export function isRecoveryCase(value: unknown): value is RecoveryCase {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const item = value as Partial<RecoveryCase>
+  return isRequiredString(item.caseId) && isRequiredString(item.eventId) && isRequiredString(item.eventType) &&
+    isRequiredString(item.account) && isBoundedString(item.riskReason, MAX_LONG_STRING) &&
+    ['detected', 'approved', 'recovered', 'escalated', 'ignored'].includes(item.status ?? '') &&
+    isBoundedString(item.createdAt) && isBoundedString(item.updatedAt) && Array.isArray(item.timeline) && item.timeline.length <= 20 &&
+    item.timeline.every(entry => entry && typeof entry === 'object' && isBoundedString((entry as { at?: unknown }).at) && isBoundedString((entry as { label?: unknown }).label) && isBoundedString((entry as { detail?: unknown }).detail, MAX_LONG_STRING)) &&
+    ['customerId', 'subscriptionId', 'currency', 'nextBillingDate', 'paymentStatus', 'analysisMeteredAt'].every(key => (item as Record<string, unknown>)[key] === undefined || isBoundedString((item as Record<string, unknown>)[key])) &&
+    (item.amount === undefined || (typeof item.amount === 'number' && Number.isFinite(item.amount))) &&
+    (item.action === undefined || (typeof item.action === 'object' && item.action !== null && ['customer_follow_up', 'payment_method_update'].includes(item.action.type ?? '') && isBoundedString(item.action.actionId) && isBoundedString(item.action.approvedAt) && isBoundedString(item.action.operator)))
+}
+
+export function isDodoSignal(value: unknown): value is DodoSignal {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false
+  const signal = value as Partial<DodoSignal>
+  return isRequiredString(signal.signalId) && isRequiredString(signal.eventId) && isRequiredString(signal.eventType) &&
+    isRequiredString(signal.eventFamily) && isRequiredString(signal.title) && isBoundedString(signal.summary, MAX_LONG_STRING) &&
+    isRequiredString(signal.account) && isBoundedString(signal.occurredAt) &&
+    ['recovery_case', 'recovery', 'operational', 'context'].includes(signal.classification ?? '') &&
+    ['customerId', 'subscriptionId'].every(key => (signal as Record<string, unknown>)[key] === undefined || isBoundedString((signal as Record<string, unknown>)[key]))
 }
 
 export interface ContextRelationSuggestion {

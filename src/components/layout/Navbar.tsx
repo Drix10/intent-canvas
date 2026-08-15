@@ -13,7 +13,7 @@ export const Navbar: React.FC = () => {
           <div className="rounded-full border border-[#00ff87]/30 bg-[#00ff87]/10 p-1 text-[#00ff87]">
             <Sparkles className="h-3.5 w-3.5" />
           </div>
-          <span className="text-xs font-bold tracking-tight text-white">Intent Canvas</span>
+          <span className="text-xs font-bold tracking-tight text-white">Intent Canvas <span className="text-[#00ff87]">· Revenue Rescue</span></span>
         </div>
 
         {/* Primary navigation */}

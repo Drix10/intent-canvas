@@ -1,6 +1,20 @@
-# Intent Canvas Frontend
+# Intent Canvas: Revenue Rescue — Frontend
 
-Intent Canvas is a browser-first spatial workspace for expressing business outcomes through context nodes, relationships, and natural-language intent.
+> A visual CRM workspace where verified Dodo Payments signals become evidence, not autonomous billing instructions.
+
+**The demo experience:** a revenue operator sees the Dodo event stream, isolates a genuine risk case, connects it with account context, reviews an AI-generated recovery plan, and explicitly approves outreach. The app can never charge a customer.
+
+## Why judges should care
+
+Most payment-alert products stop at notification. Intent Canvas closes the **decision-quality** gap between a billing signal and a safe customer response:
+
+- **Trusted input:** the backend accepts only signature-verified Dodo webhooks.
+- **Full context, low noise:** all 47 enabled Dodo event types appear as CRM signals; only a conservative risk policy opens a recovery case.
+- **Grounded reasoning:** operators add signals alongside adoption, support, ownership, or renewal evidence before planning.
+- **Human control:** the interface exposes a plan and records approval for outreach; no customer charge, retry, or email is issued.
+- **Outcome loop:** a matching later Dodo lifecycle signal marks recovery while delayed events cannot overwrite newer state.
+
+The frontend is a browser-first spatial workspace for expressing business outcomes through context nodes, relationships, and natural-language intent.
 
 The frontend lets a user:
 
@@ -10,6 +24,16 @@ The frontend lets a user:
 4. inspect the structured execution plan before anything runs;
 5. approve the plan;
 6. receive only the selected capability results back on the canvas.
+
+## The 90-second demo
+
+1. Configure a Dodo **Test Mode** checkout and webhook at `https://temp.coslynx.com/webhooks/dodo`.
+2. Open **Workspace** and use **Create test payment** to generate genuine test data, or trigger a signed Dodo delivery.
+3. Refresh the **Revenue Rescue** panel. See risk cases separately from the broader Dodo CRM signal stream.
+4. Choose **Add evidence** on a case/signal, then add customer health or ownership context.
+5. Prompt: `Create a recovery plan for the Dodo payment risk. Do not charge anyone automatically.`
+6. Inspect and approve the plan. The interface records only an outreach decision and explicitly says **No charge or email sent**.
+7. Send a matching healthy Dodo event and refresh to show the outcome.
 
 ## Product Model
 
@@ -51,6 +75,20 @@ The UI does not execute every available tool. It displays the tools selected by 
 - Renewal Rescue results with risk score provenance, multi-source evidence bullets, owner, deadline, and recovery action.
 - Local browser persistence for workspace state and saved primitive metadata.
 - Resettable starter context for the demo workflow.
+
+## Revenue Rescue interface
+
+The workspace has a dedicated operator panel backed by authenticated server APIs:
+
+| UI element | What it does | Safety boundary |
+| --- | --- | --- |
+| **Recovery cases** | Shows only risk-classified Dodo events with status and event timeline. | A case is not a billing instruction. |
+| **Latest Dodo signals** | Shows risk, recovery, operational, and context events; each can be placed on the canvas. | Operational events never create fake churn cases. |
+| **Add evidence** | Creates a source-labeled, bounded canvas document. Duplicate signals/cases and a full canvas are handled without silent failure. | Evidence includes an explicit “does not authorize a charge” notice. |
+| **Approve follow-up / payment outreach** | Records one idempotent operator decision after review. | No frontend action calls Dodo charging, retrying, or email APIs. |
+| **Create test payment** | Opens a server-created Dodo test checkout when `VITE_ENABLE_DODO_SANDBOX=true`. | Test-only; no Dodo secret is shipped to the browser. |
+
+The refresh path independently tolerates a temporarily unavailable signal or case endpoint, avoids state updates after unmount, and aborts stale requests.
 
 ## Capability Result Behavior
 
@@ -106,6 +144,7 @@ VITE_PROXIMITY_DISTANCE_PX=240
 VITE_DEFAULT_INTENT_PROMPT=Analyze the supplied context, identify the most useful supported outcome, and propose grounded next steps.
 VITE_PRIMITIVE_TITLE=Evidence-Based Risk and Opportunity Primitive
 VITE_PRIMITIVE_DESCRIPTION=User-composed dynamic computational primitive
+VITE_ENABLE_DODO_SANDBOX=false
 ```
 
 Configuration details:
@@ -119,6 +158,7 @@ Configuration details:
 - `VITE_PROXIMITY_DISTANCE_PX`: centroid distance used to infer proximity relationships.
 - `VITE_DEFAULT_INTENT_PROMPT`: neutral fallback used when the user presses Generate Intent without typing a prompt.
 - `VITE_PRIMITIVE_TITLE` and `VITE_PRIMITIVE_DESCRIPTION`: metadata used when saving a custom primitive.
+- `VITE_ENABLE_DODO_SANDBOX`: shows the test-checkout button. Enable only for the Dodo Test Mode hackathon deployment.
 
 Important: every `VITE_*` value is public because Vite embeds it in the browser bundle. Never put a MeshAPI credential in frontend configuration. Treat `VITE_API_ACCESS_TOKEN` as a client access credential, not a secret, and protect the backend with origin restrictions, token rotation, and deployment controls.
 
@@ -149,7 +189,7 @@ For a local Renewal Rescue demo without MeshAPI, use development backend setting
 1. Switch from showcase mode to the interactive workspace.
 2. Restore the starter context if needed.
 3. Arrange or connect context nodes.
-4. Enter an outcome such as finding high-risk upcoming renewals and creating recovery plans.
+4. Add a Dodo case/signal from Revenue Rescue and enter an outcome such as `Create a recovery plan for the Dodo payment risk. Do not charge anyone automatically.`
 5. Select plan inspection.
 6. Review the context, selected tool, steps, and confidence.
 7. Approve execution.
@@ -190,6 +230,7 @@ npm run preview
 5. Configure the backend `CORS_ORIGINS` to include the deployed frontend origin.
 6. Do not expose backend provider credentials in frontend variables.
 7. Use HTTPS for both frontend and backend origins.
+8. For the hackathon VPS, build with `VITE_API_BASE_URL=https://temp.coslynx.com` and `VITE_ENABLE_DODO_SANDBOX=true`; use only Dodo Test Mode values on the backend.
 
 There is no frontend database. Browser persistence is local to the current browser profile and is not multi-user storage.
 
@@ -198,6 +239,11 @@ There is no frontend database. Browser persistence is local to the current brows
 - `docs/ARCHITECTURE.md`: component and state architecture.
 - `docs/INTEGRATION_GUIDE.md`: backend integration and deployment notes.
 - `../NYC-R3-BACKEND/README.md`: backend setup, API contracts, capabilities, and operational limits.
+- `../HACKATHON.md`: Dodo test-mode checklist, event policy, demo script, and hackathon pitch.
+
+## How Codex was used
+
+Codex mapped the initial spatial-planning app into a revenue-recovery domain agent, implemented the signed Dodo webhook boundary and runtime contracts, designed the four-part product story, built the Recovery Rescue panel, and performed strict compilation plus webhook lifecycle testing. The result demonstrates a practical pattern for agentic coding: Codex is used to move from product framing to inspected code paths, safety boundaries, and a reproducible demo rather than generating an opaque prototype.
 
 ## License
 

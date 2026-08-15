@@ -17,6 +17,7 @@ export const APP_CONFIG = {
   defaultIntentPrompt: import.meta.env.VITE_DEFAULT_INTENT_PROMPT ?? 'Analyze the supplied context, identify the most useful supported outcome, and propose grounded next steps.',
   primitiveTitle: import.meta.env.VITE_PRIMITIVE_TITLE ?? 'Evidence-Based Risk & Opportunity Primitive',
   primitiveDescription: import.meta.env.VITE_PRIMITIVE_DESCRIPTION ?? 'User-composed dynamic computational primitive',
+  enableDodoSandbox: import.meta.env.VITE_ENABLE_DODO_SANDBOX === 'true',
   canvasGridSize: 32,
   maxZoom: 2,
   minZoom: 0.5,

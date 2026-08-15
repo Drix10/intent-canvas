@@ -494,9 +494,9 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#00ff87]/30 bg-[#00ff87]/10 text-[#00ff87]">
               <Network className="h-7 w-7" />
             </div>
-            <h3 className="text-lg font-bold text-white">Spatial Intent Workspace Ready</h3>
+            <h3 className="text-lg font-bold text-white">Revenue Rescue Workspace Ready</h3>
             <p className="mt-2 text-xs leading-relaxed text-neutral-400">
-               Your spatial graph AST is currently empty. Drop a PDF, CSV, text, JSON, or image file anywhere onto the canvas, or restore the starter context.
+               Start with a verified Dodo case or signal from Revenue Rescue, then add customer context from a PDF, CSV, note, JSON, or image before asking for a recovery plan.
             </p>
              <div className="mt-6 flex flex-col gap-2">
               {onAddFile && (

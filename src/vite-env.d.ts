@@ -8,6 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_DEFAULT_INTENT_PROMPT?: string
   readonly VITE_PRIMITIVE_TITLE?: string
   readonly VITE_PRIMITIVE_DESCRIPTION?: string
+  readonly VITE_ENABLE_DODO_SANDBOX?: string
 }
 
 interface ImportMeta {

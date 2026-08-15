@@ -79,7 +79,7 @@ export function Section4({
 
   if (isMobile) {
     return (
-       <MobileShowcasePanel eyebrow="04 / Workspace" title="Shape the outcome in one place." description="Arrange context, type your intent, inspect the plan, and execute from the full spatial workspace." accentClass="text-[#00ff87]">
+       <MobileShowcasePanel eyebrow="04 / Recovery loop" title="Close the loop with webhook-confirmed outcomes." description="Inspect risk cases and the wider Dodo event stream, add evidence, approve outreach, and let a matching healthy lifecycle event confirm recovery." accentClass="text-[#00ff87]">
          <button type="button" onClick={() => setViewMode('interactive')} className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[#00ff87] px-4 py-3 text-sm font-bold text-black shadow-[0_0_24px_rgba(0,255,135,0.25)] hover:bg-[#00ff87]/90">
            Open the Intent Workspace <ArrowRight className="h-4 w-4" />
          </button>
@@ -133,16 +133,16 @@ export function Section4({
             </span>
             <span className="font-mono text-xs font-bold tracking-widest text-amber-300">04 / 04</span>
             <span className="text-neutral-500">•</span>
-            <span className="text-[11px] font-semibold text-neutral-300">Dynamic Living Output</span>
+            <span className="text-[11px] font-semibold text-neutral-300">Webhook-confirmed outcome</span>
           </div>
         </motion.div>
 
         <h1 style={{ fontFamily: 'var(--font-jakarta)', fontSize: '46px', fontWeight: 300, color: '#ffffff', margin: 0, marginBottom: '6px' }}>
-          <BlurFadeWords text="Experience Intent-Driven Computation." baseDelay={0.4} isInView={isInView} />
+          <BlurFadeWords text="Close the revenue recovery loop." baseDelay={0.4} isInView={isInView} />
         </h1>
 
         <p style={{ fontFamily: 'var(--font-jakarta)', fontSize: '17px', fontWeight: 300, color: 'rgba(255,255,255,0.7)', margin: 0, marginBottom: '18px' }}>
-           <BlurFadeWords text="Take the full interaction into the workspace, where you can shape context and review computation before execution." baseDelay={0.7} isInView={isInView} />
+           <BlurFadeWords text="A later Dodo webhook marks the case recovered or escalated—so the operator sees the real outcome." baseDelay={0.7} isInView={isInView} />
         </p>
 
         {/* User Guidance Step Pills */}
@@ -154,28 +154,28 @@ export function Section4({
         >
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-[#00ff87]">
-              <Database className="h-3.5 w-3.5" /> 1. Context Nodes Linked
+              <Database className="h-3.5 w-3.5" /> 1. Dodo signal received
             </div>
             <p className="mt-1 text-[11px] text-neutral-400">
-               Your data and reference notes connected on the spatial canvas.
+               Every signed event is retained; only risk events create a recovery case.
             </p>
           </div>
 
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
             <div className="flex items-center gap-1.5 text-xs font-semibold text-sky-400">
-              <Sparkles className="h-3.5 w-3.5" /> 2. Express Outcome
+              <Sparkles className="h-3.5 w-3.5" /> 2. Evidence reviewed
             </div>
             <p className="mt-1 text-[11px] text-neutral-400">
-              State desired result in plain English. No syntax or commands needed.
+              Add account, usage, and ownership context before planning.
             </p>
           </div>
 
           <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3 backdrop-blur-md">
               <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-400">
-               <Play className="h-3.5 w-3.5" /> 3. Inspect & Execute
+               <Play className="h-3.5 w-3.5" /> 3. Approve outreach
             </div>
             <p className="mt-1 text-[11px] text-neutral-400">
-               Review the bounded plan, then execute it in the workspace.
+               Record a human decision; no charge or email is sent by the agent.
             </p>
           </div>
         </motion.div>
@@ -187,8 +187,8 @@ export function Section4({
           className="relative z-30 flex items-center justify-between gap-5 rounded-2xl border border-[#00ff87]/30 bg-[#090a0f]/90 p-5 shadow-2xl backdrop-blur-2xl"
         >
           <div>
-            <p className="text-xs font-bold text-[#00ff87]">One workspace. One clear flow.</p>
-            <p className="mt-1 text-[11px] text-neutral-400">Arrange context, type intent, inspect the plan, and execute when you are ready.</p>
+            <p className="text-xs font-bold text-[#00ff87]">One recovery loop. Evidence to outcome.</p>
+            <p className="mt-1 text-[11px] text-neutral-400">A matching healthy lifecycle event confirms recovery; a new risk stays visible for review.</p>
           </div>
           <button type="button" onClick={() => setViewMode('interactive')} className="flex shrink-0 items-center gap-2 rounded-xl bg-[#00ff87] px-4 py-2.5 text-xs font-bold text-black shadow-[0_0_20px_rgba(0,255,135,0.25)] hover:bg-[#00ff87]/90">
             Open Workspace <ArrowRight className="h-3.5 w-3.5" />

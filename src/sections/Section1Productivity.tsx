@@ -5,30 +5,6 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import { MobileShowcasePanel } from '../components/showcase/MobileShowcasePanel'
 import { BlurFadeWords } from '../BlurFadeWords'
 import { Sparkles, Cpu, CheckCircle2 } from 'lucide-react'
-import { APP_CONFIG } from '../config'
-
-function AnimatedWords({ text, baseDelay = 0, isInView }: {
-  text: string
-  baseDelay?: number
-  isInView: boolean
-}) {
-  const words = text.split(' ')
-  return (
-    <>
-      {words.map((word, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isInView ? 1 : 0 }}
-          transition={{ delay: baseDelay + i * 0.08, duration: 0.35, ease: 'easeOut' }}
-          style={{ display: 'inline' }}
-        >
-          {word}{i < words.length - 1 ? ' ' : ''}
-        </motion.span>
-      ))}
-    </>
-  )
-}
 
 const MAGIC_BORDER_GREEN = 'conic-gradient(from 0deg, transparent 0%, transparent 35%, rgba(36,255,149,0.12) 42%, #24FF95 50%, rgba(36,255,149,0.12) 58%, transparent 65%, transparent 100%)'
 
@@ -93,7 +69,7 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
   }, [isMobile])
 
   if (isMobile) {
-    return <MobileShowcasePanel eyebrow="01 / Intent as Input" title="Stop clicking buttons. Express intent." description="Describe the outcome you want in plain language. Intent Canvas turns your goal into an inspectable computation instead of a chain of forms and commands." accentClass="text-[#24ff95]" />
+    return <MobileShowcasePanel eyebrow="01 / Verified signal" title="Turn every Dodo event into usable CRM context." description="All 47 enabled Dodo signals are retained; only real billing risk opens a recovery case. Evidence is never permission to charge." accentClass="text-[#24ff95]" />
   }
 
   const card = (
@@ -154,7 +130,7 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
             </span>
             <span className="font-mono text-xs font-bold tracking-widest text-[#b8ffd9]">01 / 04</span>
             <span className="text-neutral-500">•</span>
-            <span className="text-[11px] font-semibold text-neutral-300">Intent as Input</span>
+            <span className="text-[11px] font-semibold text-neutral-300">47-event Dodo signal layer</span>
           </div>
         </motion.div>
 
@@ -170,7 +146,7 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
             marginBottom: '8px',
           }}
         >
-          <BlurFadeWords text="Stop Clicking Buttons. Express Intent." baseDelay={0.4} isInView={isInView} />
+          <BlurFadeWords text="Turn payment signals into accountable recovery." baseDelay={0.4} isInView={isInView} />
         </h1>
 
         <p
@@ -185,7 +161,7 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
           }}
         >
           <BlurFadeWords
-            text="No forms. No syntax. Just tell the computer what you want."
+            text="Every event adds context; only risk starts a recovery workflow."
             baseDelay={0.65}
             isInView={isInView}
             wordStyle={{
@@ -207,9 +183,9 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
             maxWidth: '420px',
           }}
         >
-          <BlurFadeWords text="Traditional software forces manual step-by-step procedures." baseDelay={0.9} isInView={isInView} />
+          <BlurFadeWords text="Signed Dodo events give the team a trustworthy starting point." baseDelay={0.9} isInView={isInView} />
           <br />
-          <BlurFadeWords text="Intent Canvas turns your desires directly into automated computations." baseDelay={1.15} isInView={isInView} />
+          <BlurFadeWords text="Revenue Rescue turns it into a reviewable recovery case." baseDelay={1.15} isInView={isInView} />
         </p>
       </div>
 
@@ -257,26 +233,26 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-[11px] font-bold text-[#00ff87] uppercase tracking-wider">
-                  <Cpu className="h-3.5 w-3.5" /> Spatial Graph AST Compiler
+                  <Cpu className="h-3.5 w-3.5" /> Recovery case compiler
                 </span>
                 <span className="rounded-full border border-[#00ff87]/30 bg-[#00ff87]/10 px-2 py-0.5 text-[9px] font-bold text-[#00ff87]">
                   Primitive v1.0
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-white mb-1">Spatial Layout ➔ AST Compiler</h3>
+              <h3 className="text-xl font-bold text-white mb-1">Dodo event ➔ safe CRM signal</h3>
               <p className="text-xs text-neutral-300 leading-relaxed">
-                Nodes, distance vectors, and edge connectors are parsed into structured AST representations before execution.
+                Every signed event is retained; the explicit risk policy decides whether to open a case.
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2 mt-4">
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                <div className="text-[10px] text-neutral-400 font-mono">AST Representation</div>
-                <div className="text-sm font-bold text-white">Structured context</div>
+                <div className="text-[10px] text-neutral-400 font-mono">Signal source</div>
+                <div className="text-sm font-bold text-white">All 47 Dodo events</div>
               </div>
               <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5">
-                <div className="text-[10px] text-neutral-400 font-mono">Distance Metric</div>
-                 <div className="text-sm font-bold text-[#00ff87]">{APP_CONFIG.proximityDistancePixels}px Proximity</div>
+                <div className="text-[10px] text-neutral-400 font-mono">Integrity</div>
+                 <div className="text-sm font-bold text-[#00ff87]">Signature verified</div>
               </div>
             </div>
 
@@ -300,18 +276,18 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
                 </span>
                  <span className="font-mono text-[10px] text-neutral-400">Structured reasoning model</span>
               </div>
-              <h3 className="text-lg font-bold text-white mb-2">Inspectable Execution Output</h3>
+              <h3 className="text-lg font-bold text-white mb-2">Evidence-first recovery plan</h3>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
                   <span className="flex items-center gap-2 text-neutral-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> Quantitative Signal Highlight
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> Payment state captured
                   </span>
                   <span className="font-mono font-bold text-amber-400">Ready to inspect</span>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.03] p-2 text-xs">
                   <span className="flex items-center gap-2 text-neutral-200">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> Qualitative Context Synthesis
+                    <CheckCircle2 className="h-3.5 w-3.5 text-[#00ff87]" /> Account evidence required
                   </span>
                   <span className="font-mono text-sky-400">Context linked</span>
                 </div>
@@ -319,8 +295,8 @@ export function Section1Productivity({ isInView: propIsInView }: { isInView?: bo
             </div>
 
             <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
-              <span className="text-[11px] text-neutral-400">Target Outcome:</span>
-              <span className="text-xs font-bold text-[#00ff87]">Dynamic Living Result Rendered</span>
+              <span className="text-[11px] text-neutral-400">Outcome:</span>
+              <span className="text-xs font-bold text-[#00ff87]">Ready for human review</span>
             </div>
 
             <MagicBorder color={MAGIC_BORDER_GREEN} radius="24px" reverse isInView={isInView} />
