@@ -2,7 +2,15 @@
 
 > A visual CRM workspace where verified Dodo Payments signals become evidence, not autonomous billing instructions.
 
+[![React](https://img.shields.io/badge/React-18-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Dodo Payments](https://img.shields.io/badge/Dodo_Payments-Test_Mode-0ea5e9?style=flat-square)](https://dodopayments.com/) [![Built with Codex](https://img.shields.io/badge/Built_with-Codex-412991?style=flat-square)](https://openai.com/codex/) [![Git LFS](https://img.shields.io/badge/Demo_asset-Git_LFS-8a2be2?style=flat-square&logo=gitlfs&logoColor=white)](https://git-lfs.com/)
+
 **The demo experience:** a revenue operator sees the Dodo event stream, isolates a genuine risk case, connects it with account context, reviews an AI-generated recovery plan, and explicitly approves outreach. The app can never charge a customer.
+
+## Project demo
+
+[▶ Watch the Revenue Rescue demo](demo.mp4)
+
+> The MP4 is versioned through Git LFS so it can be shared alongside the source without bloating a normal clone.
 
 ## Why judges should care
 
@@ -34,6 +42,19 @@ The frontend lets a user:
 5. Prompt: `Create a recovery plan for the Dodo payment risk. Do not charge anyone automatically.`
 6. Inspect and approve the plan. The interface records only an outreach decision and explicitly says **No charge or email sent**.
 7. Send a matching healthy Dodo event and refresh to show the outcome.
+
+## Product experience and interface design
+
+The landing flow intentionally tells the operator story in four visual steps before opening the workspace:
+
+| Section | UX message | Interface proof |
+| --- | --- | --- |
+| **01 · Verified signal** | All 47 Dodo event types are useful CRM context, but only explicit risk can open a case. | Signed-event framing and source-integrity card. |
+| **02 · Evidence graph** | A payment event alone is not enough to prescribe customer action. | Operators connect billing, usage, support, ownership, and renewal evidence spatially. |
+| **03 · Human control** | The agent can propose; the operator decides. | Approval-gated plan review with a visible no-charge/no-email boundary. |
+| **04 · Outcome loop** | Recovery must be confirmed, not assumed. | Matching healthy Dodo lifecycle events close cases; risk remains inspectable. |
+
+The workspace uses a high-contrast, glass-panel system with concise status labels, color-coded signal classes, keyboard-accessible controls, bounded scrolling, mobile-specific product panels, reduced-motion support, and source-labeled evidence nodes. The result is intentionally presentation-ready for a hackathon judge while remaining operationally legible for an actual revenue operator.
 
 ## Product Model
 
