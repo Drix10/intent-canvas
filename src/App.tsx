@@ -528,10 +528,16 @@ export default function App() {
         )}
         {/* Render Navbar & IntentBar ONLY in interactive canvas view mode */}
         <Navbar />
-        <div className="absolute top-16 left-1/2 z-40 -translate-x-1/2">
-          <ApiKeyBar />
-        </div>
         {viewMode === 'interactive' && <IntentBar {...intentHandlers} />}
+
+        {/* Gemini key — workspace-native, only in interactive */}
+        {viewMode === 'interactive' && (
+          <div className="pointer-events-none fixed bottom-20 right-6 z-30 flex flex-col items-end gap-2 sm:bottom-24">
+            <div className="pointer-events-auto">
+              <ApiKeyBar />
+            </div>
+          </div>
+        )}
 
         {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
         {viewMode === 'showcase' ? (
