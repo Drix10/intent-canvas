@@ -6,7 +6,7 @@ import { CanvasSVGEdges } from './CanvasSVGEdges';
 import { ResultNodeCard } from './ResultNodeCard';
 import { ExecutionResult } from '../../types/canvas';
 import { APP_CONFIG } from '../../config';
-import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, GitBranch, Ruler, HardDrive, Trash2, X, Pencil } from 'lucide-react';
+import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, GitBranch, Ruler, HardDrive, Trash2, X, Pencil, KeyRound } from 'lucide-react';
 import { buildSpatialEdges } from '../../utils/spatialRelations';
 import { useDialog } from '../../hooks/useDialog';
 
@@ -403,38 +403,8 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
         </button>
       </div>
 
-      {/* Bottom-Right Zoom HUD Controls */}
-      {!hasResult && <div className="absolute bottom-28 right-6 z-40 flex items-center gap-1 rounded-2xl border border-white/15 bg-[#090a0f]/95 p-1.5 text-xs text-neutral-300 shadow-2xl backdrop-blur-2xl">
-        <button
-          type="button"
-          aria-label="Zoom out"
-          onClick={() => setZoom(Math.max(APP_CONFIG.minZoom, zoom - 0.1))}
-          title="Zoom Out"
-          className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </button>
-        <span className="px-2 font-mono text-xs font-bold text-white">{Math.round(zoom * 100)}%</span>
-        <button
-          type="button"
-          aria-label="Zoom in"
-          onClick={() => setZoom(Math.min(APP_CONFIG.maxZoom, zoom + 0.1))}
-          title="Zoom In"
-          className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </button>
-        <div className="h-4 w-px bg-white/10 mx-1" />
-        <button
-          type="button"
-          aria-label="Reset canvas view"
-          onClick={resetView}
-          title="Reset View Position & Zoom"
-          className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white"
-        >
-          <Maximize2 className="h-4 w-4" />
-        </button>
-      </div>}
+      {/* Bottom-Right Zoom HUD Controls — now with Gemini key */}
+      {!hasResult && <ZoomBar zoom={zoom} setZoom={setZoom} onResetView={resetView} />}
 
       {/* Drag Collision Warning */}
       {dragBlocked && (
@@ -452,6 +422,8 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
           </div>
         </div>
       )}
+
+      {/* Inline Gemini key popover lives inside ZoomBar */}
 
       {selectedNode && (
         <aside data-scrollable="true" aria-hidden={selectedNode.type === 'output'} className={`absolute top-20 left-3 z-40 max-h-[calc(100dvh-8rem)] w-[calc(100vw-1.5rem)] max-w-[24rem] overflow-y-auto rounded-2xl border border-white/15 bg-[#090a0f]/95 p-4 text-left shadow-2xl backdrop-blur-2xl sm:left-20 ${selectedNode.type === 'output' ? 'hidden' : ''}`} aria-label={`Details for ${selectedNode.title}`}>
@@ -521,3 +493,75 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
     </div>
   );
 };
+
+function ZoomBar({ zoom, setZoom, onResetView }: { zoom: number; setZoom: (z: number) => void; onResetView: () => void }) {
+  const [showKey, setShowKey] = useState(false)
+  const [key, setKey] = useState('')
+  const [hasKey, setHasKey] = useState(false)
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('intent-canvas.gemini-key')
+      setHasKey(Boolean(stored && stored.trim().length >= 20))
+      if (stored) setKey(stored)
+    } catch {}
+  }, [showKey])
+
+  const saveKey = () => {
+    const trimmed = key.trim()
+    if (trimmed && trimmed.length < 20) {
+      alert('Invalid Gemini key. Paste the full key from aistudio.google.com (at least 20 characters).')
+      return
+    }
+    try {
+      if (!trimmed) localStorage.removeItem('intent-canvas.gemini-key')
+      else localStorage.setItem('intent-canvas.gemini-key', trimmed)
+    } catch {}
+    setHasKey(Boolean(trimmed))
+    setShowKey(false)
+  }
+
+  return (
+    <div className="absolute bottom-28 right-6 z-40 flex items-center gap-1 rounded-2xl border border-white/15 bg-[#090a0f]/95 p-1.5 text-xs text-neutral-300 shadow-2xl backdrop-blur-2xl">
+      <button type="button" aria-label="Zoom out" onClick={() => setZoom(Math.max(APP_CONFIG.minZoom, zoom - 0.1))} title="Zoom Out" className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white">
+        <ZoomOut className="h-4 w-4" />
+      </button>
+      <span className="px-2 font-mono text-xs font-bold text-white">{Math.round(zoom * 100)}%</span>
+      <button type="button" aria-label="Zoom in" onClick={() => setZoom(Math.min(APP_CONFIG.maxZoom, zoom + 0.1))} title="Zoom In" className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white">
+        <ZoomIn className="h-4 w-4" />
+      </button>
+      <div className="h-4 w-px bg-white/10 mx-1" />
+      <button type="button" aria-label="Reset canvas view" onClick={onResetView} title="Reset View" className="rounded-xl p-1.5 hover:bg-white/10 hover:text-white">
+        <Maximize2 className="h-4 w-4" />
+      </button>
+      <div className="h-4 w-px bg-white/10 mx-1" />
+      <div className="relative">
+        <button
+          type="button"
+          aria-label={hasKey ? 'Gemini key saved' : 'Add Gemini API key'}
+          onClick={() => setShowKey(s => !s)}
+          title={hasKey ? 'Gemini ready — click to manage key' : 'Add Gemini API key for AI planning'}
+          className={`flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold transition-colors ${hasKey ? 'bg-[#00ff87]/10 text-[#00ff87] border border-[#00ff87]/20' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20'}`}
+        >
+          <span className={`h-2 w-2 rounded-full ${hasKey ? 'bg-[#00ff87] shadow-[0_0_6px_rgba(0,255,135,0.6)]' : 'bg-amber-400'}`} />
+          <KeyRound className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{hasKey ? 'Gemini' : 'Add key'}</span>
+        </button>
+        {showKey && (
+          <div className="absolute bottom-full right-0 mb-2 w-72 rounded-2xl border border-white/10 bg-[#090a0f]/95 p-3 shadow-2xl backdrop-blur-2xl">
+            <p className="text-xs font-bold text-white">Gemini API Key</p>
+            <p className="mt-1 text-[10px] leading-relaxed text-neutral-400">Stored only in this browser. Powers planning & execution via <span className="text-neutral-200">generativelanguage.googleapis.com</span></p>
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-2.5 py-2">
+              <KeyRound className="h-3.5 w-3.5 shrink-0 text-neutral-500" />
+              <input type="password" value={key} onChange={e => setKey(e.target.value)} onKeyDown={e => e.key === 'Enter' && saveKey()} placeholder="Paste Gemini API key" className="flex-1 bg-transparent text-xs text-white placeholder:text-neutral-500 focus:outline-none" />
+            </div>
+            <div className="mt-2 flex gap-2">
+              <button type="button" onClick={saveKey} className="flex-1 rounded-xl bg-[#00ff87] px-3 py-1.5 text-xs font-bold text-black hover:bg-[#00ff87]/90">Save</button>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="rounded-xl border border-sky-500/20 bg-sky-500/5 px-3 py-1.5 text-xs font-semibold text-sky-300 hover:bg-sky-500/10">Get key</a>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

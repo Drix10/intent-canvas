@@ -12,7 +12,6 @@ import { AdaptationRequest, CanvasNode, ExecutionPlan } from './types/canvas'
 import { APP_CONFIG } from './config'
 import { getApiErrorMessage, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled } from './api'
 import { generatePlanWithGemini, executeWithGemini, hasGeminiKey } from './services/geminiService'
-import { ApiKeyBar } from './components/ApiKeyBar'
 import { createId } from './utils/id'
 import { buildSpatialClusters, buildSpatialEdges } from './utils/spatialRelations'
 
@@ -530,14 +529,7 @@ export default function App() {
         <Navbar />
         {viewMode === 'interactive' && <IntentBar {...intentHandlers} />}
 
-        {/* Gemini key — workspace-native, only in interactive */}
-        {viewMode === 'interactive' && (
-          <div className="pointer-events-none fixed bottom-20 right-6 z-30 flex flex-col items-end gap-2 sm:bottom-24">
-            <div className="pointer-events-auto">
-              <ApiKeyBar />
-            </div>
-          </div>
-        )}
+
 
         {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
         {viewMode === 'showcase' ? (
