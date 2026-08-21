@@ -47,8 +47,7 @@ The UI does not execute every available tool. It displays the tools selected by 
 - Plan context rationale showing why each source was selected and which spatial relationship supports it.
 - Expected outputs and verification checks shown before approval.
 - Full workflow stages shown separately from the underlying capability tool, so a single tool does not collapse a multi-step business process into one line.
-- Tool-specific result rendering for data, documents, meetings, UI/UX concepts, and renewal rescue.
-- Renewal Rescue results with risk score provenance, multi-source evidence bullets, owner, deadline, and recovery action.
+- Tool-specific result rendering for data, documents, meetings, and UI/UX concepts.
 - Local browser persistence for workspace state and saved primitive metadata.
 - Resettable starter context for the demo workflow.
 
@@ -142,14 +141,14 @@ npm run dev
 
 Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
 
-For a local Renewal Rescue demo without MeshAPI, use development backend settings with authentication disabled locally. General provider-backed tools require a configured backend `MESH_API_KEY`.
+For a local demo without MeshAPI, use development backend settings with authentication disabled locally. Provider-backed tools require a configured backend `MESH_API_KEY`.
 
 ## Demo Workflow
 
 1. Switch from showcase mode to the interactive workspace.
 2. Restore the starter context if needed.
 3. Arrange or connect context nodes.
-4. Enter an outcome such as finding high-risk upcoming renewals and creating recovery plans.
+4. Enter an outcome such as analyzing the supplied datasets and proposing the most useful insights.
 5. Select plan inspection.
 6. Review the context, selected tool, steps, and confidence.
 7. Approve execution.
