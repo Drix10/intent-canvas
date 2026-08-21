@@ -26,7 +26,6 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   useDialog(dialogRef, onClose);
-  const isRenewalPlan = plan.steps.some((step) => step.requiredCapability === 'RenewalRescue');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md p-4" role="presentation">
@@ -45,8 +44,8 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
           {/* Modal Header */}
           <div className="mb-4 flex items-center gap-2 pr-8">
             <Sparkles className="h-5 w-5 text-[#00ff87]" />
-             <div>
-                <h2 id="plan-modal-title" className="text-base font-bold text-white">{isRenewalPlan ? 'Renewal Rescue Plan Review' : 'Business Plan Review'}</h2>
+              <div>
+                <h2 id="plan-modal-title" className="text-base font-bold text-white">Business Plan Review</h2>
                 {plan.planningMode === 'local_fallback' && <p className="mt-0.5 text-[10px] text-amber-300">Planning used a local backup and is ready for review.</p>}
              </div>
           </div>
@@ -94,7 +93,7 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="truncate text-xs font-bold text-white">{step.title}</h4>
                     <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] font-mono text-neutral-300">
-                       {step.requiredCapability === 'RenewalRescue' ? 'Renewal risk assessment' : step.requiredCapability === 'DataPatternFinder' ? 'Business trend analysis' : step.requiredCapability === 'DocumentSynthesizer' ? 'Evidence synthesis' : step.requiredCapability === 'MeetingInsightExtractor' ? 'Meeting insight review' : 'Experience concept'}
+                       {step.requiredCapability === 'DataPatternFinder' ? 'Business trend analysis' : step.requiredCapability === 'DocumentSynthesizer' ? 'Evidence synthesis' : step.requiredCapability === 'MeetingInsightExtractor' ? 'Meeting insight review' : 'Experience concept'}
                     </span>
                   </div>
                   <p className="mt-1 text-[11px] leading-relaxed text-neutral-400">{step.description}</p>
@@ -117,14 +116,14 @@ export const PlanPreviewModal: React.FC<PlanPreviewModalProps> = ({
                disabled={isExecuting || plan.steps.length === 0}
                className="min-w-48 max-w-full whitespace-normal bg-[#00ff87] px-6 py-2 text-xs font-bold text-black hover:bg-[#00ff87]/90"
             >
-               {plan.steps.length === 0 ? 'Choose an intent direction' : isExecuting ? (
+                {plan.steps.length === 0 ? 'Choose an intent direction' : isExecuting ? (
                 <span className="flex items-center gap-2">
                   <div className="h-3 w-3 animate-spin rounded-full border-2 border-black border-t-transparent" />
-                   {isRenewalPlan ? 'Building recovery plans...' : 'Running business plan...'}
+                   Running business plan...
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5">
-                    <Play className="h-3.5 w-3.5 fill-black" /> {isRenewalPlan ? 'Approve & build recovery plans' : 'Approve & run selected tools'}
+                    <Play className="h-3.5 w-3.5 fill-black" /> Approve & run selected tools
                 </span>
               )}
             </MagneticButton>

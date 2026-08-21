@@ -64,13 +64,13 @@ const demoStarterNodes: CanvasNode[] = [
     },
   },
   {
-    id: 'node-renewal-calendar',
-    title: 'Renewal Calendar',
+    id: 'node-project-timeline',
+    title: 'Project Timeline',
     type: 'dataset',
     position: { x: 1020, y: 140, width: 280, height: 160 },
     dataPayload: {
       mimeType: 'text/csv',
-      contentSummary: 'account,renewal_date,owner\nNorthstar Health,2026-09-15,Jordan Lee\nAcme Logistics,2026-10-01,Maya Patel\nBrightline Media,2027-01-20,Alex Chen',
+      contentSummary: 'initiative,milestone,owner\nNorthstar Health,Q3 Review,Jordan Lee\nAcme Logistics,Onboarding,Maya Patel\nBrightline Media,Launch Prep,Alex Chen',
     },
   },
   {
@@ -80,7 +80,7 @@ const demoStarterNodes: CanvasNode[] = [
     position: { x: 260, y: 380, width: 280, height: 160 },
     dataPayload: {
       mimeType: 'text/plain',
-      contentSummary: 'Northstar Health asked for a recovery plan after a slow rollout and wants executive visibility.\nAcme Logistics confirmed the original champion left; the replacement has not joined a renewal conversation.\nBrightline Media requested a reduced-seat proposal before budget approval.',
+      contentSummary: 'Northstar Health requested a clearer rollout plan and executive visibility.\nAcme Logistics noted the champion transition and need for enablement.\nBrightline Media asked for a proposal aligned to team needs.',
     },
   },
   {
@@ -104,10 +104,10 @@ const demoStarterEdges: CanvasEdge[] = [
     label: 'Health signals',
   },
   {
-    id: 'edge-usage-calendar', sourceNodeId: 'node-customer-usage', targetNodeId: 'node-renewal-calendar', relationType: 'explicit_connector', label: 'Prioritize by timing',
+    id: 'edge-usage-calendar', sourceNodeId: 'node-customer-usage', targetNodeId: 'node-project-timeline', relationType: 'explicit_connector', label: 'Prioritize by timing',
   },
   {
-    id: 'edge-calendar-feedback', sourceNodeId: 'node-renewal-calendar', targetNodeId: 'node-customer-feedback', relationType: 'explicit_connector', label: 'Renewal evidence',
+    id: 'edge-calendar-feedback', sourceNodeId: 'node-project-timeline', targetNodeId: 'node-customer-feedback', relationType: 'explicit_connector', label: 'Project evidence',
   },
   {
     id: 'edge-feedback-csm', sourceNodeId: 'node-customer-feedback', targetNodeId: 'node-csm-notes', relationType: 'explicit_connector', label: 'Recovery ownership',
@@ -312,29 +312,29 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
       executionResult: removedNode?.type === 'output' ? null : state.executionResult,
     };
   }),
-  updateNodePosition: (id, x, y) => {
+  updateNodePosition: (id: string, x: number, y: number) => {
     let result: 'updated' | 'collision' | 'invalid' | 'missing' = 'missing';
-    set((state) => {
-      const moving = state.nodes.find((node) => node.id === id);
+    set((state: CanvasState) => {
+      const moving = state.nodes.find((node: CanvasNode) => node.id === id);
       if (!moving) return state;
       if (!Number.isFinite(x) || !Number.isFinite(y)) {
         result = 'invalid';
         return state;
       }
       const nextPosition = { ...moving.position, x, y };
-      if (state.nodes.some((node) => node.id !== id && overlaps(nextPosition, node.position))) {
+      if (state.nodes.some((node: CanvasNode) => node.id !== id && overlaps(nextPosition, node.position))) {
         result = 'collision';
         return state;
       }
       result = 'updated';
-      return { nodes: state.nodes.map((node) => node.id === id ? { ...node, position: nextPosition } : node) };
+      return { nodes: state.nodes.map((node: CanvasNode) => node.id === id ? { ...node, position: nextPosition } : node) };
     });
     return result;
   },
-  addEdge: (sourceNodeId, targetNodeId, relationType = 'explicit_connector', label = 'Spatial Relation') => set((state) => {
-    if (state.edges.length >= 60 || sourceNodeId === targetNodeId || !state.nodes.some((node) => node.id === sourceNodeId) || !state.nodes.some((node) => node.id === targetNodeId) || !['explicit_connector', 'spatial_proximity', 'enclosure_group', 'semantic_match'].includes(relationType) || typeof label !== 'string' || label.length > 300) return state;
+  addEdge: (sourceNodeId: string, targetNodeId: string, relationType: CanvasEdge['relationType'] = 'explicit_connector', label = 'Spatial Relation') => set((state: CanvasState) => {
+    if (state.edges.length >= 60 || sourceNodeId === targetNodeId || !state.nodes.some((node: CanvasNode) => node.id === sourceNodeId) || !state.nodes.some((node: CanvasNode) => node.id === targetNodeId) || !['explicit_connector', 'spatial_proximity', 'enclosure_group', 'semantic_match'].includes(relationType) || typeof label !== 'string' || label.length > 300) return state;
     const exists = state.edges.some(
-      (e) => (e.sourceNodeId === sourceNodeId && e.targetNodeId === targetNodeId) ||
+      (e: CanvasEdge) => (e.sourceNodeId === sourceNodeId && e.targetNodeId === targetNodeId) ||
              (e.sourceNodeId === targetNodeId && e.targetNodeId === sourceNodeId)
     );
     if (exists) return state;
@@ -351,34 +351,34 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
       ],
     };
   }),
-  removeEdge: (edgeId) => set((state) => ({
-    edges: state.edges.filter((e) => e.id !== edgeId),
+  removeEdge: (edgeId: string) => set((state: CanvasState) => ({
+    edges: state.edges.filter((e: CanvasEdge) => e.id !== edgeId),
   })),
-  selectNode: (id, multi) => set((state) => {
-    if (!state.nodes.some((node) => node.id === id)) return state;
+  selectNode: (id: string, multi?: boolean) => set((state: CanvasState) => {
+    if (!state.nodes.some((node: CanvasNode) => node.id === id)) return state;
     return {
-    selectedNodeIds: multi ? (state.selectedNodeIds.includes(id) ? state.selectedNodeIds.filter((i) => i !== id) : [...state.selectedNodeIds, id]) : [id],
+    selectedNodeIds: multi ? (state.selectedNodeIds.includes(id) ? state.selectedNodeIds.filter((i: string) => i !== id) : [...state.selectedNodeIds, id]) : [id],
     };
   }),
   clearSelection: () => set({ selectedNodeIds: [] }),
-  setActiveIntentPrompt: (activeIntentPrompt) => set({ activeIntentPrompt: activeIntentPrompt.slice(0, 3000) }),
-  setIsEvaluatingPlan: (isEvaluatingPlan) => set({ isEvaluatingPlan }),
-  setIsExecutingPlan: (isExecutingPlan) => set({ isExecutingPlan }),
-  setActivePlan: (activePlan) => set({ activePlan }),
-  setExecutionResult: (executionResult) => set({ executionResult }),
-  addCustomPrimitive: (primitive) => set((state) => {
+  setActiveIntentPrompt: (activeIntentPrompt: string) => set({ activeIntentPrompt: activeIntentPrompt.slice(0, 3000) }),
+  setIsEvaluatingPlan: (isEvaluatingPlan: boolean) => set({ isEvaluatingPlan }),
+  setIsExecutingPlan: (isExecutingPlan: boolean) => set({ isExecutingPlan }),
+  setActivePlan: (activePlan: ExecutionPlan | null) => set({ activePlan }),
+  setExecutionResult: (executionResult: ExecutionResult | null) => set({ executionResult }),
+  addCustomPrimitive: (primitive: CustomPrimitiveRecord) => set((state: CanvasState) => {
     if (!isValidPrimitive(primitive)) return state;
-    if (state.customPrimitives.some(existing => existing.primitiveId === primitive.primitiveId)) return state;
+    if (state.customPrimitives.some((existing: CustomPrimitiveRecord) => existing.primitiveId === primitive.primitiveId)) return state;
     const customPrimitives = [...state.customPrimitives, primitive].slice(-30);
     persistCustomPrimitives(customPrimitives);
     return { customPrimitives };
   }),
-  upsertOutputNode: (summary, payload) => {
+  upsertOutputNode: (summary: string, payload: Record<string, unknown>) => {
     let inserted = true;
-    set((state) => {
-      const existing = state.nodes.find(node => node.type === 'output');
-      const title = payload.renewalRescue ? 'Renewal Rescue Results' : 'Computed Intent Result';
-      if (existing) return { nodes: state.nodes.map(node => node.id === existing.id ? { ...node, title, dataPayload: { ...node.dataPayload, contentSummary: summary, parsedMetrics: payload } } : node) };
+    set((state: CanvasState) => {
+      const existing = state.nodes.find((node: CanvasNode) => node.type === 'output');
+      const title = 'Computed Intent Result';
+      if (existing) return { nodes: state.nodes.map((node: CanvasNode) => node.id === existing.id ? { ...node, title, dataPayload: { ...node.dataPayload, contentSummary: summary, parsedMetrics: payload } } : node) };
       if (state.nodes.length >= 30) {
         inserted = false;
         return state;
@@ -388,7 +388,7 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
     });
     return inserted;
   },
-  clearCanvas: () => set((state) => ({
+  clearCanvas: () => set((state: CanvasState) => ({
     nodes: [],
     edges: [],
     selectedNodeIds: [],
@@ -399,7 +399,7 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
     isExecutingPlan: false,
     resetVersion: state.resetVersion + 1,
   })),
-  resetDemoCanvas: () => set((state) => ({
+  resetDemoCanvas: () => set((state: CanvasState) => ({
     nodes: [...demoStarterNodes, ...primitiveNodes(state.customPrimitives)],
     edges: demoStarterEdges,
     pan: { x: 0, y: 0 },
@@ -415,8 +415,8 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
 }), {
   name: WORKSPACE_STORAGE_KEY,
   storage: createJSONStorage(() => typeof localStorage === 'undefined' ? memoryStorage : localStorage),
-  partialize: (state) => ({
-    nodes: state.nodes.map(node => ({
+  partialize: (state: CanvasState) => ({
+    nodes: state.nodes.map((node: CanvasNode) => ({
       ...node,
       dataPayload: (({ previewUrl: _previewUrl, ...payload }) => payload)(node.dataPayload),
     })),
@@ -425,5 +425,5 @@ export const useCanvasStore = create<CanvasState>()(persist((set) => ({
     customPrimitives: state.customPrimitives,
     viewMode: state.viewMode,
   }),
-  merge: (persisted, current) => mergePersistedWorkspace(current, persisted),
+  merge: (persisted: unknown, current: CanvasState) => mergePersistedWorkspace(current, persisted),
 }));
