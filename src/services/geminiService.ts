@@ -21,42 +21,81 @@ export function setGeminiKey(key: string) {
 }
 
 export function hasGeminiKey(): boolean {
-  return Boolean(getGeminiKey())
+  const key = getGeminiKey()
+  return Boolean(key && /^AIza[0-9A-Za-z_-]{35}$/.test(key))
 }
 
-// Gemini API call helper
+export function isValidGeminiKeyFormat(key: string): boolean {
+  return /^AIza[0-9A-Za-z_-]{35}$/.test(key.trim())
+}
+
+// Simple client-side rate limit: 20 calls per minute
+const callTimestamps: number[] = []
+function checkRateLimit(): void {
+  const now = Date.now()
+  while (callTimestamps.length && callTimestamps[0] < now - 60_000) callTimestamps.shift()
+  if (callTimestamps.length >= 20) throw new Error('Too many requests. Please wait a minute before trying again.')
+  callTimestamps.push(now)
+}
+
+// Gemini API call helper with retry for 429/5xx
 async function callGemini(prompt: string, apiKey: string, signal?: AbortSignal): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { responseMimeType: 'application/json', temperature: 0.3 },
-    }),
-    signal,
-  })
-  if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    if (res.status === 400 || res.status === 401 || res.status === 403) throw new Error('Gemini API key rejected. Check your key and try again.')
-    if (res.status === 429) throw new Error('Gemini rate limit hit. Please wait and try again.')
-    throw new Error(text.slice(0, 500) || `Gemini request failed (${res.status})`)
+  checkRateLimit()
+  let lastError: Error | null = null
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(apiKey)}`
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.3 },
+        }),
+        signal,
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        if (res.status === 400 || res.status === 401 || res.status === 403) throw new Error('Gemini API key rejected. Check your key and try again.')
+        if (res.status === 429 || res.status >= 500) {
+          lastError = new Error(res.status === 429 ? 'Gemini rate limit hit. Please wait and try again.' : `Gemini temporarily unavailable (${res.status})`)
+          if (attempt < 2) {
+            await new Promise(r => setTimeout(r, 800 * (attempt + 1)))
+            continue
+          }
+          throw lastError
+        }
+        throw new Error(text.slice(0, 500) || `Gemini request failed (${res.status})`)
+      }
+      const data = await res.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+      if (!text) throw new Error('Gemini returned no content')
+      return text
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') throw e
+      lastError = e as Error
+      if (lastError.message.includes('rate limit') && attempt < 2) {
+        await new Promise(r => setTimeout(r, 800 * (attempt + 1)))
+        continue
+      }
+      throw lastError
+    }
   }
-  const data = await res.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> }
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
-  if (!text) throw new Error('Gemini returned no content')
-  return text
+  throw lastError || new Error('Gemini request failed')
 }
 
-// Very small fallback planner when no key or Gemini fails — deterministic, no LLM
+// Deterministic fallback when no key or Gemini fails — covers all 4 capabilities
 function localFallbackPlan(ast: SpatialGraphAST): ExecutionPlan {
   const hasDataset = ast.nodes.some(n => n.type === 'dataset')
   const hasDocument = ast.nodes.some(n => n.type === 'document')
+  const hasInstruction = ast.nodes.some(n => n.type === 'instruction')
   const hasExample = ast.nodes.some(n => n.type === 'example')
   const steps: ExecutionPlan['steps'] = []
   if (hasDataset) steps.push({ stepId: 1, title: 'Analyze data patterns', description: 'Examine the supplied dataset for trends and key metrics.', requiredCapability: 'DataPatternFinder', inputNodeIds: ast.nodes.filter(n => n.type === 'dataset').map(n => n.id), status: 'pending' })
+  else if (hasDocument && hasInstruction) steps.push({ stepId: 1, title: 'Extract meeting insights', description: 'Review documents and instructions for decisions and actions.', requiredCapability: 'MeetingInsightExtractor', inputNodeIds: ast.nodes.filter(n => n.type === 'document' || n.type === 'instruction').map(n => n.id), status: 'pending' })
   else if (hasDocument) steps.push({ stepId: 1, title: 'Synthesize documents', description: 'Summarize and connect the supplied documents.', requiredCapability: 'DocumentSynthesizer', inputNodeIds: ast.nodes.filter(n => n.type === 'document').map(n => n.id), status: 'pending' })
   else if (hasExample) steps.push({ stepId: 1, title: 'Generate concept', description: 'Create a concept from the supplied examples.', requiredCapability: 'UIConceptGenerator', inputNodeIds: ast.nodes.filter(n => n.type === 'example').map(n => n.id), status: 'pending' })
+  else if (hasInstruction) steps.push({ stepId: 1, title: 'Synthesize instructions', description: 'Summarize the supplied instructions.', requiredCapability: 'DocumentSynthesizer', inputNodeIds: ast.nodes.filter(n => n.type === 'instruction').map(n => n.id), status: 'pending' })
   if (!steps.length) {
     return {
       planId: `plan_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -92,9 +131,12 @@ function localFallbackPlan(ast: SpatialGraphAST): ExecutionPlan {
   }
 }
 
-const PLAN_SYSTEM_PROMPT = `You are the Intent Canvas planner. Convert the spatial workspace (nodes + relationships + user intent) into a safe, inspectable execution plan.
+const PLAN_SYSTEM_PROMPT = `You are the Intent Canvas planner. Convert the spatial workspace (nodes + spatial relationships + user intent) into a safe, inspectable execution plan.
 Registered capabilities: DataPatternFinder, DocumentSynthesizer, MeetingInsightExtractor, UIConceptGenerator.
-Return ONLY valid JSON matching the schema. No markdown.
+Return ONLY valid JSON matching the schema. No markdown, no prose outside JSON.
+
+Think step-by-step but do not output chain-of-thought. First identify the user's desired outcome, required evidence, and which nodes support it, then choose the smallest useful capability set.
+Each capability may appear once, every inputNodeIds must be an exact node id from the workspace, and spatialBasis must be truthful (explicit_connector > spatial_proximity > enclosure_group > standalone).
 
 Schema:
 {

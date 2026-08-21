@@ -13,8 +13,13 @@ export function ApiKeyBar() {
   }, [])
 
   const save = () => {
-    setGeminiKey(key)
-    setSaved(Boolean(key.trim()))
+    const trimmed = key.trim()
+    if (trimmed && !/^AIza[0-9A-Za-z_-]{35}$/.test(trimmed)) {
+      alert('Invalid Gemini key format. It should start with AIza and be 39 characters.')
+      return
+    }
+    setGeminiKey(trimmed)
+    setSaved(Boolean(trimmed))
     setTimeout(() => setSaved(hasGeminiKey()), 1500)
   }
 
