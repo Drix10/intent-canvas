@@ -1,4 +1,4 @@
-export type NodeType = 'document' | 'dataset' | 'instruction' | 'output';
+export type NodeType = 'document' | 'dataset' | 'example' | 'instruction' | 'output' | 'custom_primitive';
 
 export type RelationType = 'explicit_connector' | 'spatial_proximity' | 'enclosure_group' | 'semantic_match';
 
@@ -29,7 +29,7 @@ export interface PlanStep {
   stepId: number;
   title: string;
   description: string;
-  requiredCapability: 'RenewalRescue';
+  requiredCapability: 'DataPatternFinder' | 'DocumentSynthesizer' | 'MeetingInsightExtractor' | 'UIConceptGenerator';
   inputNodeIds: string[];
   status: 'pending' | 'running' | 'completed' | 'failed';
 }
@@ -60,100 +60,41 @@ export interface ExecutionPlan {
   verification: string[];
   workflowStages: WorkflowStage[];
   steps: PlanStep[];
+  disambiguation?: {
+    requiresUserClarification: boolean;
+    reason: string;
+    options: { optionId: string; label: string; actionHint: string }[];
+  };
 }
 
 export interface ExecutionResult {
-  executionStatus: 'completed';
+  executionStatus: 'completed' | 'disambiguation_required';
   planId?: string;
   goalSummary?: string;
   confidenceScore?: number;
   executedSteps?: PlanStep[];
   outputPayload?: Record<string, unknown>;
+  disambiguation?: ExecutionPlan['disambiguation'];
+}
+
+export type AdaptationOptionId = 'opt_churn' | 'opt_trend';
+
+export interface AdaptationRequest {
+  adaptationOptionId: AdaptationOptionId;
+  filterModifier: 'enterprise' | 'trend';
 }
 
 export interface CapabilityOutputPayload {
-  renewalRescue?: RenewalRescuePayload;
+  dataPattern?: Record<string, unknown>;
+  documentSynthesis?: Record<string, unknown>;
+  meetingInsights?: Record<string, unknown>;
+  uiConcept?: Record<string, unknown>;
 }
 
-export interface RenewalRescueRecord {
-  account: string;
-  ARR: number;
-  renewalDate: string;
-  riskScore: number;
-  riskScoreSource: 'supplied' | 'derived';
-  riskLevel: 'critical' | 'high' | 'medium' | 'low';
-  driver: string;
-  evidence: string[];
-  recommendedAction: string;
-  owner: string;
-  deadline: string;
-}
-
-export interface RenewalRescuePayload {
-  riskRecords: RenewalRescueRecord[];
-  executiveSummary: string;
-  riskChartSvg: string;
-}
-
-export type RecoveryCaseStatus = 'detected' | 'approved' | 'recovered' | 'escalated' | 'ignored';
-
-export interface RecoveryCase {
-  caseId: string;
-  eventId: string;
-  eventType: string;
-  account: string;
-  customerId?: string;
-  subscriptionId?: string;
-  currency?: string;
-  amount?: number;
-  nextBillingDate?: string;
-  paymentStatus?: string;
-  riskReason: string;
-  status: RecoveryCaseStatus;
-  createdAt: string;
-  updatedAt: string;
-  analysisMeteredAt?: string;
-  action?: { actionId: string; type: 'customer_follow_up' | 'payment_method_update'; approvedAt: string; operator: string };
-  timeline: Array<{ at: string; label: string; detail: string }>;
-}
-
-export type DodoSignalClass = 'recovery_case' | 'recovery' | 'operational' | 'context';
-
-export interface DodoSignal {
-  signalId: string;
-  eventId: string;
-  eventType: string;
-  eventFamily: string;
-  classification: DodoSignalClass;
+export interface CustomPrimitiveRecord {
+  primitiveId: string;
   title: string;
-  summary: string;
-  account: string;
-  customerId?: string;
-  subscriptionId?: string;
-  occurredAt: string;
-}
-
-export interface RevenueOperationsOverview {
-  generatedAt: string;
-  retainedSignalCount: number;
-  signalCounts: Record<DodoSignalClass, number>;
-  caseCounts: Record<RecoveryCaseStatus, number>;
-  eventFamilies: Array<{ family: string; count: number; recoveryCases: number }>;
-  attentionCases: Array<Pick<RecoveryCase, 'caseId' | 'account' | 'eventType' | 'riskReason' | 'status' | 'updatedAt'>>;
-}
-
-export interface DodoConnectionStatus {
-  environment: 'test_mode' | 'live_mode';
-  webhookUrl: string;
-  webhookSigningKeyConfigured: boolean;
-  apiKeyConfigured: boolean;
-  historyImportAvailable: boolean;
-}
-
-export interface HistoricalImportResult {
-  paymentsScanned: number;
-  eventsImported: number;
-  casesCreated: number;
-  hasMore: boolean;
-  nextPage?: number;
+  description?: string;
+  inputNodeTypes?: NodeType[];
+  createdAt?: number;
 }

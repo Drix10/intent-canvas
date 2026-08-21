@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { SmoothScrollProvider } from './components/providers/SmoothScrollProvider'
+import { SpatialScroll } from './SpatialScroll'
 import { SpatialCanvas } from './components/canvas/SpatialCanvas'
 import { useCanvasStore } from './store/useCanvasStore'
 import { Navbar } from './components/layout/Navbar'
 import { IntentBar } from './components/canvas/IntentBar'
 import { PlanPreviewModal } from './components/canvas/PlanPreviewModal'
 import { ResultNodeCard } from './components/canvas/ResultNodeCard'
-import { RecoveryCasePanel } from './components/canvas/RecoveryCasePanel'
-import { CanvasNode, DodoConnectionStatus, DodoSignal, ExecutionPlan, HistoricalImportResult, RecoveryCase, RevenueOperationsOverview } from './types/canvas'
+import { DisambiguationModal } from './components/canvas/DisambiguationModal'
+import { AdaptationRequest, CanvasNode, ExecutionPlan } from './types/canvas'
 import { APP_CONFIG } from './config'
-import { getApiErrorMessage, intentApi, intentPath, isDodoConnectionStatus, isDodoSignal, isExecutionPlan, isExecutionResult, isHistoricalImportResult, isRecoveryCase, isRequestCancelled, isRevenueOperationsOverview } from './api'
+import { getApiErrorMessage, intentApi, intentPath, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled } from './api'
 import { createId } from './utils/id'
 import { buildSpatialClusters, buildSpatialEdges } from './utils/spatialRelations'
 
@@ -45,7 +46,7 @@ function responseMessage(data: unknown, fallback: string): string {
   return fallback
 }
 
-function inferIntentFromContext(): string {
+function inferIntentFromContext(nodes: CanvasNode[]): string {
   return APP_CONFIG.defaultIntentPrompt
 }
 
@@ -103,30 +104,29 @@ export default function App() {
   const activeIntentPrompt = useCanvasStore((state) => state.activeIntentPrompt)
   const activePlan = useCanvasStore((state) => state.activePlan)
   const executionResult = useCanvasStore((state) => state.executionResult)
+  const isEvaluatingPlan = useCanvasStore((state) => state.isEvaluatingPlan)
   const isExecutingPlan = useCanvasStore((state) => state.isExecutingPlan)
+  const viewMode = useCanvasStore((state) => state.viewMode)
   const setIsEvaluatingPlan = useCanvasStore((state) => state.setIsEvaluatingPlan)
   const setIsExecutingPlan = useCanvasStore((state) => state.setIsExecutingPlan)
   const setActivePlan = useCanvasStore((state) => state.setActivePlan)
   const setExecutionResult = useCanvasStore((state) => state.setExecutionResult)
+  const setViewMode = useCanvasStore((state) => state.setViewMode)
   const addNode = useCanvasStore((state) => state.addNode)
+  const addCustomPrimitive = useCanvasStore((state) => state.addCustomPrimitive)
   const upsertOutputNode = useCanvasStore((state) => state.upsertOutputNode)
 
   const [showPlanModal, setShowPlanModal] = useState(false)
+  const [disambiguationData, setDisambiguationData] = useState<NonNullable<ExecutionPlan['disambiguation']> | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
-  const [recoveryCases, setRecoveryCases] = useState<RecoveryCase[]>([])
-  const [dodoSignals, setDodoSignals] = useState<DodoSignal[]>([])
-  const [revenueOverview, setRevenueOverview] = useState<RevenueOperationsOverview | null>(null)
-  const [dodoConnection, setDodoConnection] = useState<DodoConnectionStatus | null>(null)
-  const [isLoadingCases, setIsLoadingCases] = useState(false)
-  const [isImportingHistory, setIsImportingHistory] = useState(false)
-  const [historyProgress, setHistoryProgress] = useState<{ days: number; nextPage: number } | null>(null)
+  const [isSavingPrimitive, setIsSavingPrimitive] = useState(false)
   const closePlanModal = useCallback(() => setShowPlanModal(false), [])
+  const closeDisambiguation = useCallback(() => setDisambiguationData(null), [])
   const requestRef = useRef<{ id: number; controller: AbortController; canvasKey: string } | null>(null)
   const requestSequence = useRef(0)
   const fileReadSequence = useRef(0)
   const fileReadController = useRef<AbortController | null>(null)
-  const recoveryCaseRequestRef = useRef<AbortController | null>(null)
   const mountedRef = useRef(true)
   const suppressNextInputReset = useRef(false)
   const clearPromptAfterExecution = useRef(false)
@@ -136,15 +136,17 @@ export default function App() {
     const state = useCanvasStore.getState()
     return JSON.stringify({ nodes: state.nodes, edges: state.edges, activeIntentPrompt: state.activeIntentPrompt })
   }
-  const cancelRequest = () => {
+  const cancelRequest = (clearSaving = true) => {
     requestRef.current?.controller.abort()
     requestRef.current = null
+    if (clearSaving) setIsSavingPrimitive(false)
   }
   const invalidateIntentState = () => {
     cancelRequest()
     setIsEvaluatingPlan(false)
     setIsExecutingPlan(false)
     setShowPlanModal(false)
+    setDisambiguationData(null)
     setActivePlan(null)
     setExecutionResult(null)
     setErrorMessage(null)
@@ -172,100 +174,9 @@ export default function App() {
     mountedRef.current = true
     return () => {
       mountedRef.current = false
-      cancelRequest()
+      cancelRequest(false)
       fileReadController.current?.abort()
-      recoveryCaseRequestRef.current?.abort()
     }
-  }, [])
-  const loadRecoveryCases = useCallback(async () => {
-    recoveryCaseRequestRef.current?.abort()
-    const controller = new AbortController()
-    recoveryCaseRequestRef.current = controller
-    setIsLoadingCases(true)
-    try {
-      const [caseOutcome, signalOutcome, overviewOutcome, connectionOutcome] = await Promise.allSettled([
-        intentApi.get(intentPath('/api/revenue-recovery/cases'), { signal: controller.signal }),
-        intentApi.get(intentPath('/api/revenue-recovery/signals'), { signal: controller.signal }),
-        intentApi.get(intentPath('/api/revenue-recovery/overview'), { signal: controller.signal }),
-        intentApi.get(intentPath('/api/revenue-recovery/connection'), { signal: controller.signal }),
-      ])
-      if (mountedRef.current && recoveryCaseRequestRef.current === controller) {
-        if (caseOutcome.status === 'fulfilled') {
-          const caseValues = Array.isArray(caseOutcome.value.data?.data) ? caseOutcome.value.data.data : []
-          setRecoveryCases(caseValues.filter(isRecoveryCase))
-        }
-        if (signalOutcome.status === 'fulfilled') {
-          const signalValues = Array.isArray(signalOutcome.value.data?.data) ? signalOutcome.value.data.data : []
-          setDodoSignals(signalValues.filter(isDodoSignal))
-        }
-        if (overviewOutcome.status === 'fulfilled' && isRevenueOperationsOverview(overviewOutcome.value.data?.data)) setRevenueOverview(overviewOutcome.value.data.data)
-        if (connectionOutcome.status === 'fulfilled' && isDodoConnectionStatus(connectionOutcome.value.data?.data)) setDodoConnection(connectionOutcome.value.data.data)
-        if (caseOutcome.status === 'rejected' && signalOutcome.status === 'rejected' && overviewOutcome.status === 'rejected' && connectionOutcome.status === 'rejected' && !isRequestCancelled(caseOutcome.reason) && !isRequestCancelled(signalOutcome.reason) && !isRequestCancelled(overviewOutcome.reason) && !isRequestCancelled(connectionOutcome.reason)) {
-          setErrorMessage(getApiErrorMessage(caseOutcome.reason, 'Unable to load Dodo recovery data.'))
-        }
-      }
-    } catch (error) {
-      if (mountedRef.current && recoveryCaseRequestRef.current === controller && !isRequestCancelled(error)) setErrorMessage(getApiErrorMessage(error, 'Unable to load Dodo recovery cases.'))
-    } finally {
-      if (recoveryCaseRequestRef.current === controller) {
-        recoveryCaseRequestRef.current = null
-        if (mountedRef.current) setIsLoadingCases(false)
-      }
-    }
-  }, [])
-  useEffect(() => { void loadRecoveryCases() }, [loadRecoveryCases])
-  const approveRecoveryCase = useCallback(async (recoveryCase: RecoveryCase, actionType: 'customer_follow_up' | 'payment_method_update') => {
-    try {
-      const response = await intentApi.post(intentPath(`/api/revenue-recovery/cases/${encodeURIComponent(recoveryCase.caseId)}/approve`), { actionType, operator: 'Revenue operator' })
-      if (!response.data?.success || !isRecoveryCase(response.data.data)) throw new Error('Invalid recovery case response')
-      setRecoveryCases(current => current.map(item => item.caseId === recoveryCase.caseId ? response.data.data : item))
-      // Re-fetch the bounded overview so its aggregate approval count cannot go stale.
-      void loadRecoveryCases()
-      setStatusMessage(actionType === 'payment_method_update' ? 'Payment-update request approved. No customer charge was attempted.' : 'Owner-led recovery follow-up approved. No customer charge was attempted.')
-    } catch (error) { setErrorMessage(getApiErrorMessage(error, 'Unable to approve the recovery action.')) }
-  }, [loadRecoveryCases])
-  const importDodoHistory = useCallback(async (days: number, startPage = 0) => {
-    if (![30, 90, 365].includes(days)) return
-    try {
-      setIsImportingHistory(true)
-      const response = await intentApi.post(intentPath('/api/revenue-recovery/import-history'), { days, startPage })
-      if (!response.data?.success || !isHistoricalImportResult(response.data.data)) throw new Error('Invalid Dodo history import response')
-      const result: HistoricalImportResult = response.data.data
-      await loadRecoveryCases()
-      if (mountedRef.current) {
-        setHistoryProgress(result.hasMore && result.nextPage !== undefined ? { days, nextPage: result.nextPage } : null)
-        setStatusMessage(`Imported ${result.eventsImported} payment events from ${result.paymentsScanned} records${result.casesCreated ? ` and opened ${result.casesCreated} recovery case${result.casesCreated === 1 ? '' : 's'}` : ''}.${result.hasMore ? ' The next batch is ready to continue.' : ''}`)
-      }
-    } catch (error) {
-      if (mountedRef.current) setErrorMessage(getApiErrorMessage(error, 'Unable to import Dodo payment history. Confirm the server-side Dodo API key and try again.'))
-    } finally { if (mountedRef.current) setIsImportingHistory(false) }
-  }, [loadRecoveryCases])
-  const addRecoveryEvidence = useCallback((recoveryCase: RecoveryCase) => {
-    const currentNodes = useCanvasStore.getState().nodes
-    if (currentNodes.length >= 30) { setErrorMessage('The workspace is full. Remove a node before adding Dodo evidence.'); return }
-    if (currentNodes.some(node => node.dataPayload.rawReference === `dodo-case:${recoveryCase.caseId}`)) { setStatusMessage('This recovery case is already on the canvas.'); return }
-    const node: CanvasNode = { id: createId('node_dodo'), title: `Dodo: ${recoveryCase.account}`, type: 'document', position: findVisibleNodePosition(280, 160), dataPayload: { mimeType: 'application/vnd.dodo-payments.event+json', rawReference: `dodo-case:${recoveryCase.caseId}`, contentSummary: `Verified Dodo event: ${recoveryCase.eventType}\nAccount: ${recoveryCase.account}\nStatus: ${recoveryCase.status}\nReason: ${recoveryCase.riskReason}\nSubscription: ${recoveryCase.subscriptionId || 'Not supplied'}\nNext billing: ${recoveryCase.nextBillingDate || 'Not supplied'}\nThis evidence does not authorize a charge.` } }
-    addNode(node)
-    setStatusMessage('Verified Dodo billing context added to the canvas. Generate a recovery plan to connect it with account evidence.')
-  }, [addNode])
-  const addDodoSignalEvidence = useCallback((signal: DodoSignal) => {
-    const currentNodes = useCanvasStore.getState().nodes
-    if (currentNodes.length >= 30) { setErrorMessage('The workspace is full. Remove a node before adding Dodo evidence.'); return }
-    if (currentNodes.some(node => node.dataPayload.rawReference === `dodo-signal:${signal.signalId}`)) { setStatusMessage('This Dodo signal is already on the canvas.'); return }
-    const riskScore = signal.classification === 'recovery_case' ? 82 : signal.classification === 'recovery' ? 20 : 35
-    const node: CanvasNode = { id: createId('node_dodo'), title: `Dodo: ${signal.title}`, type: 'document', position: findVisibleNodePosition(280, 180), dataPayload: { mimeType: 'application/vnd.dodo-payments.event+json', rawReference: `dodo-signal:${signal.signalId}`, contentSummary: `Verified Dodo signal: ${signal.eventType}\nAccount: ${signal.account}\nRisk Score: ${riskScore}\nDriver: ${signal.title} — ${signal.summary}\nEvidence: signed Dodo event ${signal.eventId}\nOwner: Revenue operator\nSubscription: ${signal.subscriptionId || 'Not supplied'}\nOccurred: ${signal.occurredAt}\nThis evidence does not authorize a charge.` } }
-    addNode(node)
-    setStatusMessage('Verified Dodo signal added as evidence. Generate a recovery plan to combine it with account context.')
-  }, [addNode])
-  const recordCompletedRecoveryAnalyses = useCallback(async () => {
-    const caseIds = [...new Set(useCanvasStore.getState().nodes
-      .map(node => node.dataPayload.rawReference)
-      .flatMap(reference => reference?.startsWith('dodo-case:') ? [reference.slice('dodo-case:'.length)] : []))]
-    if (!caseIds.length) return
-    const outcomes = await Promise.allSettled(caseIds.map(caseId => intentApi.post(intentPath(`/api/revenue-recovery/cases/${encodeURIComponent(caseId)}/analysis-complete`))))
-    if (!mountedRef.current) return
-    const metered = outcomes.filter(outcome => outcome.status === 'fulfilled' && outcome.value.data?.data?.meteringStatus === 'sent').length
-    if (metered) setStatusMessage(`Computation complete. Dodo recorded ${metered} completed recovery analysis event${metered === 1 ? '' : 's'}.`)
   }, [])
   useEffect(() => {
     const updateVisibility = () => document.body.dataset.pageHidden = String(document.hidden)
@@ -283,6 +194,7 @@ export default function App() {
     setIsEvaluatingPlan(false)
     setIsExecutingPlan(false)
     setShowPlanModal(false)
+    setDisambiguationData(null)
     setActivePlan(null)
     setExecutionResult(null)
     setErrorMessage(null)
@@ -293,6 +205,8 @@ export default function App() {
     fileReadController.current = null
     cancelRequest()
     setShowPlanModal(false)
+    setDisambiguationData(null)
+    setIsSavingPrimitive(false)
     setStatusMessage(null)
     setIsEvaluatingPlan(false)
     setIsExecutingPlan(false)
@@ -348,7 +262,7 @@ export default function App() {
 
   // Evaluate Intent & Inspect Plan
   const handleEvaluatePlan = async () => {
-    const prompt = activeIntentPrompt.trim() || inferIntentFromContext()
+    const prompt = activeIntentPrompt.trim() || inferIntentFromContext(useCanvasStore.getState().nodes)
     if (!prompt) {
       setErrorMessage('Describe the outcome you want before inspecting a plan.')
       document.getElementById('intent-prompt')?.focus()
@@ -373,7 +287,11 @@ export default function App() {
           useCanvasStore.getState().setActiveIntentPrompt(prompt)
         }
         setStatusMessage(res.data.data.planningMode === 'local_fallback' ? 'Provider unavailable. A bounded local plan is ready for review.' : 'Plan ready for review.')
-        setShowPlanModal(true)
+        if (res.data.data.disambiguation?.requiresUserClarification) {
+          setDisambiguationData(res.data.data.disambiguation)
+        } else {
+          setShowPlanModal(true)
+        }
       } else {
          setErrorMessage(responseMessage(res.data, 'The service returned an invalid execution plan.'))
       }
@@ -388,8 +306,8 @@ export default function App() {
   }
 
   // Execute Intent & Render In-Canvas Result
-  const handleExecuteComputation = async () => {
-    if (!activePlan) {
+  const handleExecuteComputation = async (adaptation?: AdaptationRequest) => {
+    if (!adaptation && !activePlan) {
       await handleEvaluatePlan()
       return
     }
@@ -401,10 +319,12 @@ export default function App() {
     setIsExecutingPlan(true)
     setStatusMessage('Sending the confirmed intent plan...')
     setShowPlanModal(false)
+    setDisambiguationData(null)
     try {
       const res = await intentApi.post(intentPath('/api/intent/execute'), {
         ...getASTPayload(),
-        executionPlan: activePlan,
+        adaptation,
+         executionPlan: activePlan ?? undefined,
       }, { signal: request.controller.signal })
 
       if (!isCurrentRequest(request)) {
@@ -413,15 +333,18 @@ export default function App() {
       }
       if (res.data?.success && isExecutionResult(res.data.data)) {
         const data = res.data.data
-        setExecutionResult(data)
-        const renewal = data.outputPayload?.renewalRescue as { executiveSummary?: string; riskRecords?: { account?: string; riskLevel?: string }[] } | undefined
-        const resultSummary = renewal?.executiveSummary
-          ? `${renewal.executiveSummary}${renewal.riskRecords?.length ? `\n${renewal.riskRecords.slice(0, 3).map((record) => `${record.account ?? 'Account'}: ${(record.riskLevel ?? 'unknown').toUpperCase()}`).join(' • ')}` : ''}`
-          : data.goalSummary ?? 'Revenue risk assessment completed'
-        const outputInserted = upsertOutputNode(resultSummary, data.outputPayload ?? {})
-        clearPromptAfterExecution.current = true
-        setStatusMessage(outputInserted ? 'Revenue-risk assessment complete. The result was added to the workspace.' : 'Revenue-risk assessment complete. Remove a node to place it on the canvas.')
-        void recordCompletedRecoveryAnalyses()
+        if (data.executionStatus === 'disambiguation_required' && data.disambiguation?.options?.length) {
+          setDisambiguationData(data.disambiguation)
+        } else if (data.executionStatus === 'disambiguation_required') {
+          setErrorMessage('The service requested clarification but returned no options.')
+          } else {
+            setExecutionResult(data)
+            const resultSummary = data.goalSummary ?? 'Computed intent result'
+            const outputInserted = upsertOutputNode(resultSummary, data.outputPayload ?? {})
+           setViewMode('interactive')
+           clearPromptAfterExecution.current = true
+           setStatusMessage(outputInserted ? 'Computation complete. The result was added to the workspace.' : 'Computation complete. The result is available in the result panel; remove a node to place it on the canvas.')
+        }
        } else setErrorMessage(responseMessage(res.data, 'The service returned an invalid execution result.'))
     } catch (err) {
       if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to execute the intent plan.'))
@@ -437,6 +360,11 @@ export default function App() {
        }
     }
   }
+
+  const adaptationForOption = (optionId: 'opt_churn' | 'opt_trend'): AdaptationRequest => ({
+    adaptationOptionId: optionId,
+    filterModifier: optionId === 'opt_churn' ? 'enterprise' : 'trend',
+  })
 
   // Add New Document Node
   const handleAddNewNode = () => {
@@ -455,6 +383,7 @@ export default function App() {
       },
     }
     addNode(newNode)
+    setViewMode('interactive')
      setStatusMessage('Added an untitled document to the canvas. Add your own notes or upload a file.')
   }
 
@@ -501,16 +430,73 @@ export default function App() {
        const uploadedNode: CanvasNode = {
         id: createId('node_upload'),
          title: safeFileName,
-         type: isDataset ? 'dataset' : 'document',
+         type: isImage ? 'example' : isDataset ? 'dataset' : 'document',
         position: findVisibleNodePosition(280, 160),
          dataPayload: { mimeType: isPdf ? 'application/pdf' : file.type.slice(0, 160) || 'application/octet-stream', contentSummary, rawReference: safeFileName, previewUrl },
        }
        addNode(uploadedNode)
+       setViewMode('interactive')
        setStatusMessage(`Added "${safeFileName}" to the Intent Canvas workspace. The workspace node is retained in this browser.`)
     } catch (error) {
       if (mountedRef.current && !isRequestCancelled(error)) setErrorMessage(getApiErrorMessage(error, 'The selected file could not be read or parsed.'))
     } finally {
       if (fileReadController.current === readController) fileReadController.current = null
+    }
+  }
+
+  // Save Executed Output as Higher-Order Custom Primitive
+  const handleSaveAsPrimitive = async () => {
+    if (isSavingPrimitive) return
+    if (useCanvasStore.getState().nodes.length >= 30) {
+      setErrorMessage('The canvas is full. Remove a node before saving a primitive.')
+      return
+    }
+    const request = beginRequest()
+    setErrorMessage(null)
+    setStatusMessage(null)
+    setIsSavingPrimitive(true)
+    try {
+      const res = await intentApi.post(intentPath('/api/intent/create-primitive'), {
+        title: APP_CONFIG.primitiveTitle,
+        description: APP_CONFIG.primitiveDescription,
+         inputNodeTypes: [...new Set(nodes.filter((node) => node.type !== 'output').map((node) => node.type))],
+        ast: getASTPayload(),
+      }, { signal: request.controller.signal })
+
+      if (!isCurrentRequest(request)) {
+        if (isActiveRequest(request)) setErrorMessage('The canvas changed while saving. Please try again.')
+        return
+      }
+       if (res.data?.success && isCustomPrimitiveRecord(res.data.data)) {
+         const primitive = res.data.data
+         const primitiveRecord = {
+           primitiveId: primitive.primitiveId,
+           title: primitive.title,
+           description: primitive.description,
+           inputNodeTypes: primitive.inputNodeTypes,
+           createdAt: primitive.createdAt,
+         }
+         addCustomPrimitive(primitiveRecord)
+         const primitiveNode: CanvasNode = {
+          id: primitive.primitiveId,
+             title: primitiveRecord.title,
+          type: 'custom_primitive',
+          position: findVisibleNodePosition(300, 160),
+          dataPayload: {
+            mimeType: 'application/x-intent-primitive',
+             contentSummary: 'Saved plan record for the current canvas. Re-execution with new inputs is not enabled in this MVP.',
+          },
+        }
+        addNode(primitiveNode)
+         setStatusMessage(`Custom computational primitive "${primitiveRecord.title}" created.`)
+       } else setErrorMessage(responseMessage(res.data, 'The service returned an invalid primitive.'))
+    } catch (err) {
+      if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to create the custom primitive.'))
+    } finally {
+      if (isActiveRequest(request)) {
+        setIsSavingPrimitive(false)
+        requestRef.current = null
+      }
     }
   }
 
@@ -531,16 +517,25 @@ export default function App() {
             <button type="button" aria-label="Dismiss error" onClick={() => setErrorMessage(null)} className="text-red-200 hover:text-white">&times;</button>
           </div>
         )}
+        {/* Render Navbar & IntentBar ONLY in interactive canvas view mode */}
         <Navbar />
-        <IntentBar {...intentHandlers} />
-        <SpatialCanvas onAddFile={handleAddFile} />
+        {viewMode === 'interactive' && <IntentBar {...intentHandlers} />}
 
-        {!executionResult && <div className="absolute top-20 right-6 z-[45] max-h-[calc(100dvh-7rem)] overflow-y-auto" data-scrollable="true"><RecoveryCasePanel cases={recoveryCases} signals={dodoSignals} overview={revenueOverview} connection={dodoConnection} loading={isLoadingCases} importingHistory={isImportingHistory} historyProgress={historyProgress} onRefresh={() => void loadRecoveryCases()} onImportHistory={importDodoHistory} onApprove={approveRecoveryCase} onAddEvidence={addRecoveryEvidence} onAddSignalEvidence={addDodoSignalEvidence} /></div>}
+        {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
+        {viewMode === 'showcase' ? (
+           <SpatialScroll />
+        ) : (
+          <SpatialCanvas onAddFile={handleAddFile} />
+        )}
 
         {/* In-Canvas Result Overlay Container */}
-        {executionResult && (
+        {executionResult && viewMode === 'interactive' && (
             <div data-scrollable="true" onWheel={(event) => event.stopPropagation()} className="absolute top-20 right-6 z-[55] max-h-[calc(100dvh-7rem)] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-2xl pb-3 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <ResultNodeCard result={executionResult} />
+            <ResultNodeCard
+              result={executionResult}
+              onSaveAsPrimitive={handleSaveAsPrimitive}
+              isSavingPrimitive={isSavingPrimitive}
+            />
           </div>
         )}
         </div>
@@ -565,6 +560,22 @@ export default function App() {
           />
         )}
 
+        {/* Disambiguation Option Gate Modal */}
+        {disambiguationData && (
+          <DisambiguationModal
+            reason={disambiguationData.reason}
+            options={disambiguationData.options}
+             onSelectOption={(optId) => {
+               if (optId !== 'opt_churn' && optId !== 'opt_trend') {
+                 setErrorMessage('The service returned an unsupported adaptation option.')
+                 return
+               }
+               handleExecuteComputation(adaptationForOption(optId))
+             }}
+            onClose={closeDisambiguation}
+            isLoading={isExecutingPlan}
+          />
+        )}
       </main>
     </SmoothScrollProvider>
   )

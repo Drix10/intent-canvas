@@ -1,50 +1,204 @@
-# Revenue Rescue
+# Intent Canvas Frontend
 
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/) [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vite.dev/) [![Dodo Payments](https://img.shields.io/badge/Dodo_Payments-test_mode-6C47FF)](https://dodopayments.com/)
+Intent Canvas is a browser-first spatial workspace for expressing business outcomes through context nodes, relationships, and natural-language intent.
 
-Revenue Rescue is a focused revenue-operations workspace for SaaS teams. Connect a Dodo Payments webhook, import historical payments, add account evidence to the canvas, and review a deterministic risk and recovery assessment before any human follow-up happens.
+The frontend lets a user:
 
-There is no seeded demo data and no general-purpose agent mode. The interface is purpose-built for financial evidence, Dodo signals, bounded recovery cases, and human-approved next steps.
+1. place datasets, documents, notes, examples, and uploaded files on a canvas;
+2. connect related context and let proximity form spatial clusters;
+3. describe the desired outcome;
+4. inspect the structured execution plan before anything runs;
+5. approve the plan;
+6. receive only the selected capability results back on the canvas.
 
-## Product flow
+## Product Model
 
-1. Connect the backend to Dodo Payments Test Mode.
-2. Monitor signed live webhook events or import past payment history in resumable batches.
-3. Add a Dodo signal, recovery case, CSV, PDF, note, or financial document to the canvas.
-4. Build and inspect a Revenue Rescue plan.
-5. Execute the deterministic assessment and review evidence, owners, deadlines, and recommended recovery actions.
+```text
+Context nodes + spatial relationships + user intent
+                         |
+                         v
+                  SpatialGraphAST
+                         |
+                         v
+                   Backend planner
+                         |
+                         v
+                 Inspectable plan review
+                         |
+                         v
+                  User approval and execute
+                         |
+                         v
+                 Results returned to canvas
+```
 
-No customer charge, refund, payment retry, or subscription mutation can be made from this UI.
+The UI does not execute every available tool. It displays the tools selected by the backend plan and renders only outputs corresponding to completed steps.
 
-## Local setup
+## Workspace Features
+
+- Spatial node positioning with pointer and keyboard movement.
+- Explicit relationship edges and automatically derived proximity relationships.
+- Manual named relationship edges and automatic proximity relationships; backend semantic retrieval informs planning without adding noisy automatic canvas edges.
+- Dataset, document, instruction, example, output, and custom primitive nodes.
+- PDF, CSV, TXT, MD, JSON, and raster image uploads.
+- SVG uploads are rejected; raster previews are resized before storage.
+- Inspectable plan review with context sources and confidence.
+- Approval-gated execution.
+- Plan context rationale showing why each source was selected and which spatial relationship supports it.
+- Expected outputs and verification checks shown before approval.
+- Full workflow stages shown separately from the underlying capability tool, so a single tool does not collapse a multi-step business process into one line.
+- Tool-specific result rendering for data, documents, meetings, UI/UX concepts, and renewal rescue.
+- Renewal Rescue results with risk score provenance, multi-source evidence bullets, owner, deadline, and recovery action.
+- Local browser persistence for workspace state and saved primitive metadata.
+- Resettable starter context for the demo workflow.
+
+## Capability Result Behavior
+
+The frontend accepts a result only when:
+
+- the execution status is valid;
+- executed steps are sequential and unique;
+- every output key maps to an executed capability;
+- every executed capability has a matching output;
+- nested values, strings, arrays, SVG, and serialized output stay within limits;
+- capability-specific required fields are present.
+
+The displayed tools-used line is derived from `executedSteps`, not from the available tool registry. UI/UX output also displays `referenceBasis` so visual recommendations show what supplied reference informed them.
+
+## Frontend Architecture
+
+- `src/App.tsx`: application orchestration, AST construction, uploads, plan requests, execution requests, and top-level feedback.
+- `src/components/canvas/SpatialCanvas.tsx`: pan, zoom, drag, keyboard movement, file drop, and relationship creation.
+- `src/components/canvas/PlanPreviewModal.tsx`: business-facing plan review and approval.
+- `src/components/canvas/ResultNodeCard.tsx`: validated capability-specific result rendering.
+- `src/components/canvas/CanvasNodeCard.tsx`: source and output node presentation.
+- `src/store/useCanvasStore.ts`: Zustand workspace state, persistence, node/edge operations, and starter reset.
+- `src/api.ts`: Axios client, auth headers, response size limits, runtime validators, and capability-output contracts.
+- `src/utils/spatialRelations.ts`: proximity edges and connected spatial clusters.
+- `src/api.ts`: bounded API client and runtime validators; semantic retrieval remains a backend planning concern rather than an automatic visual edge generator.
+- `src/utils/sanitizeSvg.ts`: allowlisted SVG sanitization before DOM insertion.
+- `src/hooks/useDialog.ts`: focus trapping, inert background handling, Escape behavior, and focus restoration.
+
+## Workspace State
+
+The Zustand store persists only bounded workspace data:
+
+- nodes and validated payload summaries;
+- edges and relationship metadata;
+- active prompt;
+- saved custom primitive metadata;
+- view mode.
+
+Transient request state, active plans, and execution results are not persisted. Malformed local storage data is discarded at merge time. The starter business context is isolated to the demo reset state.
+
+## Configuration
+
+Copy `.env.example` to `.env`:
+
+```env
+VITE_API_BASE_URL=http://localhost:25655
+VITE_API_PROXY_TARGET=http://localhost:25655
+VITE_API_TIMEOUT_MS=60000
+VITE_API_ACCESS_TOKEN=
+VITE_CANVAS_ID=workspace_canvas
+VITE_SPATIAL_CLUSTER_ID=primary
+VITE_PROXIMITY_DISTANCE_PX=240
+VITE_DEFAULT_INTENT_PROMPT=Analyze the supplied context, identify the most useful supported outcome, and propose grounded next steps.
+VITE_PRIMITIVE_TITLE=Evidence-Based Risk and Opportunity Primitive
+VITE_PRIMITIVE_DESCRIPTION=User-composed dynamic computational primitive
+```
+
+Configuration details:
+
+- `VITE_API_BASE_URL`: backend origin. Leave empty when using the Vite proxy configuration.
+- `VITE_API_PROXY_TARGET`: local Vite proxy target.
+- `VITE_API_TIMEOUT_MS`: Axios request timeout. The default is 60 seconds because provider-backed planning and execution can exceed short browser timeouts.
+- `VITE_API_ACCESS_TOKEN`: backend access token when backend authentication is enabled.
+- `VITE_CANVAS_ID`: stable identifier for the workspace AST.
+- `VITE_SPATIAL_CLUSTER_ID`: cluster ID prefix sent to the backend.
+- `VITE_PROXIMITY_DISTANCE_PX`: centroid distance used to infer proximity relationships.
+- `VITE_DEFAULT_INTENT_PROMPT`: neutral fallback used when the user presses Generate Intent without typing a prompt.
+- `VITE_PRIMITIVE_TITLE` and `VITE_PRIMITIVE_DESCRIPTION`: metadata used when saving a custom primitive.
+
+Important: every `VITE_*` value is public because Vite embeds it in the browser bundle. Never put a MeshAPI credential in frontend configuration. Treat `VITE_API_ACCESS_TOKEN` as a client access credential, not a secret, and protect the backend with origin restrictions, token rotation, and deployment controls.
+
+## Local Development
+
+Start the backend first, then the frontend:
 
 ```bash
+# Terminal 1
+cd NYC-R3-BACKEND
+npm install
+cp .env.example .env
+npm run dev
+
+# Terminal 2
+cd NYC-R3-FRONTEND
 npm install
 cp .env.example .env
 npm run dev
 ```
 
-Required variables:
+Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
 
-```env
-VITE_API_BASE_URL=http://localhost:25655
-VITE_API_TIMEOUT_MS=60000
-VITE_API_ACCESS_TOKEN=the-same-server-token-when-auth-is-enabled
-VITE_DEFAULT_INTENT_PROMPT=Prioritize revenue risk from the supplied financial evidence and propose a safe recovery plan.
-```
+For a local Renewal Rescue demo without MeshAPI, use development backend settings with authentication disabled locally. General provider-backed tools require a configured backend `MESH_API_KEY`.
 
-## Validation and safety
+## Demo Workflow
 
-- All API payloads are runtime validated and size bounded before rendering.
-- SVG risk charts are sanitized before insertion into the DOM.
-- Requests are abortable; stale plans and results are discarded when the canvas changes.
-- Persisted browser workspaces reject legacy demo/custom-primitive records and never retain image previews.
-- A backend-generated plan is bound to the exact canvas state and can execute only once.
+1. Switch from showcase mode to the interactive workspace.
+2. Restore the starter context if needed.
+3. Arrange or connect context nodes.
+4. Enter an outcome such as finding high-risk upcoming renewals and creating recovery plans.
+5. Select plan inspection.
+6. Review the context, selected tool, steps, and confidence.
+7. Approve execution.
+8. Inspect the resulting business objects on the canvas and in the result card.
 
-## Build
+The starter context is demo-only. Production workspaces should use uploaded or user-created context.
+
+## Upload and Rendering Limits
+
+- Maximum upload size: 10 MB in the browser.
+- PDF request size: 5 MB at the backend.
+- Extracted PDF text stored in a node: 10,000 characters.
+- Image previews: bounded raster previews only.
+- SVG uploads: rejected.
+- Workspace nodes: 30.
+- Workspace edges: 60.
+- Output payload: 100 KB client-side validation limit.
+- Inline SVG charts: sanitized and bounded before rendering.
+
+## Scripts
 
 ```bash
+npm run dev
 npm run build
+npm run preview
 ```
 
-For deployment, set `VITE_API_BASE_URL` to the HTTPS backend origin and never place Dodo API keys or webhook signing keys in frontend environment variables.
+- `npm run dev`: start Vite development mode.
+- `npm run build`: run TypeScript compilation and create the production bundle.
+- `npm run preview`: serve the production bundle locally.
+
+## Production Deployment
+
+1. Build with `npm run build`.
+2. Deploy the generated `dist` directory to a static host.
+3. Set `VITE_API_BASE_URL` to the deployed backend origin before building.
+4. Set the matching client access token only if backend authentication is enabled.
+5. Configure the backend `CORS_ORIGINS` to include the deployed frontend origin.
+6. Do not expose backend provider credentials in frontend variables.
+7. Use HTTPS for both frontend and backend origins.
+
+There is no frontend database. Browser persistence is local to the current browser profile and is not multi-user storage.
+
+## Related Documentation
+
+- `docs/ARCHITECTURE.md`: component and state architecture.
+- `docs/INTEGRATION_GUIDE.md`: backend integration and deployment notes.
+- `../NYC-R3-BACKEND/README.md`: backend setup, API contracts, capabilities, and operational limits.
+
+## License
+
+Built for the NYC Codex Community Hackathon.

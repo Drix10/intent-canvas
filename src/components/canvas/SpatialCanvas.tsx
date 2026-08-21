@@ -6,7 +6,7 @@ import { CanvasSVGEdges } from './CanvasSVGEdges';
 import { ResultNodeCard } from './ResultNodeCard';
 import { ExecutionResult } from '../../types/canvas';
 import { APP_CONFIG } from '../../config';
-import { Sparkles, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, GitBranch, Ruler, HardDrive, Trash2, X, Pencil } from 'lucide-react';
+import { Sparkles, RotateCcw, ZoomIn, ZoomOut, Maximize2, HelpCircle, Layers, Network, GitBranch, Ruler, HardDrive, Trash2, X, Pencil } from 'lucide-react';
 import { buildSpatialEdges } from '../../utils/spatialRelations';
 import { useDialog } from '../../hooks/useDialog';
 
@@ -21,6 +21,7 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
   const executionResult = useCanvasStore((state) => state.executionResult);
   const setActiveIntentPrompt = useCanvasStore((state) => state.setActiveIntentPrompt);
   const resetVersion = useCanvasStore((state) => state.resetVersion);
+  const resetDemoCanvas = useCanvasStore((state) => state.resetDemoCanvas);
   const clearCanvas = useCanvasStore((state) => state.clearCanvas);
   const setPan = useCanvasStore((state) => state.setPan);
   const setZoom = useCanvasStore((state) => state.setZoom);
@@ -384,6 +385,15 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
         <div className="flex flex-col items-center" title="Local retention"><HardDrive className="h-3.5 w-3.5 text-neutral-500" aria-label="Local retention" /><strong className="text-emerald-400">On</strong></div>
         <button
           type="button"
+          onClick={resetDemoCanvas}
+          title="Restore Initial Starter Context"
+          aria-label="Restore starter context"
+          className="flex items-center justify-center rounded-lg border border-white/10 bg-white/5 p-1.5 text-neutral-300 hover:bg-white/10 hover:text-white"
+        >
+          <RotateCcw className="h-3 w-3 text-sky-400" />
+        </button>
+        <button
+          type="button"
           onClick={() => { if (window.confirm('Clear every node and relationship from this canvas?')) clearCanvas(); }}
           title="Clear canvas"
           aria-label="Clear canvas"
@@ -484,9 +494,9 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#00ff87]/30 bg-[#00ff87]/10 text-[#00ff87]">
               <Network className="h-7 w-7" />
             </div>
-            <h3 className="text-lg font-bold text-white">Revenue Rescue Workspace Ready</h3>
+            <h3 className="text-lg font-bold text-white">Spatial Intent Workspace Ready</h3>
             <p className="mt-2 text-xs leading-relaxed text-neutral-400">
-               Start with a verified Dodo case or signal from Revenue Rescue, then add customer context from a PDF, CSV, note, JSON, or image before asking for a recovery plan.
+               Your spatial graph AST is currently empty. Drop a PDF, CSV, text, JSON, or image file anywhere onto the canvas, or restore the starter context.
             </p>
              <div className="mt-6 flex flex-col gap-2">
               {onAddFile && (
@@ -497,6 +507,13 @@ export const SpatialCanvas: React.FC<{ onAddFile?: (file: File) => void }> = ({ 
                   </button>
                 </>
               )}
+              <button
+                type="button"
+           onClick={() => { if (window.confirm('Restore the starter context? Your current canvas changes will be replaced.')) resetDemoCanvas(); }}
+                className="flex items-center justify-center gap-2 rounded-xl bg-[#00ff87] px-4 py-2.5 text-xs font-bold text-black hover:bg-[#00ff87]/90 shadow-[0_0_20px_rgba(0,255,135,0.3)] transition-all"
+              >
+                <RotateCcw className="h-4 w-4" /> Restore Starter Demo Context
+              </button>
             </div>
           </div>
         </div>
