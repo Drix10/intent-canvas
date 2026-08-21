@@ -14,8 +14,8 @@ export function ApiKeyBar() {
 
   const save = () => {
     const trimmed = key.trim()
-    if (trimmed && !/^AIza[0-9A-Za-z_-]{35}$/.test(trimmed)) {
-      alert('Invalid Gemini key format. It should start with AIza and be 39 characters.')
+    if (trimmed && trimmed.length < 20) {
+      alert('Invalid Gemini key. Paste the full key from aistudio.google.com (at least 20 characters).')
       return
     }
     setGeminiKey(trimmed)
@@ -30,7 +30,7 @@ export function ApiKeyBar() {
         type={show ? 'text' : 'password'}
         value={key}
         onChange={e => setKey(e.target.value)}
-        placeholder="Paste Gemini API key (AIza...)"
+        placeholder="Paste Gemini API key"
         className="w-56 bg-transparent text-[11px] text-white placeholder:text-neutral-500 focus:outline-none sm:w-72"
       />
       <button type="button" onClick={() => setShow(s => !s)} aria-label={show ? 'Hide key' : 'Show key'} className="rounded p-1 text-neutral-400 hover:text-white">

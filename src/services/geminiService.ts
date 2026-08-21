@@ -22,11 +22,11 @@ export function setGeminiKey(key: string) {
 
 export function hasGeminiKey(): boolean {
   const key = getGeminiKey()
-  return Boolean(key && /^AIza[0-9A-Za-z_-]{35}$/.test(key))
+  return Boolean(key && key.trim().length >= 20)
 }
 
 export function isValidGeminiKeyFormat(key: string): boolean {
-  return /^AIza[0-9A-Za-z_-]{35}$/.test(key.trim())
+  return key.trim().length >= 20
 }
 
 // Simple client-side rate limit: 20 calls per minute

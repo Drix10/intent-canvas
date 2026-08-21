@@ -1,6 +1,6 @@
 # Intent Canvas
 
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/) [![Gemini](https://img.shields.io/badge/Gemini-2.5--flash-8E75FF)](https://aistudio.google.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/) [![Gemini](https://img.shields.io/badge/Gemini-3.5--flash-8E75FF)](https://aistudio.google.com/)
 
 A browser-first **spatial workspace** for turning business intent into inspectable computation. Place evidence, connect ideas, describe what you want — get back a plan you can trust, then execute.
 
