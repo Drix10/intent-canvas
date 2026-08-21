@@ -139,19 +139,30 @@ function isContextRelationSuggestion(value: unknown, nodeIds: Set<string>): valu
     Array.isArray(relation.evidence) && relation.evidence.length <= 10 && relation.evidence.every(item => isBoundedString(item, MAX_LONG_STRING))
 }
 
-export async function suggestContextRelations(nodes: CanvasNode[], signal: AbortSignal): Promise<ContextRelationSuggestion[]> {
+export async function suggestContextRelations(nodes: CanvasNode[], _signal: AbortSignal): Promise<ContextRelationSuggestion[]> {
+  // Standalone: local lexical matching — no backend needed
   const nodeIds = new Set(nodes.map(node => node.id))
-  const requestBody = {
-    nodes: nodes.map(({ id, title, type, position, dataPayload }) => ({
-      id, title, type, position,
-      dataPayload: { mimeType: dataPayload.mimeType, contentSummary: dataPayload.contentSummary, rawReference: dataPayload.rawReference },
-    })),
+  const suggestions: ContextRelationSuggestion[] = []
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const a = nodes[i], b = nodes[j]
+      const aWords = new Set(a.title.toLowerCase().split(/\W+/).filter(Boolean).concat(a.dataPayload.contentSummary.toLowerCase().split(/\W+/).slice(0, 20)))
+      const bWords = new Set(b.title.toLowerCase().split(/\W+/).filter(Boolean).concat(b.dataPayload.contentSummary.toLowerCase().split(/\W+/).slice(0, 20)))
+      const shared = [...aWords].filter(w => w.length > 3 && bWords.has(w))
+      if (shared.length >= 2) {
+        suggestions.push({
+          sourceNodeId: a.id,
+          targetNodeId: b.id,
+          relationType: 'semantic_match',
+          label: shared.slice(0, 3).join(', '),
+          score: Math.min(0.9, 0.3 + shared.length * 0.15),
+          evidence: shared.slice(0, 5),
+        })
+      }
+      if (suggestions.length >= 60) break
+    }
   }
-  if (new TextEncoder().encode(JSON.stringify(requestBody)).length > 400_000) throw new Error('The relation context is too large to analyze.')
-  const response = await intentApi.post(intentPath('/api/context/relations'), requestBody, { signal })
-  const data = response.data?.data
-  const suggestions = Array.isArray(data) ? data : data && Array.isArray(data.relations) ? data.relations : []
-  return suggestions.filter((suggestion: unknown): suggestion is ContextRelationSuggestion => isContextRelationSuggestion(suggestion, nodeIds)).slice(0, 60)
+  return suggestions.filter(s => isContextRelationSuggestion(s, nodeIds)).slice(0, 60)
 }
 
 export function isExecutionPlan(value: unknown): value is ExecutionPlan {

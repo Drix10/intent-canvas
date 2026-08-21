@@ -1,26 +1,25 @@
-# Intent Canvas Frontend
+# Intent Canvas Frontend — Standalone (Vercel)
 
-Intent Canvas is a browser-first spatial workspace for expressing business outcomes through context nodes, relationships, and natural-language intent.
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/) [![Gemini](https://img.shields.io/badge/Gemini-2.5--flash-8E75FF)](https://aistudio.google.com/)
 
-The frontend lets a user:
+A browser-first **spatial workspace** for expressing business outcomes through context nodes, relationships, and natural-language intent — now **standalone on Vercel** with your own Gemini API key. No backend folder, no server to run.
 
-1. place datasets, documents, notes, examples, and uploaded files on a canvas;
-2. connect related context and let proximity form spatial clusters;
-3. describe the desired outcome;
-4. inspect the structured execution plan before anything runs;
-5. approve the plan;
-6. receive only the selected capability results back on the canvas.
+> **No backend:** This frontend calls `generativelanguage.googleapis.com` directly. Paste your Gemini key in the top bar (stored in `localStorage`). Legacy `intent-canvas-backend` remains in its own repo for reference.
 
-## Product Model
+## Why this exists — standalone
 
-```text
+Most canvas tools need a server. Intent Canvas standalone does the thinking **in the browser**: you place evidence spatially, connect what relates, describe the outcome, and get back a plan you can read — all with your key, no backend.
+
+## Product model — standalone
+
+```
 Context nodes + spatial relationships + user intent
                          |
                          v
-                  SpatialGraphAST
+                  SpatialGraphAST (browser)
                          |
                          v
-                   Backend planner
+              Gemini via user API key (direct fetch)
                          |
                          v
                  Inspectable plan review
@@ -32,172 +31,96 @@ Context nodes + spatial relationships + user intent
                  Results returned to canvas
 ```
 
-The UI does not execute every available tool. It displays the tools selected by the backend plan and renders only outputs corresponding to completed steps.
+The UI never executes every tool. It shows the tools the **Gemini plan selected** and renders only outputs for `executedSteps`.
 
-## Workspace Features
+## What you can do
 
-- Spatial node positioning with pointer and keyboard movement.
-- Explicit relationship edges and automatically derived proximity relationships.
-- Manual named relationship edges and automatic proximity relationships; backend semantic retrieval informs planning without adding noisy automatic canvas edges.
-- Dataset, document, instruction, example, output, and custom primitive nodes.
-- PDF, CSV, TXT, MD, JSON, and raster image uploads.
-- SVG uploads are rejected; raster previews are resized before storage.
-- Inspectable plan review with context sources and confidence.
-- Approval-gated execution.
-- Plan context rationale showing why each source was selected and which spatial relationship supports it.
-- Expected outputs and verification checks shown before approval.
-- Full workflow stages shown separately from the underlying capability tool, so a single tool does not collapse a multi-step business process into one line.
-- Tool-specific result rendering for data, documents, meetings, and UI/UX concepts.
-- Local browser persistence for workspace state and saved primitive metadata.
-- Resettable starter context for the demo workflow.
+1. **Place** datasets, documents, notes, examples, uploads on the canvas.
+2. **Connect** with explicit edges; let centroid proximity (`240px` default) form spatial clusters.
+3. **Paste** your Gemini API key in the top bar (or set `VITE_GEMINI_API_KEY` locally).
+4. **Describe** the outcome in natural language.
+5. **Inspect** the plan — context sources, confidence, why each source was chosen, expected outputs, verification checks.
+6. **Approve** — plan is validated in-browser, runs via Gemini, returns to canvas.
 
-## Capability Result Behavior
+## Workspace features
 
-The frontend accepts a result only when:
+- **Spatial** — pointer + keyboard, pan/zoom, drag, file drop, relationships (`SpatialCanvas.tsx`).
+- **Relationships** — explicit named edges + derived proximity; semantic retrieval is now a tiny local lexical matcher (no backend).
+- **Nodes** — dataset, document, instruction, example, output, custom primitive; PDF/CSV/TXT/MD/JSON/raster uploads (SVG rejected, raster previews resized).
+- **Plan review** — `PlanPreviewModal.tsx` shows context rationale, workflow stages, confidence, assumptions.
+- **Execution** — `ResultNodeCard.tsx` renders 4 capabilities: data patterns (safe SVG), document synthesis, meeting insights, UI concepts with `referenceBasis`.
+- **State** — `useCanvasStore.ts` persists only bounded workspace data (nodes, edges, prompt, primitives). Transient plans/results are not persisted.
+- **Primitives** — compile your graph into a reusable custom primitive (client-persisted, no backend).
 
-- the execution status is valid;
-- executed steps are sequential and unique;
-- every output key maps to an executed capability;
-- every executed capability has a matching output;
-- nested values, strings, arrays, SVG, and serialized output stay within limits;
-- capability-specific required fields are present.
+## Configuration — standalone
 
-The displayed tools-used line is derived from `executedSteps`, not from the available tool registry. UI/UX output also displays `referenceBasis` so visual recommendations show what supplied reference informed them.
-
-## Frontend Architecture
-
-- `src/App.tsx`: application orchestration, AST construction, uploads, plan requests, execution requests, and top-level feedback.
-- `src/components/canvas/SpatialCanvas.tsx`: pan, zoom, drag, keyboard movement, file drop, and relationship creation.
-- `src/components/canvas/PlanPreviewModal.tsx`: business-facing plan review and approval.
-- `src/components/canvas/ResultNodeCard.tsx`: validated capability-specific result rendering.
-- `src/components/canvas/CanvasNodeCard.tsx`: source and output node presentation.
-- `src/store/useCanvasStore.ts`: Zustand workspace state, persistence, node/edge operations, and starter reset.
-- `src/api.ts`: Axios client, auth headers, response size limits, runtime validators, and capability-output contracts.
-- `src/utils/spatialRelations.ts`: proximity edges and connected spatial clusters.
-- `src/api.ts`: bounded API client and runtime validators; semantic retrieval remains a backend planning concern rather than an automatic visual edge generator.
-- `src/utils/sanitizeSvg.ts`: allowlisted SVG sanitization before DOM insertion.
-- `src/hooks/useDialog.ts`: focus trapping, inert background handling, Escape behavior, and focus restoration.
-
-## Workspace State
-
-The Zustand store persists only bounded workspace data:
-
-- nodes and validated payload summaries;
-- edges and relationship metadata;
-- active prompt;
-- saved custom primitive metadata;
-- view mode.
-
-Transient request state, active plans, and execution results are not persisted. Malformed local storage data is discarded at merge time. The starter business context is isolated to the demo reset state.
-
-## Configuration
-
-Copy `.env.example` to `.env`:
+No backend env needed. For local dev, copy `.env.example` to `.env`:
 
 ```env
-VITE_API_BASE_URL=http://localhost:25655
-VITE_API_PROXY_TARGET=http://localhost:25655
-VITE_API_TIMEOUT_MS=60000
-VITE_API_ACCESS_TOKEN=
+VITE_GEMINI_API_KEY=AIza...
+VITE_GEMINI_MODEL=gemini-2.5-flash
 VITE_CANVAS_ID=workspace_canvas
 VITE_SPATIAL_CLUSTER_ID=primary
 VITE_PROXIMITY_DISTANCE_PX=240
 VITE_DEFAULT_INTENT_PROMPT=Analyze the supplied context, identify the most useful supported outcome, and propose grounded next steps.
-VITE_PRIMITIVE_TITLE=Evidence-Based Risk and Opportunity Primitive
+VITE_PRIMITIVE_TITLE=Evidence-Based Risk & Opportunity Primitive
 VITE_PRIMITIVE_DESCRIPTION=User-composed dynamic computational primitive
 ```
 
-Configuration details:
+- Paste your key in the UI — it is stored in `localStorage` under `intent-canvas.gemini-key` and never sent anywhere except `generativelanguage.googleapis.com`.
+- Every `VITE_*` is public (Vite bundles it). Never commit your key.
 
-- `VITE_API_BASE_URL`: backend origin. Leave empty when using the Vite proxy configuration.
-- `VITE_API_PROXY_TARGET`: local Vite proxy target.
-- `VITE_API_TIMEOUT_MS`: Axios request timeout. The default is 60 seconds because provider-backed planning and execution can exceed short browser timeouts.
-- `VITE_API_ACCESS_TOKEN`: backend access token when backend authentication is enabled.
-- `VITE_CANVAS_ID`: stable identifier for the workspace AST.
-- `VITE_SPATIAL_CLUSTER_ID`: cluster ID prefix sent to the backend.
-- `VITE_PROXIMITY_DISTANCE_PX`: centroid distance used to infer proximity relationships.
-- `VITE_DEFAULT_INTENT_PROMPT`: neutral fallback used when the user presses Generate Intent without typing a prompt.
-- `VITE_PRIMITIVE_TITLE` and `VITE_PRIMITIVE_DESCRIPTION`: metadata used when saving a custom primitive.
-
-Important: every `VITE_*` value is public because Vite embeds it in the browser bundle. Never put a MeshAPI credential in frontend configuration. Treat `VITE_API_ACCESS_TOKEN` as a client access credential, not a secret, and protect the backend with origin restrictions, token rotation, and deployment controls.
-
-## Local Development
-
-Start the backend first, then the frontend:
+## Local development — standalone
 
 ```bash
-# Terminal 1
-cd NYC-R3-BACKEND
+cd frontend
 npm install
-cp .env.example .env
-npm run dev
-
-# Terminal 2
-cd NYC-R3-FRONTEND
-npm install
-cp .env.example .env
-npm run dev
+cp .env.example .env   # add VITE_GEMINI_API_KEY or paste in UI
+npm run dev            # → http://localhost:3000
 ```
 
-Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
+No `backend` to run. If no key is set, a deterministic local fallback planner runs (limited, but the canvas works).
 
-For a local demo without MeshAPI, use development backend settings with authentication disabled locally. Provider-backed tools require a configured backend `MESH_API_KEY`.
+## Demo workflow — try in 2 minutes
 
-## Demo Workflow
+1. Paste Gemini key in top bar (get one at https://aistudio.google.com/app/apikey).
+2. Switch from showcase to interactive workspace.
+3. Restore starter context if needed.
+4. Arrange/connect nodes.
+5. Enter an outcome — e.g., *“Analyze the supplied datasets and propose the most useful insights.”*
+6. Inspect plan — context, tool, steps, confidence.
+7. Approve.
+8. Inspect business objects on canvas + result card.
 
-1. Switch from showcase mode to the interactive workspace.
-2. Restore the starter context if needed.
-3. Arrange or connect context nodes.
-4. Enter an outcome such as analyzing the supplied datasets and proposing the most useful insights.
-5. Select plan inspection.
-6. Review the context, selected tool, steps, and confidence.
-7. Approve execution.
-8. Inspect the resulting business objects on the canvas and in the result card.
+## Limits — intentional bounds
 
-The starter context is demo-only. Production workspaces should use uploaded or user-created context.
-
-## Upload and Rendering Limits
-
-- Maximum upload size: 10 MB in the browser.
-- PDF request size: 5 MB at the backend.
-- Extracted PDF text stored in a node: 10,000 characters.
-- Image previews: bounded raster previews only.
-- SVG uploads: rejected.
-- Workspace nodes: 30.
-- Workspace edges: 60.
-- Output payload: 100 KB client-side validation limit.
-- Inline SVG charts: sanitized and bounded before rendering.
+- Upload 10 MB, PDF text 10k chars, image = bounded raster preview, SVG rejected.
+- Workspace: 30 nodes, 60 edges, output payload 100 KB.
+- Inline SVG sanitized + bounded.
+- No database — browser persistence is per-profile, not multi-user.
+- Gemini calls use `responseMimeType: application/json` and are validated with Zod; provider failures fall back to local plan.
 
 ## Scripts
 
 ```bash
-npm run dev
-npm run build
-npm run preview
+npm run dev      # Vite dev
+npm run build    # tsc + vite build → dist/
+npm run preview  # serve dist
 ```
 
-- `npm run dev`: start Vite development mode.
-- `npm run build`: run TypeScript compilation and create the production bundle.
-- `npm run preview`: serve the production bundle locally.
+## Production deployment — Vercel (no backend)
 
-## Production Deployment
+1. Push this `frontend/` as the Vercel project root (single repo, no `backend/` folder).
+2. In Vercel, set `VITE_GEMINI_API_KEY` (optional — users can also paste in UI) and `VITE_GEMINI_MODEL`.
+3. `npm run build` → `dist/` is served statically.
+4. No `CORS_ORIGINS` / `API` env needed.
+5. Use HTTPS.
 
-1. Build with `npm run build`.
-2. Deploy the generated `dist` directory to a static host.
-3. Set `VITE_API_BASE_URL` to the deployed backend origin before building.
-4. Set the matching client access token only if backend authentication is enabled.
-5. Configure the backend `CORS_ORIGINS` to include the deployed frontend origin.
-6. Do not expose backend provider credentials in frontend variables.
-7. Use HTTPS for both frontend and backend origins.
+There is no backend database. Browser persistence is per-profile.
 
-There is no frontend database. Browser persistence is local to the current browser profile and is not multi-user storage.
+## Related
 
-## Related Documentation
+- `docs/ARCHITECTURE.md`, `docs/INTEGRATION_GUIDE.md` (legacy backend docs, now unused)
+- Original backend remains in `Drix10/intent-canvas-backend` for reference
 
-- `docs/ARCHITECTURE.md`: component and state architecture.
-- `docs/INTEGRATION_GUIDE.md`: backend integration and deployment notes.
-- `../NYC-R3-BACKEND/README.md`: backend setup, API contracts, capabilities, and operational limits.
-
-## License
-
-Built for the NYC Codex Community Hackathon.
+Built for the NYC Codex Community Hackathon — where spatial thinking becomes an inspectable plan, now with your own Gemini key.

@@ -10,7 +10,9 @@ import { ResultNodeCard } from './components/canvas/ResultNodeCard'
 import { DisambiguationModal } from './components/canvas/DisambiguationModal'
 import { AdaptationRequest, CanvasNode, ExecutionPlan } from './types/canvas'
 import { APP_CONFIG } from './config'
-import { getApiErrorMessage, intentApi, intentPath, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled } from './api'
+import { getApiErrorMessage, isCustomPrimitiveRecord, isExecutionPlan, isExecutionResult, isRequestCancelled } from './api'
+import { generatePlanWithGemini, executeWithGemini, hasGeminiKey } from './services/geminiService'
+import { ApiKeyBar } from './components/ApiKeyBar'
 import { createId } from './utils/id'
 import { buildSpatialClusters, buildSpatialEdges } from './utils/spatialRelations'
 
@@ -260,7 +262,7 @@ export default function App() {
     }
   }
 
-  // Evaluate Intent & Inspect Plan
+  // Evaluate Intent & Inspect Plan — standalone: direct Gemini with user key
   const handleEvaluatePlan = async () => {
     const prompt = activeIntentPrompt.trim() || inferIntentFromContext(useCanvasStore.getState().nodes)
     if (!prompt) {
@@ -268,35 +270,38 @@ export default function App() {
       document.getElementById('intent-prompt')?.focus()
       return
     }
+    if (!hasGeminiKey()) {
+      setErrorMessage('Add your Gemini API key above to generate an AI plan. A local fallback plan will be used otherwise.')
+    }
     const request = beginRequest()
     setErrorMessage(null)
     setStatusMessage(null)
     setIsExecutingPlan(false)
-    setStatusMessage('Preparing an inspectable plan...')
+    setStatusMessage(hasGeminiKey() ? 'Asking Gemini for an inspectable plan...' : 'Building a local fallback plan...')
     setIsEvaluatingPlan(true)
     try {
-       const res = await intentApi.post(intentPath('/api/intent/plan'), getASTPayload(prompt), { signal: request.controller.signal })
+      const plan = await generatePlanWithGemini(getASTPayload(prompt) as any, request.controller.signal)
       if (!isCurrentRequest(request)) {
         if (isActiveRequest(request)) setErrorMessage('The canvas changed while the plan was being prepared. Please try again.')
         return
       }
-      if (res.data?.success && isExecutionPlan(res.data.data)) {
-       setActivePlan(res.data.data)
-         if (!activeIntentPrompt.trim()) {
+      if (isExecutionPlan(plan)) {
+        setActivePlan(plan)
+        if (!activeIntentPrompt.trim()) {
           suppressNextInputReset.current = true
           useCanvasStore.getState().setActiveIntentPrompt(prompt)
         }
-        setStatusMessage(res.data.data.planningMode === 'local_fallback' ? 'Provider unavailable. A bounded local plan is ready for review.' : 'Plan ready for review.')
-        if (res.data.data.disambiguation?.requiresUserClarification) {
-          setDisambiguationData(res.data.data.disambiguation)
+        setStatusMessage(plan.planningMode === 'local_fallback' ? 'Local plan ready — add a Gemini key for richer AI planning.' : 'Plan ready for review.')
+        if (plan.disambiguation?.requiresUserClarification) {
+          setDisambiguationData(plan.disambiguation)
         } else {
           setShowPlanModal(true)
         }
       } else {
-         setErrorMessage(responseMessage(res.data, 'The service returned an invalid execution plan.'))
+        setErrorMessage('The generated plan was invalid.')
       }
     } catch (err) {
-      if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to evaluate the intent plan.'))
+      if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to evaluate the intent plan. Check your Gemini key.'))
     } finally {
       if (isActiveRequest(request)) {
         setIsEvaluatingPlan(false)
@@ -305,7 +310,7 @@ export default function App() {
     }
   }
 
-  // Execute Intent & Render In-Canvas Result
+  // Execute Intent & Render In-Canvas Result — standalone Gemini
   const handleExecuteComputation = async (adaptation?: AdaptationRequest) => {
     if (!adaptation && !activePlan) {
       await handleEvaluatePlan()
@@ -317,47 +322,62 @@ export default function App() {
     setIsEvaluatingPlan(false)
     setExecutionResult(null)
     setIsExecutingPlan(true)
-    setStatusMessage('Sending the confirmed intent plan...')
+    setStatusMessage(hasGeminiKey() ? 'Running plan with Gemini...' : 'Running local execution...')
     setShowPlanModal(false)
     setDisambiguationData(null)
     try {
-      const res = await intentApi.post(intentPath('/api/intent/execute'), {
-        ...getASTPayload(),
-        adaptation,
-         executionPlan: activePlan ?? undefined,
-      }, { signal: request.controller.signal })
+      const ast: any = getASTPayload()
+      const plan = activePlan!
+      // Handle disambiguation adaptation locally
+      let effectivePlan = plan
+      if (adaptation && plan.disambiguation?.requiresUserClarification) {
+        const option = plan.disambiguation.options.find(c => c.optionId === adaptation.adaptationOptionId)
+        if (!option) throw new Error('Adaptation option not offered')
+        const datasetNodes = ast.nodes.filter(n => n.type === 'dataset')
+        if (!datasetNodes.length) throw new Error('Adaptation requires a dataset')
+        effectivePlan = {
+          ...plan,
+          goalSummary: option.label,
+          confidenceScore: 0.85,
+          disambiguation: undefined,
+          steps: [{ stepId: 1, title: option.label, description: option.actionHint, requiredCapability: 'DataPatternFinder', inputNodeIds: datasetNodes.map(n => n.id), status: 'pending' }],
+        } as ExecutionPlan
+      } else if (plan.disambiguation?.requiresUserClarification) {
+        // Should not execute a disambiguation plan directly
+        throw new Error('This plan needs clarification first')
+      }
+      const data = await executeWithGemini(effectivePlan, ast, request.controller.signal)
 
       if (!isCurrentRequest(request)) {
         if (isActiveRequest(request)) setErrorMessage('The canvas changed while computation was running. Please run it again.')
         return
       }
-      if (res.data?.success && isExecutionResult(res.data.data)) {
-        const data = res.data.data
+      if (isExecutionResult(data)) {
         if (data.executionStatus === 'disambiguation_required' && data.disambiguation?.options?.length) {
           setDisambiguationData(data.disambiguation)
         } else if (data.executionStatus === 'disambiguation_required') {
           setErrorMessage('The service requested clarification but returned no options.')
-          } else {
-            setExecutionResult(data)
-            const resultSummary = data.goalSummary ?? 'Computed intent result'
-            const outputInserted = upsertOutputNode(resultSummary, data.outputPayload ?? {})
-           setViewMode('interactive')
-           clearPromptAfterExecution.current = true
-           setStatusMessage(outputInserted ? 'Computation complete. The result was added to the workspace.' : 'Computation complete. The result is available in the result panel; remove a node to place it on the canvas.')
+        } else {
+          setExecutionResult(data)
+          const resultSummary = data.goalSummary ?? 'Computed intent result'
+          const outputInserted = upsertOutputNode(resultSummary, data.outputPayload ?? {})
+          setViewMode('interactive')
+          clearPromptAfterExecution.current = true
+          setStatusMessage(outputInserted ? 'Computation complete. The result was added to the workspace.' : 'Computation complete. The result is available in the result panel; remove a node to place it on the canvas.')
         }
-       } else setErrorMessage(responseMessage(res.data, 'The service returned an invalid execution result.'))
+      } else setErrorMessage('The execution returned an invalid result.')
     } catch (err) {
-      if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to execute the intent plan.'))
+      if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to execute the intent plan. Check your Gemini key.'))
     } finally {
       if (isActiveRequest(request)) {
-         setIsExecutingPlan(false)
-         requestRef.current = null
-         if (clearPromptAfterExecution.current) {
-           clearPromptAfterExecution.current = false
-           suppressNextInputReset.current = true
-           useCanvasStore.getState().setActiveIntentPrompt('')
-         }
-       }
+        setIsExecutingPlan(false)
+        requestRef.current = null
+        if (clearPromptAfterExecution.current) {
+          clearPromptAfterExecution.current = false
+          suppressNextInputReset.current = true
+          useCanvasStore.getState().setActiveIntentPrompt('')
+        }
+      }
     }
   }
 
@@ -416,9 +436,13 @@ export default function App() {
        const previewUrl = isImage ? await readImagePreview(file, readController.signal) : undefined
       let contentSummary = isImage ? `Image reference: ${safeFileName}` : ''
       if (isPdf) {
-        const response = await intentApi.post(intentPath('/api/files/pdf-text'), file, { signal: readController.signal, headers: { 'Content-Type': 'application/pdf' } })
-         if (!response.data?.success || typeof response.data.data?.text !== 'string' || response.data.data.text.length > 10_000) throw new Error('The PDF text service returned an invalid or oversized response.')
-         contentSummary = response.data.data.text.slice(0, 10_000)
+        // Standalone: client-side PDF text — best-effort via FileReader; for full extraction add pdfjs-dist
+        try {
+          const text = await readTextFile(file, readController.signal)
+          contentSummary = text.slice(0, 10_000) || `PDF: ${safeFileName} (${file.size} bytes)`
+        } catch {
+          contentSummary = `PDF: ${safeFileName} (${file.size} bytes)`
+        }
       } else if (!isImage) {
         contentSummary = (await readTextFile(file, readController.signal)).slice(0, 10_000) || `Uploaded file: ${safeFileName}`
       }
@@ -444,59 +468,44 @@ export default function App() {
     }
   }
 
-  // Save Executed Output as Higher-Order Custom Primitive
+  // Save Executed Output as Higher-Order Custom Primitive — standalone, no backend
   const handleSaveAsPrimitive = async () => {
     if (isSavingPrimitive) return
     if (useCanvasStore.getState().nodes.length >= 30) {
       setErrorMessage('The canvas is full. Remove a node before saving a primitive.')
       return
     }
-    const request = beginRequest()
     setErrorMessage(null)
     setStatusMessage(null)
     setIsSavingPrimitive(true)
     try {
-      const res = await intentApi.post(intentPath('/api/intent/create-primitive'), {
+      const primitiveId = `primitive_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
+      const inputNodeTypes = [...new Set(useCanvasStore.getState().nodes.filter((node: CanvasNode) => node.type !== 'output').map((node: CanvasNode) => node.type))] as CanvasNode['type'][]
+      const primitiveRecord = {
+        primitiveId,
         title: APP_CONFIG.primitiveTitle,
         description: APP_CONFIG.primitiveDescription,
-         inputNodeTypes: [...new Set(nodes.filter((node) => node.type !== 'output').map((node) => node.type))],
-        ast: getASTPayload(),
-      }, { signal: request.controller.signal })
-
-      if (!isCurrentRequest(request)) {
-        if (isActiveRequest(request)) setErrorMessage('The canvas changed while saving. Please try again.')
-        return
+        inputNodeTypes,
+        createdAt: Date.now(),
       }
-       if (res.data?.success && isCustomPrimitiveRecord(res.data.data)) {
-         const primitive = res.data.data
-         const primitiveRecord = {
-           primitiveId: primitive.primitiveId,
-           title: primitive.title,
-           description: primitive.description,
-           inputNodeTypes: primitive.inputNodeTypes,
-           createdAt: primitive.createdAt,
-         }
-         addCustomPrimitive(primitiveRecord)
-         const primitiveNode: CanvasNode = {
-          id: primitive.primitiveId,
-             title: primitiveRecord.title,
-          type: 'custom_primitive',
-          position: findVisibleNodePosition(300, 160),
-          dataPayload: {
-            mimeType: 'application/x-intent-primitive',
-             contentSummary: 'Saved plan record for the current canvas. Re-execution with new inputs is not enabled in this MVP.',
-          },
-        }
-        addNode(primitiveNode)
-         setStatusMessage(`Custom computational primitive "${primitiveRecord.title}" created.`)
-       } else setErrorMessage(responseMessage(res.data, 'The service returned an invalid primitive.'))
+      if (!isCustomPrimitiveRecord(primitiveRecord)) throw new Error('Invalid primitive')
+      addCustomPrimitive(primitiveRecord)
+      const primitiveNode: CanvasNode = {
+        id: primitiveId,
+        title: primitiveRecord.title,
+        type: 'custom_primitive',
+        position: findVisibleNodePosition(300, 160),
+        dataPayload: {
+          mimeType: 'application/x-intent-primitive',
+          contentSummary: 'Saved plan record for the current canvas. Re-execution with new inputs is not enabled in this MVP.',
+        },
+      }
+      addNode(primitiveNode)
+      setStatusMessage(`Custom primitive "${primitiveRecord.title}" created.`)
     } catch (err) {
-      if (isCurrentRequest(request) && !isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to create the custom primitive.'))
+      if (!isRequestCancelled(err)) setErrorMessage(getApiErrorMessage(err, 'Unable to create the custom primitive.'))
     } finally {
-      if (isActiveRequest(request)) {
-        setIsSavingPrimitive(false)
-        requestRef.current = null
-      }
+      setIsSavingPrimitive(false)
     }
   }
 
@@ -519,6 +528,9 @@ export default function App() {
         )}
         {/* Render Navbar & IntentBar ONLY in interactive canvas view mode */}
         <Navbar />
+        <div className="absolute top-16 left-1/2 z-40 -translate-x-1/2">
+          <ApiKeyBar />
+        </div>
         {viewMode === 'interactive' && <IntentBar {...intentHandlers} />}
 
         {/* View Mode Switcher: Showcase vs Interactive Spatial Canvas */}
